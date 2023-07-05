@@ -5,7 +5,7 @@ import {
     type TreeViewProps
 } from "./types/treeView.types";
 
-export * from "./TestTree";
+export * from "./TreeView";
 export * from "./components/CustomCheckboxView";
 
 export {

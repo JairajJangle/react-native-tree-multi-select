@@ -1,31 +1,65 @@
 import * as React from 'react';
 
-import { StyleSheet, View, Text } from 'react-native';
-import { multiply } from 'react-native-tree-multi-select';
+import { StyleSheet, TextInput, View } from 'react-native';
+import {
+  TreeView,
+  CustomCheckboxView,
+
+  type CustomCheckBoxViewProps,
+  type CheckboxProps
+} from 'react-native-tree-multi-select';
+import { sampleData1 } from './sample/sampleData1';
+
+// Example of HOC wrapped Checkbox to react required prop signature
+function withCheckboxProps(
+  Component: React.ComponentType<CustomCheckBoxViewProps>
+): React.ComponentType<CheckboxProps> {
+  return function WrappedComponent(props: CheckboxProps) {
+    const { value, onValueChange, text } = props;
+
+    // transform CheckboxProps to Props
+    const transformedProps: CustomCheckBoxViewProps = {
+      value: value,
+      onValueChange: () => onValueChange(),
+      text: text,
+      // set other Props properties as you need
+    };
+
+    return <Component {...transformedProps} />;
+  };
+}
 
 export default function App() {
-  const [result, setResult] = React.useState<number | undefined>();
+  const [searchText, setSearchText] = React.useState('');
 
-  React.useEffect(() => {
-    multiply(3, 7).then(setResult);
-  }, []);
+  const handleSelectionChange = (selectedIds: string[]) => {
+    console.debug('Selected ids:', selectedIds);
+  };
 
   return (
-    <View style={styles.container}>
-      <Text>Result: {result}</Text>
+    <View
+      style={styles.mainView}>
+      <TextInput
+        style={styles.textInput}
+        value={searchText}
+        onChangeText={setSearchText} />
+      <TreeView
+        data={sampleData1}
+        onSelectionChange={handleSelectionChange}
+        CheckboxComponent={withCheckboxProps(CustomCheckboxView)}
+        searchText={searchText}
+      />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+export const styles = StyleSheet.create({
+  mainView: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignSelf: "flex-start",
+    backgroundColor: "white"
   },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
-  },
+  textInput: {
+    backgroundColor: "grey"
+  }
 });

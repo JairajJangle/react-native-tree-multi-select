@@ -1,22 +1,16 @@
-import { NativeModules, Platform } from 'react-native';
+import {
+    type CheckboxProps,
+    type ExpandIconProps,
+    type TreeNode,
+    type TreeViewProps
+} from "./types/treeView.types";
 
-const LINKING_ERROR =
-  `The package 'react-native-tree-multi-select' doesn't seem to be linked. Make sure: \n\n` +
-  Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
-  '- You rebuilt the app after installing the package\n' +
-  '- You are not using Expo Go\n';
+export * from "./TestTree";
+export * from "./components/CustomCheckboxView";
 
-const TreeMultiSelect = NativeModules.TreeMultiSelect
-  ? NativeModules.TreeMultiSelect
-  : new Proxy(
-      {},
-      {
-        get() {
-          throw new Error(LINKING_ERROR);
-        },
-      }
-    );
-
-export function multiply(a: number, b: number): Promise<number> {
-  return TreeMultiSelect.multiply(a, b);
-}
+export {
+    type CheckboxProps,
+    type ExpandIconProps,
+    type TreeNode,
+    type TreeViewProps
+};

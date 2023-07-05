@@ -1,21 +1,27 @@
+import React, { useMemo } from "react";
 import {
     FlatList,
     View,
     StyleSheet,
 
+    TouchableOpacity,
     type TouchableOpacityProps
 } from "react-native";
+import Icon from 'react-native-vector-icons/FontAwesome';
+
 import type {
     __CheckBoxState__,
     CheckboxProps,
     TreeFlatListProps,
-    TreeNode
-} from "../types/treeView.types";
-import { useMemo } from "react";
-import React from "react";
-import Node from "./Node";
+    TreeNode,
 
-interface Props {
+    CheckboxValueType,
+    ExpandIconProps,
+} from "../types/treeView.types";
+
+import { CustomCheckboxView } from "./CustomCheckboxView";
+
+interface NodeListProps {
     nodes: TreeNode[];
     level: number;
 
@@ -33,7 +39,7 @@ interface Props {
     ExpandArrowTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
 }
 
-export default function NodeList(props: Props) {
+export default function NodeList(props: NodeListProps) {
     const {
         nodes,
         level,
@@ -103,8 +109,111 @@ function HeaderFooterView() {
 }
 
 
-export const styles = StyleSheet.create({
+interface NodeProps {
+    node: TreeNode;
+    level: number;
+
+    state: __CheckBoxState__;
+    onCheck: (id: string) => void;
+
+    expanded: Set<string>;
+    onToggleExpand: (id: string) => void;
+
+    IconComponent?: React.ComponentType<ExpandIconProps>;
+    CheckboxComponent?: React.ComponentType<CheckboxProps>;
+    ExpandArrowTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
+
+    searchText: string;
+}
+
+function Node(props: NodeProps) {
+    const {
+        node,
+        level,
+        state,
+        onCheck,
+        expanded,
+        onToggleExpand,
+        CheckboxComponent = CustomCheckboxView,
+        ExpandArrowTouchableComponent = TouchableOpacity,
+        searchText,
+
+        // TODO:
+        // ExpandIconComponent,
+    } = props;
+
+    const isChecked = state.checked.has(node.id);
+    const isIndeterminate = state.indeterminate.has(node.id);
+    const isExpanded = expanded.has(node.id);
+
+    let value: CheckboxValueType;
+    if (isIndeterminate) {
+        value = 'indeterminate';
+    } else if (isChecked) {
+        value = true;
+    } else {
+        value = false;
+    }
+
+    return (
+        <View style={[
+            styles.nodeParentView,
+            { marginLeft: level && 15, }
+        ]}>
+            <View style={styles.nodeCheckboxAndArrowRow}>
+                <CustomCheckboxView
+                    text={node.name}
+                    onValueChange={() => onCheck(node.id)}
+                    value={value} />
+
+                {node.children?.length ? (
+                    <ExpandArrowTouchableComponent
+                        style={styles.nodeExpandableArrowTouchable}
+                        onPress={() => onToggleExpand(node.id)}>
+                        {/* <IconComponent isExpanded={isExpanded} /> */}
+                        <Icon
+                            name={
+                                isExpanded
+                                    ? 'caret-down'
+                                    : 'caret-right'
+                            }
+                            size={20}
+                            color="black"
+                        />
+                    </ExpandArrowTouchableComponent>
+                ) : null}
+            </View>
+            {isExpanded && node.children && (
+                <NodeList
+                    nodes={node.children}
+                    level={level + 1}
+                    state={state}
+                    onCheck={onCheck}
+                    expanded={expanded}
+                    onToggleExpand={onToggleExpand}
+                    CheckboxComponent={CheckboxComponent}
+                    ExpandArrowTouchableComponent={ExpandArrowTouchableComponent}
+                    searchText={searchText}
+                />
+            )}
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
     defaultHeaderFooter: {
         padding: 5
+    },
+    nodeParentView: {
+        flex: 1
+    },
+    nodeExpandableArrowTouchable: {
+        flex: 1
+    },
+    nodeCheckboxAndArrowRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        minWidth: "100%",
     }
 });
+

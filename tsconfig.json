@@ -1,4 +1,7 @@
 {
+  "exclude": [
+    "node_modules"
+  ],
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
@@ -9,7 +12,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "jsx": "react",
-    "lib": ["dom", "esnext"],
+    "lib": ["esnext"],
     "module": "esnext",
     "moduleResolution": "node",
     "noFallthroughCasesInSwitch": true,

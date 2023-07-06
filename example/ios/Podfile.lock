@@ -374,7 +374,7 @@ PODS:
   - React-jsinspector (0.72.1)
   - React-logger (0.72.1):
     - glog
-  - react-native-tree-multi-select (0.1.0):
+  - react-native-tree-multi-select (0.1.2):
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
   - React-NativeModulesApple (0.72.1):
@@ -697,7 +697,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 184eae1ecdedc7a083194bd9ff809c93f08fd34c
   React-jsinspector: d0b5bfd1085599265f4212034321e829bdf83cc0
   React-logger: b8103c9b04e707b50cdd2b1aeb382483900cbb37
-  react-native-tree-multi-select: e4ed304e0207bebdbf3661ba3171ac2d8e736fd8
+  react-native-tree-multi-select: 7606320cb896c78b2f6efb395f7e0084f602e40d
   React-NativeModulesApple: 4f31a812364443cee6ef768d256c594ad3b20f53
   React-perflogger: 3d501f34c8d4b10cb75f348e43591765788525ad
   React-RCTActionSheet: f5335572c979198c0c3daff67b07bd1ad8370c1d

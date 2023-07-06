@@ -34,7 +34,7 @@ export const TreeView = forwardRef<TreeViewRef, TreeViewProps>(
 
     const [expanded, setExpanded] = useState(new Set<string>());
 
-    const handleToggleExpand = (id: string) => {
+    const handleToggleExpand = React.useCallback((id: string) => {
       const newExpanded = new Set(expanded);
       if (expanded.has(id)) {
         newExpanded.delete(id);
@@ -42,7 +42,7 @@ export const TreeView = forwardRef<TreeViewRef, TreeViewProps>(
         newExpanded.add(id);
       }
       setExpanded(newExpanded);
-    };
+    }, [expanded]);
 
     useEffect(() => {
       if (searchText) {

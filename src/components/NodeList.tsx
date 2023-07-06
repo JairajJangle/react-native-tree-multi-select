@@ -58,7 +58,7 @@ export default function NodeList(props: NodeListProps) {
         ExpandArrowTouchableComponent,
     } = props;
 
-    const filterTreeData = (_nodes: TreeNode[]): TreeNode[] => {
+    const filterTreeData = React.useCallback((_nodes: TreeNode[]): TreeNode[] => {
         return _nodes.reduce<TreeNode[]>((filtered, node) => {
             if (node.name.toLowerCase().includes(searchText.toLowerCase())) {
                 filtered.push({ ...node }); // copy node
@@ -70,12 +70,11 @@ export default function NodeList(props: NodeListProps) {
             }
             return filtered;
         }, []);
-    };
+    }, [searchText]);
 
     const filteredNodes = useMemo(() => {
         return searchText ? filterTreeData(nodes) : nodes;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [nodes, searchText]);
+    }, [filterTreeData, nodes, searchText]);
 
     return (
         <FlatList
@@ -107,7 +106,6 @@ function HeaderFooterView() {
         <View style={styles.defaultHeaderFooter} />
     );
 }
-
 
 interface NodeProps {
     node: TreeNode;
@@ -155,21 +153,29 @@ function Node(props: NodeProps) {
         value = false;
     }
 
+    const _onToggleExpand = React.useCallback(() => {
+        onToggleExpand(node.id);
+    }, [node.id, onToggleExpand]);
+
+    const _onCheck = React.useCallback(() => {
+        onCheck(node.id);
+    }, [node.id, onCheck]);
+
     return (
         <View style={[
             styles.nodeParentView,
             { marginLeft: level && 15, }
         ]}>
             <View style={styles.nodeCheckboxAndArrowRow}>
-                <CustomCheckboxView
+                <CheckboxComponent
                     text={node.name}
-                    onValueChange={() => onCheck(node.id)}
+                    onValueChange={_onCheck}
                     value={value} />
 
                 {node.children?.length ? (
                     <ExpandArrowTouchableComponent
                         style={styles.nodeExpandableArrowTouchable}
-                        onPress={() => onToggleExpand(node.id)}>
+                        onPress={_onToggleExpand}>
                         {/* <IconComponent isExpanded={isExpanded} /> */}
                         <Icon
                             name={

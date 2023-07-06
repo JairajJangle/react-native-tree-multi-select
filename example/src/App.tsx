@@ -47,6 +47,11 @@ export default function App() {
   return (
     <SafeAreaView
       style={styles.mainView}>
+      <TextInput
+        style={styles.textInput}
+        value={searchText}
+        onChangeText={setSearchText}
+        placeholder='Search here' />
       <View
         style={styles.selectionButtonRow}>
         <Button
@@ -60,17 +65,17 @@ export default function App() {
             treeViewRef.current?.unselectAll?.();
           }} />
       </View>
-      <TextInput
-        style={styles.textInput}
-        value={searchText}
-        onChangeText={setSearchText} />
-      <TreeView
-        ref={treeViewRef}
-        data={sampleData2}
-        onSelectionChange={handleSelectionChange}
-        CheckboxComponent={withCheckboxProps(CustomCheckboxView)}
-        searchText={searchText}
-      />
+
+      <View
+        style={styles.treeViewParent}>
+        <TreeView
+          ref={treeViewRef}
+          data={sampleData2}
+          onSelectionChange={handleSelectionChange}
+          CheckboxComponent={withCheckboxProps(CustomCheckboxView)}
+          searchText={searchText}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -82,10 +87,26 @@ export const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   selectionButtonRow: {
+    borderTopWidth: 0.5,
+    borderColor: "grey",
+    paddingTop: 5,
     flexDirection: "row",
-    justifyContent: "space-evenly"
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
   },
   textInput: {
-    backgroundColor: "grey"
+    borderRadius: 10,
+    margin: 10,
+    padding: 10,
+    backgroundColor: "#DDD",
+    height: 40,
+    fontSize: 16
+  },
+  treeViewParent: {
+    flex: 1,
+    minWidth: "100%",
+    borderTopWidth: 0.5,
+    marginTop: 5,
+    borderColor: "grey",
   }
 });

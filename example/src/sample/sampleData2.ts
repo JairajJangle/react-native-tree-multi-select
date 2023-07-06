@@ -1,4 +1,4 @@
-export const sampleTree = [
+export const sampleData2 = [
   {
     "id": "y3jvtt6o0nn",
     "name": "0qh7l8d9904",

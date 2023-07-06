@@ -2,7 +2,8 @@ import {
     type CheckboxProps,
     type ExpandIconProps,
     type TreeNode,
-    type TreeViewProps
+    type TreeViewProps,
+    type TreeViewRef
 } from "./types/treeView.types";
 
 export * from "./TreeView";
@@ -12,5 +13,6 @@ export {
     type CheckboxProps,
     type ExpandIconProps,
     type TreeNode,
-    type TreeViewProps
+    type TreeViewProps,
+    type TreeViewRef
 };

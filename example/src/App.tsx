@@ -1,12 +1,19 @@
 import * as React from 'react';
 
-import { StyleSheet, TextInput, View } from 'react-native';
+import {
+  Button,
+  SafeAreaView,
+  StyleSheet,
+  TextInput,
+  View
+} from 'react-native';
 import {
   TreeView,
   CustomCheckboxView,
 
   type CustomCheckBoxViewProps,
-  type CheckboxProps
+  type CheckboxProps,
+  type TreeViewRef
 } from 'react-native-tree-multi-select';
 import { sampleData1 } from './sample/sampleData1';
 
@@ -30,6 +37,7 @@ function withCheckboxProps(
 }
 
 export default function App() {
+  const treeViewRef = React.useRef<TreeViewRef | null>(null);
   const [searchText, setSearchText] = React.useState('');
 
   const handleSelectionChange = (selectedIds: string[]) => {
@@ -37,19 +45,33 @@ export default function App() {
   };
 
   return (
-    <View
+    <SafeAreaView
       style={styles.mainView}>
+      <View
+        style={styles.selectionButtonRow}>
+        <Button
+          title='Select All'
+          onPress={() => {
+            treeViewRef.current?.selectAll?.();
+          }} />
+        <Button
+          title='Unselect All'
+          onPress={() => {
+            treeViewRef.current?.unselectAll?.();
+          }} />
+      </View>
       <TextInput
         style={styles.textInput}
         value={searchText}
         onChangeText={setSearchText} />
       <TreeView
+        ref={treeViewRef}
         data={sampleData1}
         onSelectionChange={handleSelectionChange}
         CheckboxComponent={withCheckboxProps(CustomCheckboxView)}
         searchText={searchText}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -57,7 +79,11 @@ export const styles = StyleSheet.create({
   mainView: {
     flex: 1,
     alignSelf: "flex-start",
-    backgroundColor: "white"
+    backgroundColor: "white",
+  },
+  selectionButtonRow: {
+    flexDirection: "row",
+    justifyContent: "space-evenly"
   },
   textInput: {
     backgroundColor: "grey"

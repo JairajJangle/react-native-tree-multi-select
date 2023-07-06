@@ -8,19 +8,27 @@ import type {
  * Custom hook to manage the state of a tree of checkboxes.
  *
  * @param initialData - Initial data for the tree nodes.
+ * @param preselectedIds - Array of the ids of the nodes that should be preselected.
  * @param onSelectionChange - Callback function called whenever the selection changes.
  *
  * @returns An array with the current checkbox state and a function to toggle a checkbox.
  */
 export default function useCheckboxState(
     initialData: TreeNode[],
+    preselectedIds: string[] = [],
     onSelectionChange?: (selectedIds: string[]) => void
-): [__CheckBoxState__, (id: string) => void] {
+): [__CheckBoxState__, (id: string) => void, () => void, () => void] {
     // Map of node id to node, and child id to parent id, populated on initial render
     const nodeMap = useRef(new Map<string, TreeNode>()).current;
     const childToParentMap = useRef(new Map<string, string>()).current;
 
-    // Populate the maps on initial render
+    // State for the checked and indeterminate checkboxes
+    const [state, setState] = useState<__CheckBoxState__>({
+        checked: new Set(),
+        indeterminate: new Set(),
+    });
+
+    // Populate the maps and preselect nodes on initial render
     useEffect(() => {
         const processNodes = (
             nodes: TreeNode[],
@@ -33,14 +41,21 @@ export default function useCheckboxState(
             });
         };
         processNodes(initialData);
+
+        // Preselect nodes
+        const checked = new Set(state.checked);
+        const indeterminate = new Set(state.indeterminate);
+        preselectedIds.forEach(id => {
+            checked.add(id);
+            let parentId = childToParentMap.get(id);
+            while (parentId) {
+                indeterminate.add(parentId);
+                parentId = childToParentMap.get(parentId);
+            }
+        });
+        setState({ checked, indeterminate });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialData]);
-
-    // State for the checked and indeterminate checkboxes
-    const [state, setState] = useState<__CheckBoxState__>({
-        checked: new Set(),
-        indeterminate: new Set(),
-    });
 
     /**
      * Toggle the checked state of a checkbox and update its ancestors and descendants.
@@ -130,5 +145,17 @@ export default function useCheckboxState(
         [state, onSelectionChange]
     );
 
-    return [state, toggleCheckbox];
+    const selectAll = useCallback(() => {
+        const newChecked = new Set(nodeMap.keys());
+        setState({ checked: newChecked, indeterminate: new Set() });
+        onSelectionChange?.(Array.from(newChecked));
+    }, [nodeMap, onSelectionChange]);
+
+    const unselectAll = useCallback(() => {
+        setState({ checked: new Set(), indeterminate: new Set() });
+        onSelectionChange?.([]);
+    }, [onSelectionChange]);
+
+
+    return [state, toggleCheckbox, selectAll, unselectAll];
 }

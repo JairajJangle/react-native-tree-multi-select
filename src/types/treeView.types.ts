@@ -34,10 +34,17 @@ export interface TreeViewProps {
     data: TreeNode[];
     onSelectionChange?: (selectedIds: string[]) => void;
 
+    preselectedIds?: string[],
+
     searchText: string;
 
     treeFlatListProps?: TreeFlatListProps;
 
     CheckboxComponent?: React.ComponentType<CheckboxProps>;
     ExpandArrowTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
+}
+
+export interface TreeViewRef {
+    selectAll: () => void;
+    unselectAll: () => void;
 }

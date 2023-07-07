@@ -5,12 +5,12 @@ import {
     StyleSheet,
 
     TouchableOpacity,
-    type TouchableOpacityProps
+    type TouchableOpacityProps,
 } from "react-native";
+import { computed, Signal } from "@preact/signals-react";
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 import type {
-    __CheckBoxState__,
     CheckboxProps,
     TreeFlatListProps,
     TreeNode,
@@ -20,16 +20,12 @@ import type {
 } from "../types/treeView.types";
 
 import { CustomCheckboxView } from "./CustomCheckboxView";
+import { expanded, state } from "../signals/global.signals";
+import { handleToggleExpand, toggleCheckbox } from "../hooks/useCheckboxState";
 
 interface NodeListProps {
     nodes: TreeNode[];
     level: number;
-
-    state: __CheckBoxState__;
-    onCheck: (id: string) => void;
-
-    expanded: Set<string>;
-    onToggleExpand: (id: string) => void;
 
     searchText: string;
 
@@ -43,12 +39,6 @@ export default function NodeList(props: NodeListProps) {
     const {
         nodes,
         level,
-
-        state,
-        onCheck,
-
-        expanded,
-        onToggleExpand,
 
         searchText,
 
@@ -76,24 +66,27 @@ export default function NodeList(props: NodeListProps) {
         return searchText ? filterTreeData(nodes) : nodes;
     }, [filterTreeData, nodes, searchText]);
 
+    const nodeRenderer = ({ item }: { item: TreeNode; }) => {
+        return (
+            <Node
+                node={item}
+                level={level}
+                CheckboxComponent={CheckboxComponent}
+                ExpandArrowTouchableComponent={ExpandArrowTouchableComponent}
+                searchText={searchText}
+            />
+        );
+    };
+
+    const keyExtractor = (item: TreeNode) => item.id;
+
     return (
         <FlatList
             keyboardShouldPersistTaps="handled"
+            removeClippedSubviews={true}
             data={filteredNodes}
-            renderItem={({ item }) => (
-                <Node
-                    node={item}
-                    level={level}
-                    state={state}
-                    onCheck={onCheck}
-                    expanded={expanded}
-                    onToggleExpand={onToggleExpand}
-                    CheckboxComponent={CheckboxComponent}
-                    ExpandArrowTouchableComponent={ExpandArrowTouchableComponent}
-                    searchText={searchText}
-                />
-            )}
-            keyExtractor={(item) => item.id}
+            renderItem={nodeRenderer}
+            keyExtractor={keyExtractor}
             ListHeaderComponent={<HeaderFooterView />}
             ListFooterComponent={<HeaderFooterView />}
             {...treeFlatListProps}
@@ -111,12 +104,6 @@ interface NodeProps {
     node: TreeNode;
     level: number;
 
-    state: __CheckBoxState__;
-    onCheck: (id: string) => void;
-
-    expanded: Set<string>;
-    onToggleExpand: (id: string) => void;
-
     IconComponent?: React.ComponentType<ExpandIconProps>;
     CheckboxComponent?: React.ComponentType<CheckboxProps>;
     ExpandArrowTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
@@ -128,10 +115,6 @@ function Node(props: NodeProps) {
     const {
         node,
         level,
-        state,
-        onCheck,
-        expanded,
-        onToggleExpand,
         CheckboxComponent = CustomCheckboxView,
         ExpandArrowTouchableComponent = TouchableOpacity,
         searchText,
@@ -140,26 +123,32 @@ function Node(props: NodeProps) {
         // ExpandIconComponent,
     } = props;
 
-    const isChecked = state.checked.has(node.id);
-    const isIndeterminate = state.indeterminate.has(node.id);
-    const isExpanded = expanded.has(node.id);
-
-    let value: CheckboxValueType;
-    if (isIndeterminate) {
-        value = 'indeterminate';
-    } else if (isChecked) {
-        value = true;
-    } else {
-        value = false;
-    }
+    const isChecked = computed(() => {
+        return state.value.checked.has(node.id);
+    });
+    const isIndeterminate = computed(() => {
+        return state.value.indeterminate.has(node.id);
+    });
+    const value: Signal<CheckboxValueType> = computed(() => {
+        if (isIndeterminate.value) {
+            return 'indeterminate';
+        } else if (isChecked.value) {
+            return true;
+        } else {
+            return false;
+        }
+    });
+    const isExpanded = computed(() => {
+        return expanded.value.has(node.id);
+    });
 
     const _onToggleExpand = React.useCallback(() => {
-        onToggleExpand(node.id);
-    }, [node.id, onToggleExpand]);
+        handleToggleExpand(node.id);
+    }, [node.id]);
 
     const _onCheck = React.useCallback(() => {
-        onCheck(node.id);
-    }, [node.id, onCheck]);
+        toggleCheckbox(node.id);
+    }, [node.id]);
 
     return (
         <View style={[
@@ -170,7 +159,7 @@ function Node(props: NodeProps) {
                 <CheckboxComponent
                     text={node.name}
                     onValueChange={_onCheck}
-                    value={value} />
+                    value={value.value} />
 
                 {node.children?.length ? (
                     <ExpandArrowTouchableComponent
@@ -179,7 +168,7 @@ function Node(props: NodeProps) {
                         {/* <IconComponent isExpanded={isExpanded} /> */}
                         <Icon
                             name={
-                                isExpanded
+                                isExpanded.value
                                     ? 'caret-down'
                                     : 'caret-right'
                             }
@@ -189,14 +178,10 @@ function Node(props: NodeProps) {
                     </ExpandArrowTouchableComponent>
                 ) : null}
             </View>
-            {isExpanded && node.children && (
+            {isExpanded.value && node.children && (
                 <NodeList
                     nodes={node.children}
                     level={level + 1}
-                    state={state}
-                    onCheck={onCheck}
-                    expanded={expanded}
-                    onToggleExpand={onToggleExpand}
                     CheckboxComponent={CheckboxComponent}
                     ExpandArrowTouchableComponent={ExpandArrowTouchableComponent}
                     searchText={searchText}

@@ -34,8 +34,18 @@ export interface CustomCheckBoxViewProps {
     textProps?: TextProps;
 }
 
+function arePropsEqual(
+    prevProps: CustomCheckBoxViewProps,
+    nextProps: CustomCheckBoxViewProps
+) {
+    return (
+        prevProps.value === nextProps.value
+    );
+}
 
-export function CustomCheckboxView(props: CustomCheckBoxViewProps) {
+export const CustomCheckboxView = React.memo(_CustomCheckboxView, arePropsEqual);
+
+function _CustomCheckboxView(props: CustomCheckBoxViewProps) {
     const {
         value,
         onValueChange,

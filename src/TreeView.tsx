@@ -36,13 +36,45 @@ export const TreeView = forwardRef<TreeViewRef, TreeViewProps>(
 
     const handleToggleExpand = React.useCallback((id: string) => {
       const newExpanded = new Set(expanded);
+
+      // Helper function to recursively delete children from the expanded set.
+      const deleteChildrenFromExpanded = (node: TreeNode) => {
+        if (node.children) {
+          for (let child of node.children) {
+            newExpanded.delete(child.id);
+            deleteChildrenFromExpanded(child);
+          }
+        }
+      };
+
+      // Find the clicked node in the nodes array.
+      const findNode = (nodes: TreeNode[]): TreeNode | undefined => {
+        for (let node of nodes) {
+          if (node.id === id) {
+            return node;
+          } else if (node.children) {
+            const found = findNode(node.children);
+            if (found) {
+              return found;
+            }
+          }
+        }
+        return undefined;
+      };
+      const node = findNode(data);
+
       if (expanded.has(id)) {
         newExpanded.delete(id);
+        // If this node was in the expanded set, also delete all its children from the set.
+        if (node) {
+          deleteChildrenFromExpanded(node);
+        }
       } else {
         newExpanded.add(id);
       }
+
       setExpanded(newExpanded);
-    }, [expanded]);
+    }, [expanded, data]);
 
     useEffect(() => {
       if (searchText) {

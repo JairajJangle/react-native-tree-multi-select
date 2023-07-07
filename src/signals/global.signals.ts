@@ -10,3 +10,4 @@ export const expanded = signal(new Set<string>());
 export const globalData = signal<TreeNode[]>([]);
 export const nodeMap = signal(new Map<string, TreeNode>());
 export const childToParentMap = signal(new Map<string, string>());
+export const searchText = signal("");

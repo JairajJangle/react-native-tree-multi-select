@@ -39,7 +39,8 @@ function arePropsEqual(
     nextProps: CustomCheckBoxViewProps
 ) {
     return (
-        prevProps.value === nextProps.value
+        prevProps.value === nextProps.value &&
+        prevProps.text === nextProps.text
     );
 }
 

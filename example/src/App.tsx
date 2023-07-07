@@ -15,7 +15,7 @@ import {
   type CheckboxProps,
   type TreeViewRef
 } from 'react-native-tree-multi-select';
-import { sampleData1 } from './sample/sampleData1';
+import { sampleData2 } from './sample/sampleData2';
 
 // Example of HOC wrapped Checkbox to react required prop signature
 function withCheckboxProps(
@@ -70,7 +70,7 @@ export default function App() {
         style={styles.treeViewParent}>
         <TreeView
           ref={treeViewRef}
-          data={sampleData1}
+          data={sampleData2}
           onSelectionChange={handleSelectionChange}
           CheckboxComponent={withCheckboxProps(CustomCheckboxView)}
           searchText={searchText}

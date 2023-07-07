@@ -1,14 +1,14 @@
-import React, { useMemo } from "react";
+import React from "react";
 import {
-    FlatList,
     View,
     StyleSheet,
 
     TouchableOpacity,
     type TouchableOpacityProps,
 } from "react-native";
-import { computed, Signal } from "@preact/signals-react";
+import { computed, Signal, useSignal } from "@preact/signals-react";
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { FlashList } from "@shopify/flash-list";
 
 import type {
     CheckboxProps,
@@ -20,15 +20,10 @@ import type {
 } from "../types/treeView.types";
 
 import { CustomCheckboxView } from "./CustomCheckboxView";
-import { expanded, state } from "../signals/global.signals";
+import { expanded, globalData, searchText, state } from "../signals/global.signals";
 import { handleToggleExpand, toggleCheckbox } from "../hooks/useCheckboxState";
 
 interface NodeListProps {
-    nodes: TreeNode[];
-    level: number;
-
-    searchText: string;
-
     treeFlatListProps?: TreeFlatListProps;
 
     CheckboxComponent?: React.ComponentType<CheckboxProps>;
@@ -37,43 +32,48 @@ interface NodeListProps {
 
 export default function NodeList(props: NodeListProps) {
     const {
-        nodes,
-        level,
-
-        searchText,
-
         treeFlatListProps,
 
         CheckboxComponent,
         ExpandArrowTouchableComponent,
     } = props;
 
-    const filterTreeData = React.useCallback((_nodes: TreeNode[]): TreeNode[] => {
-        return _nodes.reduce<TreeNode[]>((filtered, node) => {
-            if (node.name.toLowerCase().includes(searchText.toLowerCase())) {
-                filtered.push({ ...node }); // copy node
-            } else if (node.children) {
-                const children = filterTreeData(node.children);
-                if (children.length > 0) {
-                    filtered.push({ ...node, children }); // copy node and replace children
+    const flattenedNodes = computed(() => {
+        const flattenTreeData = (
+            _nodes: TreeNode[],
+            level: number = 0,
+        ): TreeNode[] => {
+            let flattened: TreeNode[] = [];
+            for (let node of _nodes) {
+                flattened.push({ ...node, level });
+                if (node.children && expanded.value.has(node.id)) {
+                    flattened = [...flattened, ...flattenTreeData(node.children, level + 1)];
                 }
             }
-            return filtered;
-        }, []);
-    }, [searchText]);
+            return flattened;
+        };
 
-    const filteredNodes = useMemo(() => {
-        return searchText ? filterTreeData(nodes) : nodes;
-    }, [filterTreeData, nodes, searchText]);
+        return flattenTreeData(globalData.value);
+    });
+
+    const filteredNodes = computed(() => {
+        if (searchText.value.trim() === "") {
+            return flattenedNodes.value;
+        } else {
+            return flattenedNodes.value.filter(node => {
+                return node.name.toLowerCase().includes(searchText.value.toLowerCase()) ||
+                    (node.children && node.children.some(child => child.name.toLowerCase().includes(searchText.value.toLowerCase())));
+            });
+        }
+    });
 
     const nodeRenderer = ({ item }: { item: TreeNode; }) => {
         return (
             <Node
                 node={item}
-                level={level}
+                level={item.level || 0}
                 CheckboxComponent={CheckboxComponent}
                 ExpandArrowTouchableComponent={ExpandArrowTouchableComponent}
-                searchText={searchText}
             />
         );
     };
@@ -81,10 +81,11 @@ export default function NodeList(props: NodeListProps) {
     const keyExtractor = (item: TreeNode) => item.id;
 
     return (
-        <FlatList
+        <FlashList
+            estimatedItemSize={36}
             keyboardShouldPersistTaps="handled"
-            removeClippedSubviews={true}
-            data={filteredNodes}
+            drawDistance={100}
+            data={filteredNodes.value}
             renderItem={nodeRenderer}
             keyExtractor={keyExtractor}
             ListHeaderComponent={<HeaderFooterView />}
@@ -107,27 +108,31 @@ interface NodeProps {
     IconComponent?: React.ComponentType<ExpandIconProps>;
     CheckboxComponent?: React.ComponentType<CheckboxProps>;
     ExpandArrowTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
-
-    searchText: string;
 }
 
 function Node(props: NodeProps) {
     const {
-        node,
+        node: _node,
         level,
         CheckboxComponent = CustomCheckboxView,
         ExpandArrowTouchableComponent = TouchableOpacity,
-        searchText,
 
         // TODO:
         // ExpandIconComponent,
     } = props;
 
+
+    const node = useSignal(_node);
+    React.useEffect(() => {
+        node.value = _node;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [_node]);
+
     const isChecked = computed(() => {
-        return state.value.checked.has(node.id);
+        return state.value.checked.has(node.value.id);
     });
     const isIndeterminate = computed(() => {
-        return state.value.indeterminate.has(node.id);
+        return state.value.indeterminate.has(node.value.id);
     });
     const value: Signal<CheckboxValueType> = computed(() => {
         if (isIndeterminate.value) {
@@ -139,33 +144,34 @@ function Node(props: NodeProps) {
         }
     });
     const isExpanded = computed(() => {
-        return expanded.value.has(node.id);
+        return expanded.value.has(node.value.id);
     });
 
     const _onToggleExpand = React.useCallback(() => {
-        handleToggleExpand(node.id);
-    }, [node.id]);
+        handleToggleExpand(node.value.id);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const _onCheck = React.useCallback(() => {
-        toggleCheckbox(node.id);
-    }, [node.id]);
+        toggleCheckbox(node.value.id);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <View style={[
             styles.nodeParentView,
-            { marginLeft: level && 15, }
+            { marginLeft: level * 15, }
         ]}>
             <View style={styles.nodeCheckboxAndArrowRow}>
                 <CheckboxComponent
-                    text={node.name}
+                    text={node.value.name}
                     onValueChange={_onCheck}
                     value={value.value} />
 
-                {node.children?.length ? (
+                {node.value.children?.length ? (
                     <ExpandArrowTouchableComponent
                         style={styles.nodeExpandableArrowTouchable}
                         onPress={_onToggleExpand}>
-                        {/* <IconComponent isExpanded={isExpanded} /> */}
                         <Icon
                             name={
                                 isExpanded.value
@@ -178,15 +184,6 @@ function Node(props: NodeProps) {
                     </ExpandArrowTouchableComponent>
                 ) : null}
             </View>
-            {isExpanded.value && node.children && (
-                <NodeList
-                    nodes={node.children}
-                    level={level + 1}
-                    CheckboxComponent={CheckboxComponent}
-                    ExpandArrowTouchableComponent={ExpandArrowTouchableComponent}
-                    searchText={searchText}
-                />
-            )}
         </View>
     );
 };

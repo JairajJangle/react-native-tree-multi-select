@@ -1,4 +1,5 @@
-import type { FlatListProps, TouchableOpacityProps } from "react-native";
+import type { TouchableOpacityProps } from "react-native";
+import type { FlashListProps } from "@shopify/flash-list";
 
 export type CheckboxValueType = boolean | 'indeterminate';
 
@@ -21,10 +22,11 @@ export interface TreeNode {
     id: string;
     name: string;
     children?: TreeNode[];
+    level?: number;
 }
 
 export type TreeFlatListProps<ItemT = any> = Omit<
-    FlatListProps<ItemT>,
+    FlashListProps<ItemT>,
     "data"
     | "renderItem"
     | "keyExtractor"

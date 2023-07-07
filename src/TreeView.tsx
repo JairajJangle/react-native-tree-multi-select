@@ -10,7 +10,14 @@ import {
   unselectAll
 } from './hooks/useCheckboxState';
 import { effect } from "@preact/signals-react";
-import { expanded, globalData, state } from './signals/global.signals';
+import {
+  childToParentMap,
+  expanded,
+  globalData,
+  nodeMap,
+  searchText,
+  state
+} from './signals/global.signals';
 import initializeNodeMaps from './hooks/useCheckboxState';
 import { InteractionManager } from 'react-native';
 
@@ -22,43 +29,61 @@ export const TreeView = forwardRef<TreeViewRef, TreeViewProps>(
 
       preselectedIds,
 
-      searchText,
+      searchText: _searchText,
 
       CheckboxComponent,
     } = props;
-
-    useEffect(() => {
-      initializeNodeMaps(
-        data,
-        preselectedIds,
-      );
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    globalData.value = data;
 
     useImperativeHandle(ref, () => ({
       selectAll,
       unselectAll,
     }));
 
+    useEffect(() => {
+      globalData.value = data;
+      initializeNodeMaps(
+        data,
+        preselectedIds,
+      );
+    }, [data, preselectedIds]);
+
+    useEffect(() => {
+      searchText.value = _searchText;
+    }, [_searchText]);
+
     const disposeCheckedStateEffect = effect(() => {
       onSelectionChange && onSelectionChange(Array.from(state.value.checked));
     });
 
-    disposeCheckedStateEffect();
-
     useEffect(() => {
-      InteractionManager.runAfterInteractions(() => {
-        if (searchText) {
-          expanded.value = (new Set(data.flatMap((item) => getIds(item))));
-        }
-        else {
-          expanded.value = (new Set());
-        }
-      });
+      return () => {
+        // Cleanup all global signals and signal effects
+        disposeCheckedStateEffect();
+        state.value = ({
+          checked: new Set(),
+          indeterminate: new Set(),
+        });
+        expanded.value = new Set<string>();
+        globalData.value = [];
+        nodeMap.value = new Map<string, TreeNode>();
+        childToParentMap.value = new Map<string, string>();
+        searchText.value = "";
+      };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchText, data]);
+    }, []);
+
+    effect(() => {
+      if (searchText.value) {
+        InteractionManager.runAfterInteractions(() => {
+          expanded.value = (new Set(globalData.value.flatMap((item) => getIds(item))));
+        });
+      }
+      else {
+        InteractionManager.runAfterInteractions(() => {
+          expanded.value = (new Set());
+        });
+      }
+    });
 
     const getIds = (node: TreeNode): string[] => {
       if (!node.children || node.children.length === 0) {
@@ -70,9 +95,6 @@ export const TreeView = forwardRef<TreeViewRef, TreeViewProps>(
 
     return (
       <NodeList
-        nodes={data}
-        level={0}
-        searchText={searchText}
         CheckboxComponent={CheckboxComponent}
       />
     );

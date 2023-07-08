@@ -32,7 +32,10 @@ import {
     searchText,
     state
 } from "../signals/global.signals";
-import { handleToggleExpand, toggleCheckbox } from "../hooks/useCheckboxState";
+import {
+    handleToggleExpand,
+    toggleCheckbox
+} from "../helpers";
 import { CheckboxProps } from "react-native-paper";
 import { CheckboxView } from "./CheckboxView";
 

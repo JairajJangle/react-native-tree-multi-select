@@ -20,17 +20,12 @@ export default function App() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSetSearchText = React.useCallback(
-    debounce((text) => treeViewRef.current?.setSearchText(text), 250, {
+    debounce((text) => treeViewRef.current?.setSearchText(text), 500, {
       leading: false,
       trailing: true,
     }),
-    []  // debounce will be recreated if dependencies change
+    []
   );
-
-  // Set text directly into searchText state
-  const handleSearchTextChange = (text: string) => {
-    debouncedSetSearchText(text);
-  };
 
   const handleSelectionChange = (selectedIds: string[]) => {
     console.debug('Selected ids:', selectedIds);
@@ -39,7 +34,7 @@ export default function App() {
   return (
     <SafeAreaView
       style={styles.mainView}>
-      <SearchInput onChange={handleSearchTextChange} />
+      <SearchInput onChange={debouncedSetSearchText} />
       <View
         style={styles.selectionButtonRow}>
         <Button

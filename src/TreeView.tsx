@@ -13,8 +13,9 @@ import {
   selectAll,
   selectAllFiltered,
   unselectAll,
-  unselectAllFiltered
-} from './hooks/useCheckboxState';
+  unselectAllFiltered,
+  initializeNodeMaps
+} from './helpers';
 import { effect } from "@preact/signals-react";
 import {
   childToParentMap,
@@ -24,7 +25,6 @@ import {
   searchText,
   state
 } from './signals/global.signals';
-import initializeNodeMaps from './hooks/useCheckboxState';
 import { InteractionManager } from 'react-native';
 
 const _TreeView = forwardRef<TreeViewRef, TreeViewProps>(

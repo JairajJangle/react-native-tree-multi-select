@@ -28,8 +28,11 @@ export default function App() {
     []
   );
 
-  const handleSelectionChange = (selectedIds: string[]) => {
-    console.debug('Selected ids:', selectedIds);
+  const handleSelectionChange = (checkedIds: string[]) => {
+    console.debug('Selected ids:', checkedIds);
+  };
+  const handleExpanded = (expandedIds: string[]) => {
+    console.debug('expanded ids:', expandedIds);
   };
 
   return (
@@ -82,7 +85,8 @@ export default function App() {
         <TreeView
           ref={treeViewRef}
           data={sampleData.current}
-          onSelectionChange={handleSelectionChange}
+          onCheck={handleSelectionChange}
+          onExpand={handleExpanded}
         />
       </View>
     </SafeAreaView>

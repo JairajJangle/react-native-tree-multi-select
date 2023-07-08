@@ -33,7 +33,9 @@ const _TreeView = forwardRef<TreeViewRef, TreeViewProps>(
   (props, ref) => {
     const {
       data,
-      onSelectionChange,
+
+      onCheck,
+      onExpand,
 
       preselectedIds,
 
@@ -71,13 +73,17 @@ const _TreeView = forwardRef<TreeViewRef, TreeViewProps>(
     }, [data, preselectedIds]);
 
     const disposeCheckedStateEffect = effect(() => {
-      onSelectionChange && onSelectionChange(Array.from(state.value.checked));
+      onCheck && onCheck(Array.from(state.value.checked));
+    });
+    const disposeExpandedStateEffect = effect(() => {
+      onExpand && onExpand(Array.from(expanded.value));
     });
 
     useEffect(() => {
       return () => {
         // Cleanup all global signals and signal effects
         disposeCheckedStateEffect();
+        disposeExpandedStateEffect();
         state.value = ({
           checked: new Set(),
           indeterminate: new Set(),

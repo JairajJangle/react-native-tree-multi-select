@@ -31,7 +31,9 @@ export type TreeFlatListProps<ItemT = any> = Omit<
 
 export interface TreeViewProps {
     data: TreeNode[];
-    onSelectionChange?: (selectedIds: string[]) => void;
+
+    onCheck?: (checkedIds: string[]) => void;
+    onExpand?: (expandedIds: string[]) => void;
 
     preselectedIds?: string[],
 

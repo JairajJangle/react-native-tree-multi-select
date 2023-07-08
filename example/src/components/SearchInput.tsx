@@ -11,21 +11,16 @@ export default SearchInput;
 function _SearchInput(props: Props) {
   const { onChange } = props;
 
-  const [text, setText] = React.useState('');
-
   const handleChange = (value: string) => {
-    setText(value);
     onChange(value);
   };
 
   return (
     <TextInput
       style={styles.textInput}
-      value={text}
       onChangeText={handleChange}
       placeholder='Search here'
       placeholderTextColor={"#888"}
-      blurOnSubmit
     />
   );
 }
@@ -33,6 +28,7 @@ function _SearchInput(props: Props) {
 
 const styles = StyleSheet.create({
   textInput: {
+    color: "black",
     borderRadius: 10,
     margin: 10,
     padding: 10,

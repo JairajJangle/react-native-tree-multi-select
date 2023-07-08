@@ -13,7 +13,6 @@ import {
     useComputed,
     useSignal
 } from "@preact/signals-react";
-import Icon from 'react-native-vector-icons/FontAwesome';
 import { FlashList } from "@shopify/flash-list";
 
 import type {
@@ -22,7 +21,8 @@ import type {
 
     CheckboxValueType,
     ExpandIconProps,
-    CustomCheckBoxViewProps,
+    CheckBoxViewStyleProps,
+    CheckBoxViewProps,
 } from "../types/treeView.types";
 
 import {
@@ -36,14 +36,16 @@ import {
     handleToggleExpand,
     toggleCheckboxes
 } from "../helpers";
-import { CheckboxProps } from "react-native-paper";
 import { CheckboxView } from "./CheckboxView";
+import CustomExpandCollapseIcon from "./CustomExpandCollapseIcon";
 
 interface NodeListProps {
     treeFlashListProps?: TreeFlatListProps;
-    customCheckBoxViewProps?: CustomCheckBoxViewProps;
+    checkBoxViewStyleProps?: CheckBoxViewStyleProps;
 
-    ExpandArrowTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
+    CheckboxComponent?: React.ComponentType<CheckBoxViewProps>;
+    ExpandCollapseIconComponent?: React.ComponentType<ExpandIconProps>;
+    ExpandCollapseTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
 }
 
 const NodeList = React.memo(_NodeList);
@@ -52,8 +54,11 @@ export default NodeList;
 function _NodeList(props: NodeListProps) {
     const {
         treeFlashListProps,
-        customCheckBoxViewProps,
-        ExpandArrowTouchableComponent,
+        checkBoxViewStyleProps,
+
+        CheckboxComponent,
+        ExpandCollapseIconComponent,
+        ExpandCollapseTouchableComponent,
     } = props;
 
     const filteredTree = computed(() => {
@@ -122,8 +127,11 @@ function _NodeList(props: NodeListProps) {
             <Node
                 node={item}
                 level={item.level || 0}
-                customCheckBoxViewProps={customCheckBoxViewProps}
-                ExpandArrowTouchableComponent={ExpandArrowTouchableComponent}
+                checkBoxViewStyleProps={checkBoxViewStyleProps}
+
+                CheckboxComponent={CheckboxComponent}
+                ExpandCollapseIconComponent={ExpandCollapseIconComponent}
+                ExpandCollapseTouchableComponent={ExpandCollapseTouchableComponent}
             />
         );
     };
@@ -156,11 +164,11 @@ interface NodeProps {
     node: TreeNode;
     level: number;
 
-    customCheckBoxViewProps?: CustomCheckBoxViewProps;
+    checkBoxViewStyleProps?: CheckBoxViewStyleProps;
 
-    IconComponent?: React.ComponentType<ExpandIconProps>;
-    CheckboxComponent?: React.ComponentType<CheckboxProps>;
-    ExpandArrowTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
+    ExpandCollapseIconComponent?: React.ComponentType<ExpandIconProps>;
+    CheckboxComponent?: React.ComponentType<CheckBoxViewProps>;
+    ExpandCollapseTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
 }
 
 const Node = React.memo(_Node);
@@ -169,12 +177,11 @@ function _Node(props: NodeProps) {
         node: _node,
         level,
 
-        customCheckBoxViewProps,
+        checkBoxViewStyleProps,
 
-        ExpandArrowTouchableComponent = TouchableOpacity,
-
-        // TODO:
-        // ExpandIconComponent,
+        ExpandCollapseIconComponent = CustomExpandCollapseIcon,
+        CheckboxComponent = CheckboxView,
+        ExpandCollapseTouchableComponent = TouchableOpacity,
     } = props;
 
     const node = useSignal(_node);
@@ -214,26 +221,20 @@ function _Node(props: NodeProps) {
             { marginLeft: level * 15, }
         ]}>
             <View style={styles.nodeCheckboxAndArrowRow}>
-                <CheckboxView
+                <CheckboxComponent
                     text={node.value.name}
                     onValueChange={_onCheck}
                     value={value.value}
-                    {...customCheckBoxViewProps} />
+                    {...checkBoxViewStyleProps} />
 
                 {node.value.children?.length ? (
-                    <ExpandArrowTouchableComponent
+                    <ExpandCollapseTouchableComponent
                         style={styles.nodeExpandableArrowTouchable}
                         onPress={_onToggleExpand}>
-                        <Icon
-                            name={
-                                isExpanded.value
-                                    ? 'caret-down'
-                                    : 'caret-right'
-                            }
-                            size={20}
-                            color="black"
+                        <ExpandCollapseIconComponent
+                            isExpanded={isExpanded.value}
                         />
-                    </ExpandArrowTouchableComponent>
+                    </ExpandCollapseTouchableComponent>
                 ) : null}
             </View>
         </View>

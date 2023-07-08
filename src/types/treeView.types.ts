@@ -36,13 +36,22 @@ export interface TreeViewProps {
     preselectedIds?: string[],
 
     treeFlashListProps?: TreeFlatListProps;
-    customCheckBoxViewProps?: CustomCheckBoxViewProps;
+    checkBoxViewStyleProps?: CheckBoxViewStyleProps;
 
-    ExpandArrowTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
+    CheckboxComponent?: React.ComponentType<CheckBoxViewProps>;
+    ExpandCollapseIconComponent?: React.ComponentType<ExpandIconProps>;
+    ExpandCollapseTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
 }
 
 type CheckboxProps = Omit<RNPaperCheckboxAndroidProps, "onPress" | "status">;
-export interface CustomCheckBoxViewProps {
+
+export interface CheckBoxViewProps extends CheckBoxViewStyleProps {
+    value: CheckboxValueType;
+    onValueChange: (value: boolean) => void;
+    text: string;
+}
+
+export interface CheckBoxViewStyleProps {
     // Optional style modifiers
     outermostParentViewStyle?: StyleProp<ViewStyle> | {};
     checkboxParentViewStyle?: StyleProp<ViewStyle> | {};

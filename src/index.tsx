@@ -1,18 +1,22 @@
 import type {
-    ExpandIconProps,
     TreeNode,
     TreeViewProps,
     TreeViewRef,
-    CustomCheckBoxViewProps
+    TreeFlatListProps,
+    ExpandIconProps,
+    CheckBoxViewProps,
+    CheckBoxViewStyleProps
 } from "./types/treeView.types";
 
 export * from "./TreeView";
 export * from "./components/CheckboxView";
 
 export type {
-    ExpandIconProps,
     TreeNode,
     TreeViewProps,
     TreeViewRef,
-    CustomCheckBoxViewProps
+    TreeFlatListProps,
+    ExpandIconProps,
+    CheckBoxViewProps,
+    CheckBoxViewStyleProps
 };

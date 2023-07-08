@@ -38,7 +38,11 @@ const _TreeView = forwardRef<TreeViewRef, TreeViewProps>(
       preselectedIds,
 
       treeFlashListProps,
-      customCheckBoxViewProps,
+      checkBoxViewStyleProps,
+
+      CheckboxComponent,
+      ExpandCollapseIconComponent,
+      ExpandCollapseTouchableComponent
     } = props;
 
     useImperativeHandle(ref, () => ({
@@ -111,7 +115,11 @@ const _TreeView = forwardRef<TreeViewRef, TreeViewProps>(
     return (
       <NodeList
         treeFlashListProps={treeFlashListProps}
-        customCheckBoxViewProps={customCheckBoxViewProps}
+        checkBoxViewStyleProps={checkBoxViewStyleProps}
+
+        CheckboxComponent={CheckboxComponent}
+        ExpandCollapseIconComponent={ExpandCollapseIconComponent}
+        ExpandCollapseTouchableComponent={ExpandCollapseTouchableComponent}
       />
     );
   }

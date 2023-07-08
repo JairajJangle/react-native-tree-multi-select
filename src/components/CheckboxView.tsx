@@ -9,15 +9,9 @@ import {
 
 import { Checkbox } from 'react-native-paper';
 import type {
-    CheckboxValueType,
-    CustomCheckBoxViewProps
+    CheckBoxViewProps,
+    CheckboxValueType
 } from "../types/treeView.types";
-
-export interface CheckBoxViewProps extends CustomCheckBoxViewProps {
-    value: CheckboxValueType;
-    onValueChange: (value: boolean) => void;
-    text: string;
-}
 
 function arePropsEqual(
     prevProps: CheckBoxViewProps,

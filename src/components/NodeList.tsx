@@ -10,6 +10,7 @@ import {
     computed,
     effect,
     Signal,
+    useComputed,
     useSignal
 } from "@preact/signals-react";
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -134,7 +135,7 @@ function _NodeList(props: NodeListProps) {
             estimatedItemSize={36}
             removeClippedSubviews={true}
             keyboardShouldPersistTaps="handled"
-            drawDistance={100}
+            drawDistance={50}
             data={flattenedFilteredNodes.value}
             renderItem={nodeRenderer}
             keyExtractor={keyExtractor}
@@ -182,13 +183,11 @@ function _Node(props: NodeProps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [_node]);
 
-    const isChecked = computed(() => {
-        return state.value.checked.has(node.value.id);
-    });
-    const isIndeterminate = computed(() => {
-        return state.value.indeterminate.has(node.value.id);
-    });
-    const value: Signal<CheckboxValueType> = computed(() => {
+    const isChecked = useComputed(() => state.value.checked.has(node.value.id));
+    const isIndeterminate = useComputed(() => state.value.indeterminate.has(
+        node.value.id
+    ));
+    const value: Signal<CheckboxValueType> = useComputed(() => {
         if (isIndeterminate.value) {
             return 'indeterminate';
         } else if (isChecked.value) {
@@ -197,9 +196,7 @@ function _Node(props: NodeProps) {
             return false;
         }
     });
-    const isExpanded = computed(() => {
-        return expanded.value.has(node.value.id);
-    });
+    const isExpanded = useComputed(() => expanded.value.has(node.value.id));
 
     const _onToggleExpand = React.useCallback(() => {
         handleToggleExpand(node.value.id);

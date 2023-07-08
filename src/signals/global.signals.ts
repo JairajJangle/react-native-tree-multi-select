@@ -11,5 +11,4 @@ export const globalData = signal<TreeNode[]>([]);
 export const nodeMap = signal(new Map<string, TreeNode>());
 export const childToParentMap = signal(new Map<string, string>());
 export const searchText = signal("");
-export const flattenedFilteredNodes = signal<TreeNode[]>([]);
 export const innerMostChildrenIds = signal<string[]>([]);

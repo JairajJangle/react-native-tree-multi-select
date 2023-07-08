@@ -1,17 +1,23 @@
-import { batch } from "@preact/signals-react";
-import { innerMostChildrenIds, nodeMap, state } from "../signals/global.signals";
-import { toggleCheckbox } from "./toggleCheckbox.helper";
+import {
+    innerMostChildrenIds,
+    nodeMap,
+    searchText,
+    state
+} from "../signals/global.signals";
+import { toggleCheckboxes } from "./toggleCheckbox.helper";
 
 export function selectAllFiltered() {
-    batch(() => {
-        innerMostChildrenIds.value.forEach(i => toggleCheckbox(i, true));
-    });
+    if (!searchText.value)
+        selectAll();
+    else
+        toggleCheckboxes(innerMostChildrenIds.value, true);
 };
 
 export function unselectAllFiltered() {
-    batch(() => {
-        innerMostChildrenIds.value.forEach(i => toggleCheckbox(i, false));
-    });
+    if (!searchText.value)
+        unselectAll();
+    else
+        toggleCheckboxes(innerMostChildrenIds.value, false);
 };
 
 export function selectAll() {

@@ -60,5 +60,8 @@ export interface TreeViewRef {
     selectAllFiltered: () => void;
     unselectAllFiltered: () => void;
 
+    expandAll: () => void;
+    collapseAll: () => void;
+
     setSearchText: (searchText: string) => void;
 }

@@ -26,7 +26,6 @@ import type {
 
 import {
     expanded,
-    flattenedFilteredNodes,
     globalData,
     innerMostChildrenIds,
     searchText,
@@ -34,7 +33,7 @@ import {
 } from "../signals/global.signals";
 import {
     handleToggleExpand,
-    toggleCheckbox
+    toggleCheckboxes
 } from "../helpers";
 import { CheckboxProps } from "react-native-paper";
 import { CheckboxView } from "./CheckboxView";
@@ -82,7 +81,7 @@ function _NodeList(props: NodeListProps) {
         return filterTreeData(globalData.value);
     });
 
-    effect(() => {
+    const flattenedFilteredNodes = computed(() => {
         const flattenTreeData = (
             _nodes: TreeNode[],
             level: number = 0,
@@ -97,7 +96,7 @@ function _NodeList(props: NodeListProps) {
             return flattened;
         };
 
-        flattenedFilteredNodes.value = flattenTreeData(filteredTree.value);
+        return flattenTreeData(filteredTree.value);
     });
 
     effect(() => {
@@ -133,6 +132,7 @@ function _NodeList(props: NodeListProps) {
     return (
         <FlashList
             estimatedItemSize={36}
+            removeClippedSubviews={true}
             keyboardShouldPersistTaps="handled"
             drawDistance={100}
             data={flattenedFilteredNodes.value}
@@ -176,7 +176,6 @@ function _Node(props: NodeProps) {
         // ExpandIconComponent,
     } = props;
 
-
     const node = useSignal(_node);
     React.useEffect(() => {
         node.value = _node;
@@ -208,7 +207,7 @@ function _Node(props: NodeProps) {
     }, []);
 
     const _onCheck = React.useCallback(() => {
-        toggleCheckbox(node.value.id);
+        toggleCheckboxes([node.value.id]);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

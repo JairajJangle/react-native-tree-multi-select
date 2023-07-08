@@ -1,5 +1,9 @@
 import { TreeNode } from "../types/treeView.types";
-import { expanded, globalData } from "../signals/global.signals";
+import {
+    expanded,
+    globalData,
+    nodeMap
+} from "../signals/global.signals";
 
 export function handleToggleExpand(id: string) {
     const newExpanded = new Set(expanded.value);
@@ -41,5 +45,15 @@ export function handleToggleExpand(id: string) {
         newExpanded.add(id);
     }
 
+    expanded.value = newExpanded;
+};
+
+export function expandAll() {
+    const newExpanded = new Set(nodeMap.value.keys());
+    expanded.value = newExpanded;
+};
+
+export function collapseAll() {
+    const newExpanded = new Set<string>();
     expanded.value = newExpanded;
 };

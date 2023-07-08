@@ -14,7 +14,9 @@ import {
   selectAllFiltered,
   unselectAll,
   unselectAllFiltered,
-  initializeNodeMaps
+  initializeNodeMaps,
+  expandAll,
+  collapseAll
 } from './helpers';
 import { effect } from "@preact/signals-react";
 import {
@@ -45,6 +47,9 @@ const _TreeView = forwardRef<TreeViewRef, TreeViewProps>(
 
       selectAllFiltered,
       unselectAllFiltered,
+
+      expandAll,
+      collapseAll,
 
       setSearchText
     }));

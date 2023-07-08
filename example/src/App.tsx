@@ -11,11 +11,11 @@ import {
   TreeView,
   type TreeViewRef
 } from 'react-native-tree-multi-select';
-import { sampleData2 } from './sample/sampleData2';
+import { sampleData3 } from './sample/sampleData3';
 import SearchInput from './components/SearchInput';
 
 export default function App() {
-  const sampleData = React.useRef(sampleData2);
+  const sampleData = React.useRef(sampleData3);
   const treeViewRef = React.useRef<TreeViewRef | null>(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -59,6 +59,20 @@ export default function App() {
           title='Unselect Filtered'
           onPress={() => {
             treeViewRef.current?.unselectAllFiltered?.();
+          }} />
+      </View>
+
+      <View
+        style={styles.selectionButtonRow}>
+        <Button
+          title='Expand All'
+          onPress={() => {
+            treeViewRef.current?.expandAll?.();
+          }} />
+        <Button
+          title='Collapse All'
+          onPress={() => {
+            treeViewRef.current?.collapseAll?.();
           }} />
       </View>
 

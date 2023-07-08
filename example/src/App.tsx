@@ -20,9 +20,10 @@ export default function App() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSetSearchText = React.useCallback(
-    debounce((text) => treeViewRef.current?.setSearchText(text), 500, {
-      leading: false,
+    debounce((text) => treeViewRef.current?.setSearchText(text), 300, {
+      leading: true,
       trailing: true,
+      maxWait: 900
     }),
     []
   );
@@ -63,7 +64,7 @@ export default function App() {
       </View>
 
       <View
-        style={styles.selectionButtonRow}>
+        style={[styles.selectionButtonRow, styles.selectionButtonBottom]}>
         <Button
           title='Expand All'
           onPress={() => {
@@ -96,17 +97,18 @@ const styles = StyleSheet.create({
   },
   selectionButtonRow: {
     borderTopWidth: 0.5,
-    borderColor: "grey",
-    paddingTop: 5,
+    borderColor: "lightgrey",
+    paddingVertical: 2,
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 10,
+    marginHorizontal: 10,
+  },
+  selectionButtonBottom: {
+    borderBottomWidth: 0.5,
+    borderColor: "lightgrey"
   },
   treeViewParent: {
     flex: 1,
-    minWidth: "100%",
-    borderTopWidth: 0.5,
-    marginTop: 5,
-    borderColor: "grey",
+    minWidth: "100%"
   }
 });

@@ -3,11 +3,17 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from 'react';
-import type { TreeNode, TreeViewProps, TreeViewRef } from './types/treeView.types';
+import type {
+  TreeNode,
+  TreeViewProps,
+  TreeViewRef
+} from './types/treeView.types';
 import NodeList from './components/NodeList';
 import {
   selectAll,
-  unselectAll
+  selectAllFiltered,
+  unselectAll,
+  unselectAllFiltered
 } from './hooks/useCheckboxState';
 import { effect } from "@preact/signals-react";
 import {
@@ -21,7 +27,7 @@ import {
 import initializeNodeMaps from './hooks/useCheckboxState';
 import { InteractionManager } from 'react-native';
 
-export const TreeView = forwardRef<TreeViewRef, TreeViewProps>(
+const _TreeView = forwardRef<TreeViewRef, TreeViewProps>(
   (props, ref) => {
     const {
       data,
@@ -29,15 +35,23 @@ export const TreeView = forwardRef<TreeViewRef, TreeViewProps>(
 
       preselectedIds,
 
-      searchText: _searchText,
-
-      CheckboxComponent,
+      treeFlashListProps,
+      customCheckBoxViewProps,
     } = props;
 
     useImperativeHandle(ref, () => ({
       selectAll,
       unselectAll,
+
+      selectAllFiltered,
+      unselectAllFiltered,
+
+      setSearchText
     }));
+
+    function setSearchText(text: string) {
+      searchText.value = text;
+    }
 
     useEffect(() => {
       globalData.value = data;
@@ -46,10 +60,6 @@ export const TreeView = forwardRef<TreeViewRef, TreeViewProps>(
         preselectedIds,
       );
     }, [data, preselectedIds]);
-
-    useEffect(() => {
-      searchText.value = _searchText;
-    }, [_searchText]);
 
     const disposeCheckedStateEffect = effect(() => {
       onSelectionChange && onSelectionChange(Array.from(state.value.checked));
@@ -95,8 +105,11 @@ export const TreeView = forwardRef<TreeViewRef, TreeViewProps>(
 
     return (
       <NodeList
-        CheckboxComponent={CheckboxComponent}
+        treeFlashListProps={treeFlashListProps}
+        customCheckBoxViewProps={customCheckBoxViewProps}
       />
     );
   }
 );
+
+export const TreeView = React.memo(_TreeView);

@@ -2,12 +2,15 @@ import type { TreeNode } from "../types/treeView.types";
 import {
     childToParentMap,
     expanded,
+    flattenedFilteredNodes,
     globalData,
+    innerMostChildrenIds,
     nodeMap,
     state
 } from "../signals/global.signals";
+import { batch } from "@preact/signals-react";
 
-export const toggleCheckbox = (id: string) => {
+export const toggleCheckbox = (id: string, forceCheck?: boolean) => {
     const checked = new Set(state.value.checked);
     const indeterminate = new Set(state.value.indeterminate);
 
@@ -71,7 +74,7 @@ export const toggleCheckbox = (id: string) => {
 
     // Toggle the clicked node and its children
     const isChecked = checked.has(id);
-    toggleNodeAndChildren(id, !isChecked);
+    toggleNodeAndChildren(id, forceCheck === undefined ? !isChecked : forceCheck);
 
     // Update the indeterminate state of all nodes
     let currentNodeId: string | undefined = id;
@@ -81,9 +84,36 @@ export const toggleCheckbox = (id: string) => {
     }
 
     state.value = ({ checked, indeterminate });
+};
 
-    // Call the callback function with the selected ids
-    // onSelectionChange?.(Array.from(checked));
+export function getInnerMostChildrenIds() {
+    const allLeafIds: string[] = [];
+
+    const getLeafNodes = (_nodes: TreeNode[]) => {
+        for (let node of _nodes) {
+            if (node.children) {
+                getLeafNodes(node.children);
+            } else {
+                allLeafIds.push(node.id);
+            }
+        }
+    };
+
+    getLeafNodes(flattenedFilteredNodes.value);
+
+    return allLeafIds;
+}
+
+export const selectAllFiltered = () => {
+    batch(() => {
+        innerMostChildrenIds.value.forEach(i => toggleCheckbox(i, true));
+    });
+};
+
+export const unselectAllFiltered = () => {
+    batch(() => {
+        innerMostChildrenIds.value.forEach(i => toggleCheckbox(i, false));
+    });
 };
 
 export const selectAll = () => {

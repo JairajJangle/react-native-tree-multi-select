@@ -3,40 +3,25 @@ import {
     Platform,
     StyleSheet,
     Text,
-    TouchableWithoutFeedback,
-    View,
-    type StyleProp,
-    type ViewStyle,
-    type TextProps
+    TouchableOpacity,
+    View
 } from "react-native";
 
 import { Checkbox } from 'react-native-paper';
-import {
-    type Props
-} from 'react-native-paper/src/components/Checkbox/CheckboxAndroid';
+import type {
+    CheckboxValueType,
+    CustomCheckBoxViewProps
+} from "../types/treeView.types";
 
-import type { CheckboxValueType } from "../types/treeView.types";
-
-type CheckboxProps = Omit<Props, "onPress" | "status">;
-
-export interface CustomCheckBoxViewProps {
+export interface CheckBoxViewProps extends CustomCheckBoxViewProps {
     value: CheckboxValueType;
     onValueChange: (value: boolean) => void;
     text: string;
-
-    // Optional style modifiers
-    outermostParentViewStyle?: StyleProp<ViewStyle> | {};
-    checkboxParentViewStyle?: StyleProp<ViewStyle> | {};
-    textTouchableStyle?: StyleProp<ViewStyle> | {};
-
-    // Optional checkbox and text component props
-    checkboxProps?: CheckboxProps;
-    textProps?: TextProps;
 }
 
 function arePropsEqual(
-    prevProps: CustomCheckBoxViewProps,
-    nextProps: CustomCheckBoxViewProps
+    prevProps: CheckBoxViewProps,
+    nextProps: CheckBoxViewProps
 ) {
     return (
         prevProps.value === nextProps.value &&
@@ -44,9 +29,9 @@ function arePropsEqual(
     );
 }
 
-export const CustomCheckboxView = React.memo(_CustomCheckboxView, arePropsEqual);
+export const CheckboxView = React.memo(_CheckboxView, arePropsEqual);
 
-function _CustomCheckboxView(props: CustomCheckBoxViewProps) {
+function _CheckboxView(props: CheckBoxViewProps) {
     const {
         value,
         onValueChange,
@@ -103,14 +88,14 @@ function _CustomCheckboxView(props: CustomCheckBoxViewProps) {
             </View>
 
             {text ? (
-                <TouchableWithoutFeedback
+                <TouchableOpacity
                     style={textTouchableStyle}
                     onPress={onValueChangeModifier}>
                     <Text
                         {...textProps}>
                         {text}
                     </Text>
-                </TouchableWithoutFeedback>
+                </TouchableOpacity>
             ) : null}
         </View>
     );

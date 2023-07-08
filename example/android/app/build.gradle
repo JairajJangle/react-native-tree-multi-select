@@ -78,8 +78,8 @@ android {
         applicationId "com.treemultiselectexample"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 21
+        versionName "0.3.0"
     }
     signingConfigs {
         debug {

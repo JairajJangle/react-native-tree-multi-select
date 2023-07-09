@@ -2,7 +2,7 @@
 
 Tree view with multi selection using checkbox + search filtering.
 
-![License](https://img.shields.io/github/license/JairajJangle/react-native-tree-multi-select) ![Workflow Status](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml/badge.svg)
+[![npm version](https://badge.fury.io/js/react-native-tree-multi-select.svg)](https://badge.fury.io/js/react-native-tree-multi-select)![License](https://img.shields.io/github/license/JairajJangle/react-native-tree-multi-select) ![Workflow Status](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml/badge.svg)
 
 ## Demo
 

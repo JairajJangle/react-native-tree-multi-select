@@ -20,19 +20,19 @@ export default function App() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSetSearchText = React.useCallback(
-    debounce((text) => treeViewRef.current?.setSearchText(text), 300, {
+    debounce((text) => treeViewRef.current?.setSearchText(text), 500, {
       leading: true,
       trailing: true,
-      maxWait: 900
+      maxWait: 1000
     }),
     []
   );
 
-  const handleSelectionChange = (checkedIds: string[]) => {
-    console.debug('Selected ids:', checkedIds);
+  const handleSelectionChange = (_checkedIds: string[]) => {
+    // NOTE: Handle _checkedIds here
   };
-  const handleExpanded = (expandedIds: string[]) => {
-    console.debug('expanded ids:', expandedIds);
+  const handleExpanded = (_expandedIds: string[]) => {
+    // NOTE: Handle _expandedIds here
   };
 
   return (

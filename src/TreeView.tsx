@@ -20,10 +20,10 @@ import {
 } from './helpers';
 import { effect } from "@preact/signals-react";
 import {
-  childToParentMap,
+  cleanUpGlobalSignals,
   expanded,
   globalData,
-  nodeMap,
+  searchKeys,
   searchText,
   state
 } from './signals/global.signals';
@@ -60,8 +60,9 @@ const _TreeView = forwardRef<TreeViewRef, TreeViewProps>(
       setSearchText
     }));
 
-    function setSearchText(text: string) {
+    function setSearchText(text: string, keys: string[] = ["name"]) {
       searchText.value = text;
+      searchKeys.value = keys;
     }
 
     useEffect(() => {
@@ -72,51 +73,55 @@ const _TreeView = forwardRef<TreeViewRef, TreeViewProps>(
       );
     }, [data, preselectedIds]);
 
-    const disposeCheckedStateEffect = effect(() => {
-      onCheck && onCheck(Array.from(state.value.checked));
-    });
-    const disposeExpandedStateEffect = effect(() => {
-      onExpand && onExpand(Array.from(expanded.value));
-    });
+    const disposeCheckedStateEffect = React.useMemo(() => {
+      return effect(() => {
+        onCheck && onCheck(Array.from(state.value.checked));
+      });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const disposeExpandedStateEffect = React.useMemo(() => {
+      return effect(() => {
+        onExpand && onExpand(Array.from(expanded.value));
+      });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const disposeSearchStateEffect = React.useMemo(() => {
+      return effect(() => {
+        if (searchText.value) {
+          InteractionManager.runAfterInteractions(() => {
+            expanded.value = (new Set(globalData.value.flatMap((item) => getIds(item))));
+          });
+        }
+        else {
+          InteractionManager.runAfterInteractions(() => {
+            expanded.value = (new Set());
+          });
+        }
+      });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
       return () => {
         // Cleanup all global signals and signal effects
         disposeCheckedStateEffect();
         disposeExpandedStateEffect();
-        state.value = ({
-          checked: new Set(),
-          indeterminate: new Set(),
-        });
-        expanded.value = new Set<string>();
-        globalData.value = [];
-        nodeMap.value = new Map<string, TreeNode>();
-        childToParentMap.value = new Map<string, string>();
-        searchText.value = "";
+        disposeSearchStateEffect();
+
+        cleanUpGlobalSignals();
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    effect(() => {
-      if (searchText.value) {
-        InteractionManager.runAfterInteractions(() => {
-          expanded.value = (new Set(globalData.value.flatMap((item) => getIds(item))));
-        });
-      }
-      else {
-        InteractionManager.runAfterInteractions(() => {
-          expanded.value = (new Set());
-        });
-      }
-    });
-
-    const getIds = (node: TreeNode): string[] => {
+    const getIds = React.useCallback((node: TreeNode): string[] => {
       if (!node.children || node.children.length === 0) {
         return [node.id];
       } else {
         return [node.id, ...node.children.flatMap((item) => getIds(item))];
       }
-    };
+    }, []);
 
     return (
       <NodeList

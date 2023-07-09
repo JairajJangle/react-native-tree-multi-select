@@ -35,6 +35,11 @@ export default function App() {
     // NOTE: Handle _expandedIds here
   };
 
+  const onSelectAllPress = () => treeViewRef.current?.selectAll?.();
+  const onUnselectAllPress = () => treeViewRef.current?.unselectAll?.();
+  const onSelectAllFilteredPress = () => treeViewRef.current?.selectAllFiltered?.();
+  const onUnselectAllFilteredPress = () => treeViewRef.current?.unselectAllFiltered?.();
+
   return (
     <SafeAreaView
       style={styles.mainView}>
@@ -43,27 +48,19 @@ export default function App() {
         style={styles.selectionButtonRow}>
         <Button
           title='Select All'
-          onPress={() => {
-            treeViewRef.current?.selectAll?.();
-          }} />
+          onPress={onSelectAllPress} />
         <Button
           title='Unselect All'
-          onPress={() => {
-            treeViewRef.current?.unselectAll?.();
-          }} />
+          onPress={onUnselectAllPress} />
       </View>
       <View
         style={styles.selectionButtonRow}>
         <Button
           title='Select Filtered'
-          onPress={() => {
-            treeViewRef.current?.selectAllFiltered?.();
-          }} />
+          onPress={onSelectAllFilteredPress} />
         <Button
           title='Unselect Filtered'
-          onPress={() => {
-            treeViewRef.current?.unselectAllFiltered?.();
-          }} />
+          onPress={onUnselectAllFilteredPress} />
       </View>
 
       <View

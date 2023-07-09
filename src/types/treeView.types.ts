@@ -19,6 +19,13 @@ export interface TreeNode {
     id: string;
     name: string;
     children?: TreeNode[];
+    [key: string]: any;
+}
+
+export interface __FlattenedTreeNode__ {
+    id: string;
+    name: string;
+    children?: TreeNode[];
     level?: number;
     [key: string]: any;
 }

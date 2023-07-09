@@ -23,6 +23,7 @@ import type {
     ExpandIconProps,
     CheckBoxViewStyleProps,
     CheckBoxViewProps,
+    __FlattenedTreeNode__,
 } from "../types/treeView.types";
 
 import {
@@ -96,8 +97,8 @@ function _NodeList(props: NodeListProps) {
             const flattenTreeData = (
                 _nodes: TreeNode[],
                 level: number = 0,
-            ): TreeNode[] => {
-                let flattened: TreeNode[] = [];
+            ): __FlattenedTreeNode__[] => {
+                let flattened: __FlattenedTreeNode__[] = [];
                 for (let node of _nodes) {
                     flattened.push({ ...node, level });
                     if (node.children && expanded.value.has(node.id)) {
@@ -132,7 +133,9 @@ function _NodeList(props: NodeListProps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const nodeRenderer = React.useCallback(({ item }: { item: TreeNode; }) => {
+    const nodeRenderer = React.useCallback((
+        { item }: { item: __FlattenedTreeNode__; }
+    ) => {
         return (
             <Node
                 node={item}
@@ -176,7 +179,7 @@ function HeaderFooterView() {
 }
 
 interface NodeProps {
-    node: TreeNode;
+    node: __FlattenedTreeNode__;
     level: number;
 
     checkBoxViewStyleProps?: CheckBoxViewStyleProps;

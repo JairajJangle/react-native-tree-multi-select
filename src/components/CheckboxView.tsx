@@ -71,11 +71,6 @@ function _CheckboxView(props: CheckBoxViewProps) {
             <View
                 style={checkboxParentViewStyle}>
                 <Checkbox.Android
-                    theme={{
-                        animation: {
-                            scale: 0
-                        }
-                    }}
                     {...checkboxProps}
                     status={customCheckboxValueTypeToRNPaperType(value)}
                     onPress={onValueChangeModifier} />

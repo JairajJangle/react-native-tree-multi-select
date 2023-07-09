@@ -20,10 +20,10 @@ export default function App() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSetSearchText = React.useCallback(
-    debounce((text) => treeViewRef.current?.setSearchText(text), 500, {
+    debounce((text) => treeViewRef.current?.setSearchText(text), 375, {
       leading: true,
       trailing: true,
-      maxWait: 1000
+      maxWait: 750
     }),
     []
   );

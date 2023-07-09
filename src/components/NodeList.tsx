@@ -29,10 +29,12 @@ import {
     expanded,
     globalData,
     innerMostChildrenIds,
+    searchKeys,
     searchText,
     state
 } from "../signals/global.signals";
 import {
+    doesNodeContainSearchTerm,
     handleToggleExpand,
     toggleCheckboxes
 } from "../helpers";
@@ -61,68 +63,76 @@ function _NodeList(props: NodeListProps) {
         ExpandCollapseTouchableComponent,
     } = props;
 
-    const filteredTree = computed(() => {
-        const searchTrimmed = searchText.value.trim().toLowerCase();
+    const filteredTree = React.useMemo(() => {
+        return computed(() => {
+            const searchTrimmed = searchText.value.trim().toLowerCase();
 
-        const filterTreeData = (_nodes: TreeNode[]): TreeNode[] => {
-            let filtered: TreeNode[] = [];
+            const filterTreeData = (_nodes: TreeNode[]): TreeNode[] => {
+                let filtered: TreeNode[] = [];
 
-            for (let node of _nodes) {
-                if (node.name.toLowerCase().includes(searchTrimmed)) {
-                    // If node itself matches, include it and all its descendants
-                    filtered.push(node);
-                } else if (node.children) {
-                    // If node does not match, check its children and include them if they match
-                    const childMatches = filterTreeData(node.children);
-                    if (childMatches.length > 0) {
-                        // If any children match, include the node, replacing its children with the matching ones
-                        filtered.push({ ...node, children: childMatches });
+                for (let node of _nodes) {
+                    if (!searchTrimmed || doesNodeContainSearchTerm(node, searchTrimmed, searchKeys.value)) {
+                        // If node itself matches, include it and all its descendants
+                        filtered.push(node);
+                    } else if (node.children) {
+                        // If node does not match, check its children and include them if they match
+                        const childMatches = filterTreeData(node.children);
+                        if (childMatches.length > 0) {
+                            // If any children match, include the node, replacing its children with the matching ones
+                            filtered.push({ ...node, children: childMatches });
+                        }
                     }
                 }
-            }
 
-            return filtered;
-        };
+                return filtered;
+            };
 
-        return filterTreeData(globalData.value);
-    });
+            return filterTreeData(globalData.value);
+        });
+    }, []);
 
-    const flattenedFilteredNodes = computed(() => {
-        const flattenTreeData = (
-            _nodes: TreeNode[],
-            level: number = 0,
-        ): TreeNode[] => {
-            let flattened: TreeNode[] = [];
-            for (let node of _nodes) {
-                flattened.push({ ...node, level });
-                if (node.children && expanded.value.has(node.id)) {
-                    flattened = [...flattened, ...flattenTreeData(node.children, level + 1)];
+    const flattenedFilteredNodes = React.useMemo(() => {
+        return computed(() => {
+            const flattenTreeData = (
+                _nodes: TreeNode[],
+                level: number = 0,
+            ): TreeNode[] => {
+                let flattened: TreeNode[] = [];
+                for (let node of _nodes) {
+                    flattened.push({ ...node, level });
+                    if (node.children && expanded.value.has(node.id)) {
+                        flattened = [...flattened, ...flattenTreeData(node.children, level + 1)];
+                    }
                 }
-            }
-            return flattened;
-        };
+                return flattened;
+            };
 
-        return flattenTreeData(filteredTree.value);
-    });
+            return flattenTreeData(filteredTree.value);
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-    effect(() => {
-        const allLeafIds: string[] = [];
-        const getLeafNodes = (_nodes: TreeNode[]) => {
-            for (let node of _nodes) {
-                if (node.children) {
-                    getLeafNodes(node.children);
-                } else {
-                    allLeafIds.push(node.id);
+    React.useEffect(() => {
+        effect(() => {
+            const allLeafIds: string[] = [];
+            const getLeafNodes = (_nodes: TreeNode[]) => {
+                for (let node of _nodes) {
+                    if (node.children) {
+                        getLeafNodes(node.children);
+                    } else {
+                        allLeafIds.push(node.id);
+                    }
                 }
-            }
-        };
+            };
 
-        getLeafNodes(filteredTree.value);
+            getLeafNodes(filteredTree.value);
 
-        innerMostChildrenIds.value = allLeafIds;
-    });
+            innerMostChildrenIds.value = allLeafIds;
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-    const nodeRenderer = ({ item }: { item: TreeNode; }) => {
+    const nodeRenderer = React.useCallback(({ item }: { item: TreeNode; }) => {
         return (
             <Node
                 node={item}
@@ -134,9 +144,14 @@ function _NodeList(props: NodeListProps) {
                 ExpandCollapseTouchableComponent={ExpandCollapseTouchableComponent}
             />
         );
-    };
+    }, [
+        CheckboxComponent,
+        ExpandCollapseIconComponent,
+        ExpandCollapseTouchableComponent,
+        checkBoxViewStyleProps
+    ]);
 
-    const keyExtractor = (item: TreeNode) => item.id;
+    const keyExtractor = React.useCallback((item: TreeNode) => item.id, []);
 
     return (
         <FlashList

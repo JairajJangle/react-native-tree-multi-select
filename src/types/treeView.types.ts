@@ -20,6 +20,7 @@ export interface TreeNode {
     name: string;
     children?: TreeNode[];
     level?: number;
+    [key: string]: any;
 }
 
 export type TreeFlatListProps<ItemT = any> = Omit<
@@ -74,5 +75,5 @@ export interface TreeViewRef {
     expandAll: () => void;
     collapseAll: () => void;
 
-    setSearchText: (searchText: string) => void;
+    setSearchText: (searchText: string, searchKeys?: string[]) => void;
 }

@@ -33,7 +33,7 @@ Make sure to follow the native-related installation for these dependencies.
 
 ## Usage
 
-```js
+```tsx
 import {
   TreeView,
   type TreeNode,
@@ -43,7 +43,7 @@ import {
 const myData: TreeNode[] = [...];
 
 export function MyAppScreen(){
-	const treeViewRef = React.useRef<TreeViewRef | null>(null);
+  const treeViewRef = React.useRef<TreeViewRef | null>(null);
   
   // Recommended to use debounce for search function
   function triggerSearch(text: string){
@@ -52,7 +52,7 @@ export function MyAppScreen(){
   }
   
   const handleSelectionChange = (checkedIds: string[]) => {
-  	// NOTE: Do something with updated checkedIds here
+    // NOTE: Do something with updated checkedIds here
   };
   const handleExpanded = (expandedIds: string[]) => {
     // NOTE: Do something with updated expandedIds here
@@ -65,14 +65,14 @@ export function MyAppScreen(){
   const onUnselectAllFilteredPress = () => treeViewRef.current?.unselectAllFiltered?.();
   
   return(
-  	// ...
-		<TreeView
-			ref={treeViewRef}
-			data={myData}
-			onCheck={handleSelectionChange}
-			onExpand={handleExpanded}
-		/>
-  )
+    // ...
+    <TreeView
+      ref={treeViewRef}
+      data={myData}
+      onCheck={handleSelectionChange}
+      onExpand={handleExpanded}
+    />
+  );
 }
 ```
 

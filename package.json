@@ -169,8 +169,14 @@
     "react-native-safe-area-context": "^4.6.4",
     "react-native-vector-icons": "^9.2.0"
   },
-  "funding": {
-    "paypal": "https://www.paypal.com/paypalme/jairajjangle001/usd",
-    "liberapay": "https://liberapay.com/FutureJJ/donate"
-  }
+  "funding": [
+    {
+      "type": "individual",
+      "url": "https://www.paypal.com/paypalme/jairajjangle001/usd"
+    },
+    {
+      "type": "individual",
+      "url": "https://liberapay.com/FutureJJ/donate"
+    }
+  ]
 }

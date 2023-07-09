@@ -119,6 +119,22 @@ See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the 
 
 MIT
 
+## Support the project
+
+<p align="center" valign="center">
+  <a href="https://liberapay.com/FutureJJ/donate">
+    <img src="https://liberapay.com/assets/widgets/donate.svg" alt="LiberPay_Donation_Button" width="100" > 
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://github.com/JairajJangle/OpenCV-Catalogue/blob/master/.github/Jairaj_Jangle_Google_Pay_UPI_QR_Code.jpg">
+    <img src="https://img.uxwing.com/wp-content/themes/uxwing/download/brands-social-media/upi-icon.svg" alt="UPI_Donation_Button" width="70" >
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.paypal.com/paypalme/jairajjangle001/usd">
+    <img src="https://logos-world.net/wp-content/uploads/2020/07/PayPal-Logo-500x281.png" alt="Paypal_Donation_Button" width="100" >
+  </a>
+</p>
+
 ---
 
 Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)

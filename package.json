@@ -40,6 +40,13 @@
   },
   "keywords": [
     "react-native",
+    "tree-view",
+    "tree-select",
+    "react-tree-view",
+    "react-native-tree-view",
+    "react-native-tree-select",
+    "react-native-tree-checkbox",
+    "react-checkbox-tree",
     "ios",
     "android"
   ],

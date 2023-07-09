@@ -2,8 +2,8 @@ import type { TreeNode } from "../types/treeView.types";
 import {
     childToParentMap,
     nodeMap,
-    state
 } from "../signals/global.signals";
+import { toggleCheckboxes } from "./toggleCheckbox.helper";
 
 /**
  * Custom hook to manage the state of a tree of checkboxes.
@@ -31,16 +31,5 @@ export function initializeNodeMaps(
     };
     processNodes(initialData);
 
-    // Preselect nodes
-    const checked = new Set(state.value.checked);
-    const indeterminate = new Set(state.value.indeterminate);
-    preselectedIds.forEach(id => {
-        checked.add(id);
-        let parentId = childToParentMap.value.get(id);
-        while (parentId) {
-            indeterminate.add(parentId);
-            parentId = childToParentMap.value.get(parentId);
-        }
-    });
-    state.value = ({ checked, indeterminate });
+    toggleCheckboxes(preselectedIds, true);
 }

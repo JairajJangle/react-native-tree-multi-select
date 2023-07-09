@@ -78,29 +78,29 @@ export function MyAppScreen(){
 
 ### Properties
 
-| Property                           | Type                                         | Required | Description                                  |
-| ---------------------------------- | -------------------------------------------- | -------- | -------------------------------------------- |
-| `data`                             | `TreeNode[]`                                 | Yes      | An array of `TreeNode` objects               |
-| `onCheck`                          | `(checkedIds: string[]) => void`             | No       | Callback when a checkbox is checked          |
-| `onExpand`                         | `(expandedIds: string[]) => void`            | No       | Callback when a node is expanded             |
-| `preselectedIds`                   | `string[]`                                   | No       | An array of `id`s that should be preselected |
-| `treeFlashListProps`               | `TreeFlatListProps`                          | No       | Props for the flash list                     |
-| `checkBoxViewStyleProps`           | `CheckBoxViewStyleProps`                     | No       | Props for the checkbox view                  |
-| `CheckboxComponent`                | `React.ComponentType<CheckBoxViewProps>`     | No       | A custom checkbox component                  |
-| `ExpandCollapseIconComponent`      | `React.ComponentType<ExpandIconProps>`       | No       | A custom expand/collapse icon component      |
-| `ExpandCollapseTouchableComponent` | `React.ComponentType<TouchableOpacityProps>` | No       | A custom expand/collapse touchable component |
+| Property                           | Type                                   | Required | Description                                  |
+| ---------------------------------- | -------------------------------------- | -------- | -------------------------------------------- |
+| `data`                             | `TreeNode[]`                           | Yes      | An array of `TreeNode` objects               |
+| `onCheck`                          | `(checkedIds: string[]) => void`       | No       | Callback when a checkbox is checked          |
+| `onExpand`                         | `(expandedIds: string[]) => void`      | No       | Callback when a node is expanded             |
+| `preselectedIds`                   | `string[]`                             | No       | An array of `id`s that should be preselected |
+| `treeFlashListProps`               | `TreeFlatListProps`                    | No       | Props for the flash list                     |
+| `checkBoxViewStyleProps`           | `CheckBoxViewStyleProps`               | No       | Props for the checkbox view                  |
+| `CheckboxComponent`                | `ComponentType<CheckBoxViewProps>`     | No       | A custom checkbox component                  |
+| `ExpandCollapseIconComponent`      | `ComponentType<ExpandIconProps>`       | No       | A custom expand/collapse icon component      |
+| `ExpandCollapseTouchableComponent` | `ComponentType<TouchableOpacityProps>` | No       | A custom expand/collapse touchable component |
 
 ## TreeViewRef
 
-| Property              | Type                                                  | Required | Description                                                  |
-| --------------------- | ----------------------------------------------------- | -------- | ------------------------------------------------------------ |
-| `selectAll`           | `() => void`                                          | Yes      | Selects **all** nodes                                        |
-| `unselectAll`         | `() => void`                                          | Yes      | Unselects **all** nodes                                      |
-| `selectAllFiltered`   | `() => void`                                          | Yes      | Selects all **filtered** nodes                               |
-| `unselectAllFiltered` | `() => void`                                          | Yes      | Unselects all **filtered** nodes                             |
-| `expandAll`           | `() => void`                                          | Yes      | Expands all nodes                                            |
-| `collapseAll`         | `() => void`                                          | Yes      | Collapses all nodes                                          |
-| `setSearchText`       | `(searchText: string, searchKeys?: string[]) => void` | Yes      | Set the search text and optionally the search keys. Default search key is "name"<br /><br />Recommended to call this inside a debounced function if you find any performance issue otherwise. |
+| Property              | Type                                                  | Description                                                  |
+| --------------------- | ----------------------------------------------------- | ------------------------------------------------------------ |
+| `selectAll`           | `() => void`                                          | Selects **all** nodes                                        |
+| `unselectAll`         | `() => void`                                          | Unselects **all** nodes                                      |
+| `selectAllFiltered`   | `() => void`                                          | Selects all **filtered** nodes                               |
+| `unselectAllFiltered` | `() => void`                                          | Unselects all **filtered** nodes                             |
+| `expandAll`           | `() => void`                                          | Expands all nodes                                            |
+| `collapseAll`         | `() => void`                                          | Collapses all nodes                                          |
+| `setSearchText`       | `(searchText: string, searchKeys?: string[]) => void` | Set the search text and optionally the search keys. Default search key is "name"<br /><br />Recommended to call this inside a debounced function if you find any performance issue otherwise. |
 
 ## TreeNode
 

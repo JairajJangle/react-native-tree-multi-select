@@ -1,8 +1,4 @@
-import React, {
-  useEffect,
-  forwardRef,
-  useImperativeHandle,
-} from 'react';
+import React from 'react';
 import type {
   TreeNode,
   TreeViewProps,
@@ -18,18 +14,10 @@ import {
   expandAll,
   collapseAll
 } from './helpers';
-import { effect } from "@preact/signals-react";
-import {
-  cleanUpGlobalSignals,
-  expanded,
-  globalData,
-  searchKeys,
-  searchText,
-  state
-} from './signals/global.signals';
+import { useStore } from './store/global.store';
 import { InteractionManager } from 'react-native';
 
-const _TreeView = forwardRef<TreeViewRef, TreeViewProps>(
+const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
   (props, ref) => {
     const {
       data,
@@ -47,7 +35,24 @@ const _TreeView = forwardRef<TreeViewRef, TreeViewProps>(
       ExpandCollapseTouchableComponent
     } = props;
 
-    useImperativeHandle(ref, () => ({
+    const {
+      cleanUpGlobalSignals,
+
+      expanded,
+      updateExpanded,
+
+      globalData,
+      updateGlobalData,
+
+      searchText,
+      updatedSearchText,
+
+      updatedSearchKeys,
+
+      checked
+    } = useStore();
+
+    React.useImperativeHandle(ref, () => ({
       selectAll,
       unselectAll,
 
@@ -61,59 +66,18 @@ const _TreeView = forwardRef<TreeViewRef, TreeViewProps>(
     }));
 
     function setSearchText(text: string, keys: string[] = ["name"]) {
-      searchText.value = text;
-      searchKeys.value = keys;
+      updatedSearchText(text);
+      updatedSearchKeys(keys);
     }
 
-    useEffect(() => {
-      globalData.value = data;
+    React.useEffect(() => {
+      updateGlobalData(data);
       initializeNodeMaps(
         data,
         preselectedIds,
       );
-    }, [data, preselectedIds]);
+    }, [updateGlobalData, data, preselectedIds]);
 
-    const disposeCheckedStateEffect = React.useMemo(() => {
-      return effect(() => {
-        onCheck && onCheck(Array.from(state.value.checked));
-      });
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const disposeExpandedStateEffect = React.useMemo(() => {
-      return effect(() => {
-        onExpand && onExpand(Array.from(expanded.value));
-      });
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const disposeSearchStateEffect = React.useMemo(() => {
-      return effect(() => {
-        if (searchText.value) {
-          InteractionManager.runAfterInteractions(() => {
-            expanded.value = (new Set(globalData.value.flatMap((item) => getIds(item))));
-          });
-        }
-        else {
-          InteractionManager.runAfterInteractions(() => {
-            expanded.value = (new Set());
-          });
-        }
-      });
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    useEffect(() => {
-      return () => {
-        // Cleanup all global signals and signal effects
-        disposeCheckedStateEffect();
-        disposeExpandedStateEffect();
-        disposeSearchStateEffect();
-
-        cleanUpGlobalSignals();
-      };
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     const getIds = React.useCallback((node: TreeNode): string[] => {
       if (!node.children || node.children.length === 0) {
@@ -122,6 +86,33 @@ const _TreeView = forwardRef<TreeViewRef, TreeViewProps>(
         return [node.id, ...node.children.flatMap((item) => getIds(item))];
       }
     }, []);
+
+    React.useEffect(() => {
+      onCheck && onCheck(Array.from(checked));
+    }, [onCheck, checked]);
+
+    React.useEffect(() => {
+      onExpand && onExpand(Array.from(expanded));
+    }, [onExpand, expanded]);
+
+    React.useEffect(() => {
+      if (searchText) {
+        InteractionManager.runAfterInteractions(() => {
+          updateExpanded(new Set(globalData.flatMap((item) => getIds(item))));
+        });
+      }
+      else {
+        InteractionManager.runAfterInteractions(() => {
+          updateExpanded(new Set());
+        });
+      }
+    }, [getIds, globalData, searchText, updateExpanded]);
+
+    React.useEffect(() => {
+      return () => {
+        cleanUpGlobalSignals();
+      };
+    }, [cleanUpGlobalSignals]);
 
     return (
       <NodeList

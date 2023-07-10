@@ -10,11 +10,6 @@ export interface ExpandIconProps {
     isExpanded: boolean;
 }
 
-export type __CheckBoxState__ = {
-    checked: Set<string>;
-    indeterminate: Set<string>;
-};
-
 export interface TreeNode {
     id: string;
     name: string;

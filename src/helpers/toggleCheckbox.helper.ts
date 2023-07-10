@@ -1,4 +1,4 @@
-import { childToParentMap, nodeMap, state } from "../signals/global.signals";
+import { useStore } from "../store/global.store";
 
 /**
  * Function to toggle checkbox state for a tree structure.
@@ -8,9 +8,20 @@ import { childToParentMap, nodeMap, state } from "../signals/global.signals";
  * If not provided, the check state will be toggled based on the current state.
  */
 export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
+    const {
+        checked,
+        updateChecked,
+
+        indeterminate,
+        updateIndeterminate,
+
+        nodeMap,
+        childToParentMap
+    } = useStore.getState();
+
     // Create new sets for checked and indeterminate state so as not to mutate the original state.
-    const checked = new Set(state.value.checked);
-    const indeterminate = new Set(state.value.indeterminate);
+    const tempChecked = new Set(checked);
+    const tempIndeterminate = new Set(indeterminate);
 
     // Maps for memoization of the recursive functions areAllDescendantsChecked and areAnyDescendantsChecked.
     const memoAllDescendantsChecked = new Map();
@@ -24,16 +35,16 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
     const toggleNodeAndChildren = (nodeId: string, isChecked: boolean) => {
         // Set or unset this node in the checked set, and remove it from the indeterminate set.
         if (isChecked) {
-            checked.add(nodeId);
-            indeterminate.delete(nodeId);
+            tempChecked.add(nodeId);
+            tempIndeterminate.delete(nodeId);
         } else {
-            checked.delete(nodeId);
+            tempChecked.delete(nodeId);
         }
 
         // Get the node from the node map and recursively apply the same state to all its children.
-        const node = nodeMap.value.get(nodeId);
+        const node = nodeMap.get(nodeId);
         node?.children?.forEach((childNode) => {
-            if (isChecked) indeterminate.delete(childNode.id);
+            if (isChecked) tempIndeterminate.delete(childNode.id);
             toggleNodeAndChildren(childNode.id, isChecked);
         });
     };
@@ -50,7 +61,7 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
             return memoAllDescendantsChecked.get(nodeId);
         }
 
-        const node = nodeMap.value.get(nodeId);
+        const node = nodeMap.get(nodeId);
         let allChecked = true;
         if (node?.children) {
             // If the node has children, recursively check all children.
@@ -59,7 +70,7 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
             }
         } else {
             // If the node has no children, its state is equal to whether it is in the checked set.
-            allChecked = checked.has(nodeId);
+            allChecked = tempChecked.has(nodeId);
         }
 
         // Store the result in the map and return it.
@@ -79,7 +90,7 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
             return memoAnyDescendantsChecked.get(nodeId);
         }
 
-        const node = nodeMap.value.get(nodeId);
+        const node = nodeMap.get(nodeId);
         let anyChecked = false;
         if (node?.children) {
             // If the node has children, recursively check all children.
@@ -88,7 +99,7 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
             }
         } else {
             // If the node has no children, its state is equal to whether it is in the checked set.
-            anyChecked = checked.has(nodeId);
+            anyChecked = tempChecked.has(nodeId);
         }
 
         // Store the result in the map and return it.
@@ -101,32 +112,32 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
      * @param {string} nodeId - The id of the node to be updated.
      */
     const updateNodeAndAncestorsState = (nodeId: string) => {
-        const node = nodeMap.value.get(nodeId);
+        const node = nodeMap.get(nodeId);
         const hasOnlyOneChild = node?.children && node.children.length === 1;
 
         // Update the node's state based on the state of its descendants.
         if (areAllDescendantsChecked(nodeId)) {
-            checked.add(nodeId);
-            indeterminate.delete(nodeId);
+            tempChecked.add(nodeId);
+            tempIndeterminate.delete(nodeId);
         } else if (areAnyDescendantsChecked(nodeId)) {
             if (hasOnlyOneChild) {
                 // If a node has only one child and it's not checked,
                 // remove this node from both checked and indeterminate sets.
-                checked.delete(nodeId);
-                indeterminate.delete(nodeId);
+                tempChecked.delete(nodeId);
+                tempIndeterminate.delete(nodeId);
             } else {
-                checked.delete(nodeId);
-                indeterminate.add(nodeId);
+                tempChecked.delete(nodeId);
+                tempIndeterminate.add(nodeId);
             }
         } else {
-            checked.delete(nodeId);
-            indeterminate.delete(nodeId);
+            tempChecked.delete(nodeId);
+            tempIndeterminate.delete(nodeId);
         }
     };
 
     // Toggle the clicked nodes and their children.
     ids.forEach((id) => {
-        const isChecked = checked.has(id);
+        const isChecked = tempChecked.has(id);
         toggleNodeAndChildren(id, forceCheck === undefined ? !isChecked : forceCheck);
     });
 
@@ -135,10 +146,11 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
         let currentNodeId: string | undefined = id;
         while (currentNodeId) {
             updateNodeAndAncestorsState(currentNodeId);
-            currentNodeId = childToParentMap.value.get(currentNodeId);
+            currentNodeId = childToParentMap.get(currentNodeId);
         }
     });
 
     // Update the state object with the new checked and indeterminate sets.
-    state.value = ({ checked, indeterminate });
+    updateChecked(tempChecked);
+    updateIndeterminate(tempIndeterminate);
 };

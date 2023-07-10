@@ -1,8 +1,7 @@
 import type { TreeNode } from "../types/treeView.types";
 import {
-    childToParentMap,
-    nodeMap,
-} from "../signals/global.signals";
+    useStore
+} from "../store/global.store";
 import { toggleCheckboxes } from "./toggleCheckbox.helper";
 
 /**
@@ -18,6 +17,14 @@ export function initializeNodeMaps(
     initialData: TreeNode[],
     preselectedIds: string[] = [],
 ) {
+    const {
+        updateNodeMap,
+        updateChildToParentMap
+    } = useStore.getState();
+
+    const tempNodeMap: Map<string, TreeNode> = new Map();;
+    const tempChildToParentMap: Map<string, string> = new Map();;
+
     /**
      * Recursively processes nodes, adding them to the nodeMap and childToParentMap.
      *
@@ -30,9 +37,9 @@ export function initializeNodeMaps(
     ) => {
         nodes.forEach((node) => {
             // Each node is added to the nodeMap with its ID as the key
-            nodeMap.value.set(node.id, node);
+            tempNodeMap.set(node.id, node);
             // If the node has a parent, its ID is mapped to the parent's ID in the childToParentMap
-            if (parentId) childToParentMap.value.set(node.id, parentId);
+            if (parentId) tempChildToParentMap.set(node.id, parentId);
             // If the node has children, recursively process them
             if (node.children) processNodes(node.children, node.id);
         });
@@ -40,6 +47,9 @@ export function initializeNodeMaps(
 
     // Begin processing with the initial tree data
     processNodes(initialData);
+
+    updateNodeMap(tempNodeMap);
+    updateChildToParentMap(tempChildToParentMap);
 
     // Check any preselected nodes
     toggleCheckboxes(preselectedIds, true);

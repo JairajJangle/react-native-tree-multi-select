@@ -50,13 +50,18 @@ export function MyAppScreen(){
     treeViewRef.current?.setSearchText(text, ["name"]);
   }
   
+  // Callback functions for check and expand state changes
   const handleSelectionChange = (checkedIds: string[]) => {
     // NOTE: Do something with updated checkedIds here
   };
   const handleExpanded = (expandedIds: string[]) => {
     // NOTE: Do something with updated expandedIds here
   };
-  
+
+  // Expand collapse calls using ref
+  const expandAllPress = () => treeViewRef.current?.expandAll?.();
+  const collapseAllPress = () => treeViewRef.current?.collapseAll?.();
+
   // Multi-selection function calls using ref
   const onSelectAllPress = () => treeViewRef.current?.selectAll?.();
   const onUnselectAllPress = () => treeViewRef.current?.unselectAll?.();

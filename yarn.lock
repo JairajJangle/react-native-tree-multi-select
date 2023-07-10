@@ -2205,7 +2205,7 @@
     conventional-recommended-bump "^6.1.0"
     semver "7.3.8"
 
-"@shopify/flash-list@^1.4.0":
+"@shopify/flash-list@1.x.x":
   version "1.4.3"
   resolved "https://registry.yarnpkg.com/@shopify/flash-list/-/flash-list-1.4.3.tgz#b7a4fe03d64f3c5ce9646859b49b9d95307f203d"
   integrity sha512-jtIReAbwWzYBV0dQ6Io9wBX+pD0C4qQFMrb5/fkEvX8PYDgBl5KRYvpfr9WLLj8CV2Jsn1X0mYOsB+ysWrI/8g==
@@ -5712,7 +5712,7 @@ is-wsl@^1.1.0:
 
 is-wsl@^2.1.1, is-wsl@^2.2.0:
   version "2.2.0"
-  resolved "https://registry.npmjs.org/is-wsl/-/is-wsl-2.2.0.tgz"
+  resolved "https://registry.yarnpkg.com/is-wsl/-/is-wsl-2.2.0.tgz#74a4c76e77ca9fd3f932f290c17ea326cd157271"
   integrity sha512-fKzAra0rGJUUBwGBgNkHZuToZcn+TtXHpeCgmkMJMMYx1sQDYaCSyjJBSCa2nH1DGm7s3n1oBnohoVTBaN7Lww==
   dependencies:
     is-docker "^2.0.0"
@@ -7961,7 +7961,7 @@ react-native-builder-bob@^0.20.0:
   optionalDependencies:
     jetifier "^2.0.0"
 
-react-native-paper@^5.9.1:
+react-native-paper@5.x.x:
   version "5.9.1"
   resolved "https://registry.yarnpkg.com/react-native-paper/-/react-native-paper-5.9.1.tgz#e77d8ecda6e41783cf781ead5c2bbcc9ce26f44b"
   integrity sha512-zsOdKQ+mXxeY+qZDSpizBTFVFrnV4P/84ZgSjTKQjbmPU5MnO1xJtntWVmk7Pba81x5Hbcf3Q1/9VP3LHy1anA==

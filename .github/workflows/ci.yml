@@ -148,4 +148,10 @@ jobs:
 
       - name: Build example for iOS
         run: |
-          yarn turbo run build:ios --cache-dir="${{ env.TURBO_CACHE_DIR }}"
+          yarn turbo run build:ios --cache-dir="${{ env.TURBO_CACHE_DIR }}" 2>&1 | grep -i error > ios_errorlog.txt
+
+      - name: Upload iOS error log
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-error-log
+          path: ios_errorlog.txt

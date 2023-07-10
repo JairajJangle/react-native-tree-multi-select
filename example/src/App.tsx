@@ -35,6 +35,11 @@ export default function App() {
     // NOTE: Handle _expandedIds here
   };
 
+  // Expand collapse calls using ref
+  const expandAllPress = () => treeViewRef.current?.expandAll?.();
+  const collapseAllPress = () => treeViewRef.current?.collapseAll?.();
+
+  // Multi-select calls using ref
   const onSelectAllPress = () => treeViewRef.current?.selectAll?.();
   const onUnselectAllPress = () => treeViewRef.current?.unselectAll?.();
   const onSelectAllFilteredPress = () => treeViewRef.current?.selectAllFiltered?.();
@@ -67,14 +72,10 @@ export default function App() {
         style={[styles.selectionButtonRow, styles.selectionButtonBottom]}>
         <Button
           title='Expand All'
-          onPress={() => {
-            treeViewRef.current?.expandAll?.();
-          }} />
+          onPress={expandAllPress} />
         <Button
           title='Collapse All'
-          onPress={() => {
-            treeViewRef.current?.collapseAll?.();
-          }} />
+          onPress={collapseAllPress} />
       </View>
 
       <View

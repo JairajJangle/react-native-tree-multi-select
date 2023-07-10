@@ -2,9 +2,7 @@
 
 Tree view with multi selection using checkbox + search filtering.
 
-[![npm version](https://badge.fury.io/js/react-native-tree-multi-select.svg)](https://badge.fury.io/js/react-native-tree-multi-select)![License](https://img.shields.io/github/license/JairajJangle/react-native-tree-multi-select) ![Workflow Status](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml/badge.svg)
-
-## Demo
+[![npm version](https://img.shields.io/npm/v/react-native-tree-multi-select)](https://badge.fury.io/js/react-native-tree-multi-select)![License](https://img.shields.io/github/license/JairajJangle/react-native-tree-multi-select)![Workflow Status](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml/badge.svg)![Static Badge](https://img.shields.io/badge/platform-android%20%26%20ios-blue)![GitHub issues](https://img.shields.io/github/issues/JairajJangle/react-native-tree-multi-select)
 
 <div align="left">
   <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHFleDNleTZsMXVoMjk1YnlpdXFtanZyZGprMDkwcDdteGhqYTNhcCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L0w26RrC32gdfWZ8Ux/giphy.gif" alt="demo" style="border: 1px solid gray;" />
@@ -15,19 +13,20 @@ Tree view with multi selection using checkbox + search filtering.
 Using yarn 
 
 ```sh
-yarn add react-native-tree-multi-select
+yarn add react-native-tree-multi-select && cd ios && pod install
 ```
 
 using npm:
 
 ```sh
-npm install react-native-tree-multi-select
+npm install react-native-tree-multi-select && cd ios && pod install
 ```
 
 Dependencies required to be installed for this library to work:
 
 1. [@shopify/flash-list](https://github.com/Shopify/flash-list)
-2. [react-native-vector-icons](https://github.com/oblador/react-native-vector-icons)
+2. [react-native-paper](https://github.com/callstack/react-native-paper)
+3. [react-native-vector-icons](https://github.com/oblador/react-native-vector-icons)
 
 Make sure to follow the native-related installation for these dependencies.
 

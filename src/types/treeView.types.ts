@@ -17,14 +17,11 @@ export interface TreeNode {
     [key: string]: any;
 }
 
-export interface __FlattenedTreeNode__ {
-    id: string;
-    name: string;
-    children?: TreeNode[];
+export interface __FlattenedTreeNode__ extends TreeNode {
     level?: number;
-    [key: string]: any;
 }
 
+// Remove non-modifiable keys
 export type TreeFlatListProps<ItemT = any> = Omit<
     FlashListProps<ItemT>,
     "data"
@@ -50,12 +47,6 @@ export interface TreeViewProps {
 
 type CheckboxProps = Omit<RNPaperCheckboxAndroidProps, "onPress" | "status">;
 
-export interface CheckBoxViewProps extends CheckBoxViewStyleProps {
-    value: CheckboxValueType;
-    onValueChange: (value: boolean) => void;
-    text: string;
-}
-
 export interface CheckBoxViewStyleProps {
     // Optional style modifiers
     outermostParentViewStyle?: StyleProp<ViewStyle> | {};
@@ -65,6 +56,12 @@ export interface CheckBoxViewStyleProps {
     // Optional checkbox and text component props
     checkboxProps?: CheckboxProps;
     textProps?: TextProps;
+}
+
+export interface CheckBoxViewProps extends CheckBoxViewStyleProps {
+    value: CheckboxValueType;
+    onValueChange: (value: boolean) => void;
+    text: string;
 }
 
 export interface TreeViewRef {

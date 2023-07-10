@@ -65,6 +65,7 @@
     "@evilmartians/lefthook": "^1.2.2",
     "@react-native-community/eslint-config": "^3.0.2",
     "@release-it/conventional-changelog": "^5.0.0",
+    "@shopify/flash-list": "^1.4.3",
     "@types/color": "^3.0.3",
     "@types/jest": "^28.1.2",
     "@types/react": "~17.0.21",
@@ -89,9 +90,11 @@
     "@types/react": "17.0.21"
   },
   "peerDependencies": {
-    "@shopify/flash-list": "^1.2.0",
+    "@shopify/flash-list": "*",
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-paper": "*",
+    "react-native-vector-icons": "*"
   },
   "engines": {
     "node": ">= 16.0.0"
@@ -163,11 +166,7 @@
   },
   "dependencies": {
     "@preact/signals-react": "1.2.1",
-    "@shopify/flash-list": "^1.4.3",
-    "react-native-gesture-handler": "^2.12.0",
-    "react-native-paper": "^5.9.1",
-    "react-native-safe-area-context": "^4.6.4",
-    "react-native-vector-icons": "^9.2.0"
+    "@shopify/flash-list": "^1.4.3"
   },
   "funding": [
     {

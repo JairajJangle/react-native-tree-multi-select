@@ -1,6 +1,6 @@
 {
   "name": "react-native-tree-multi-select",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Tree view with multi selection using checkbox",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",

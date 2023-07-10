@@ -1,9 +1,4 @@
-import {
-    innerMostChildrenIds,
-    nodeMap,
-    searchText,
-    state
-} from "../signals/global.signals";
+import { useStore } from "../store/global.store";
 import { toggleCheckboxes } from "./toggleCheckbox.helper";
 
 /**
@@ -12,12 +7,15 @@ import { toggleCheckboxes } from "./toggleCheckbox.helper";
  * If there is no search text, then it selects all nodes; otherwise, it selects all visible nodes.
  */
 export function selectAllFiltered() {
+    const { searchText, innerMostChildrenIds } = useStore.getState();
+
+
     // If there's no search text, select all nodes
-    if (!searchText.value) {
+    if (!searchText) {
         selectAll();
     } else {
         // If there's search text, only select the visible nodes
-        toggleCheckboxes(innerMostChildrenIds.value, true);
+        toggleCheckboxes(innerMostChildrenIds, true);
     }
 };
 
@@ -27,12 +25,14 @@ export function selectAllFiltered() {
  * If there is no search text, then it unselects all nodes; otherwise, it unselects all visible nodes.
  */
 export function unselectAllFiltered() {
+    const { searchText, innerMostChildrenIds } = useStore.getState();
+
     // If there's no search text, unselect all nodes
-    if (!searchText.value) {
+    if (!searchText) {
         unselectAll();
     } else {
         // If there's search text, only unselect the visible nodes
-        toggleCheckboxes(innerMostChildrenIds.value, false);
+        toggleCheckboxes(innerMostChildrenIds, false);
     }
 };
 
@@ -42,10 +42,14 @@ export function unselectAllFiltered() {
  * This function selects all nodes by adding all node ids to the checked set and clearing the indeterminate set.
  */
 export function selectAll() {
+    const { nodeMap, updateChecked, updateIndeterminate } = useStore.getState();
+
     // Create a new set containing the ids of all nodes
-    const newChecked = new Set(nodeMap.value.keys());
+    const newChecked = new Set(nodeMap.keys());
     // Update the state to mark all nodes as checked
-    state.value = ({ checked: newChecked, indeterminate: new Set() });
+
+    updateChecked(newChecked);
+    updateIndeterminate(new Set());
 };
 
 /**
@@ -54,6 +58,9 @@ export function selectAll() {
  * This function unselects all nodes by clearing both the checked and indeterminate sets.
  */
 export function unselectAll() {
+    const { updateChecked, updateIndeterminate } = useStore.getState();
     // Update the state to mark all nodes as unchecked
-    state.value = ({ checked: new Set(), indeterminate: new Set() });
+
+    updateChecked(new Set());
+    updateIndeterminate(new Set());
 };

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
     View,
     StyleSheet,
@@ -6,13 +6,6 @@ import {
     TouchableOpacity,
     type TouchableOpacityProps,
 } from "react-native";
-import {
-    computed,
-    effect,
-    Signal,
-    useComputed,
-    useSignal
-} from "@preact/signals-react";
 import { FlashList } from "@shopify/flash-list";
 
 import type {
@@ -26,14 +19,7 @@ import type {
     __FlattenedTreeNode__,
 } from "../types/treeView.types";
 
-import {
-    expanded,
-    globalData,
-    innerMostChildrenIds,
-    searchKeys,
-    searchText,
-    state
-} from "../signals/global.signals";
+import { useStore } from "../store/global.store";
 import {
     doesNodeContainSearchTerm,
     handleToggleExpand,
@@ -64,74 +50,80 @@ function _NodeList(props: NodeListProps) {
         ExpandCollapseTouchableComponent,
     } = props;
 
-    const filteredTree = React.useMemo(() => {
-        return computed(() => {
-            const searchTrimmed = searchText.value.trim().toLowerCase();
+    const {
+        expanded,
+        globalData,
+        updatedInnerMostChildrenIds,
+        searchKeys,
+        searchText
+    } = useStore();
 
-            const filterTreeData = (_nodes: TreeNode[]): TreeNode[] => {
-                let filtered: TreeNode[] = [];
+    const [filteredTree, setFilteredTree] = useState<TreeNode[]>([]);
+    const [flattenedFilteredNodes, setFlattenedFilteredNodes]
+        = useState<__FlattenedTreeNode__[]>([]);
 
-                for (let node of _nodes) {
-                    if (!searchTrimmed || doesNodeContainSearchTerm(node, searchTrimmed, searchKeys.value)) {
-                        // If node itself matches, include it and all its descendants
-                        filtered.push(node);
-                    } else if (node.children) {
-                        // If node does not match, check its children and include them if they match
-                        const childMatches = filterTreeData(node.children);
-                        if (childMatches.length > 0) {
-                            // If any children match, include the node, replacing its children with the matching ones
-                            filtered.push({ ...node, children: childMatches });
-                        }
+    useEffect(() => {
+        const searchTrimmed = searchText.trim().toLowerCase();
+
+        const filterTreeData = (_nodes: TreeNode[]): TreeNode[] => {
+            let filtered: TreeNode[] = [];
+
+            for (let node of _nodes) {
+                if (!searchTrimmed || doesNodeContainSearchTerm(node, searchTrimmed, searchKeys)) {
+                    // If node itself matches, include it and all its descendants
+                    filtered.push(node);
+                } else if (node.children) {
+                    // If node does not match, check its children and include them if they match
+                    const childMatches = filterTreeData(node.children);
+                    if (childMatches.length > 0) {
+                        // If any children match, include the node, replacing its children with the matching ones
+                        filtered.push({ ...node, children: childMatches });
                     }
                 }
+            }
 
-                return filtered;
-            };
+            return filtered;
+        };
 
-            return filterTreeData(globalData.value);
-        });
-    }, []);
-
-    const flattenedFilteredNodes = React.useMemo(() => {
-        return computed(() => {
-            const flattenTreeData = (
-                _nodes: TreeNode[],
-                level: number = 0,
-            ): __FlattenedTreeNode__[] => {
-                let flattened: __FlattenedTreeNode__[] = [];
-                for (let node of _nodes) {
-                    flattened.push({ ...node, level });
-                    if (node.children && expanded.value.has(node.id)) {
-                        flattened = [...flattened, ...flattenTreeData(node.children, level + 1)];
-                    }
-                }
-                return flattened;
-            };
-
-            return flattenTreeData(filteredTree.value);
-        });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        const tempFilterTree = filterTreeData(globalData);
+        setFilteredTree(tempFilterTree);
+    }, [searchText, searchKeys, globalData]);
 
     React.useEffect(() => {
-        effect(() => {
-            const allLeafIds: string[] = [];
-            const getLeafNodes = (_nodes: TreeNode[]) => {
-                for (let node of _nodes) {
-                    if (node.children) {
-                        getLeafNodes(node.children);
-                    } else {
-                        allLeafIds.push(node.id);
-                    }
+        const flattenTreeData = (
+            _nodes: TreeNode[],
+            level: number = 0,
+        ): __FlattenedTreeNode__[] => {
+            let flattened: __FlattenedTreeNode__[] = [];
+            for (let node of _nodes) {
+                flattened.push({ ...node, level });
+                if (node.children && expanded.has(node.id)) {
+                    flattened = [...flattened, ...flattenTreeData(node.children, level + 1)];
                 }
-            };
+            }
+            return flattened;
+        };
 
-            getLeafNodes(filteredTree.value);
+        const tempFlattenTreeData = flattenTreeData(filteredTree);
+        setFlattenedFilteredNodes(tempFlattenTreeData);
+    }, [filteredTree, expanded]);
 
-            innerMostChildrenIds.value = allLeafIds;
-        });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    useEffect(() => {
+        const allLeafIds: string[] = [];
+        const getLeafNodes = (_nodes: TreeNode[]) => {
+            for (let node of _nodes) {
+                if (node.children) {
+                    getLeafNodes(node.children);
+                } else {
+                    allLeafIds.push(node.id);
+                }
+            }
+        };
+
+        getLeafNodes(filteredTree);
+
+        updatedInnerMostChildrenIds(allLeafIds);
+    }, [filteredTree, updatedInnerMostChildrenIds]);
 
     const nodeRenderer = React.useCallback((
         { item }: { item: __FlattenedTreeNode__; }
@@ -140,6 +132,7 @@ function _NodeList(props: NodeListProps) {
             <Node
                 node={item}
                 level={item.level || 0}
+
                 checkBoxViewStyleProps={checkBoxViewStyleProps}
 
                 CheckboxComponent={CheckboxComponent}
@@ -162,7 +155,7 @@ function _NodeList(props: NodeListProps) {
             removeClippedSubviews={true}
             keyboardShouldPersistTaps="handled"
             drawDistance={50}
-            data={flattenedFilteredNodes.value}
+            data={flattenedFilteredNodes}
             renderItem={nodeRenderer}
             keyExtractor={keyExtractor}
             ListHeaderComponent={<HeaderFooterView />}
@@ -189,10 +182,23 @@ interface NodeProps {
     ExpandCollapseTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
 }
 
+function getValue(
+    isChecked: boolean,
+    isIndeterminate: boolean
+): CheckboxValueType {
+    if (isIndeterminate) {
+        return 'indeterminate';
+    } else if (isChecked) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 const Node = React.memo(_Node);
 function _Node(props: NodeProps) {
     const {
-        node: _node,
+        node,
         level,
 
         checkBoxViewStyleProps,
@@ -202,36 +208,25 @@ function _Node(props: NodeProps) {
         ExpandCollapseTouchableComponent = TouchableOpacity,
     } = props;
 
-    const node = useSignal(_node);
-    React.useEffect(() => {
-        node.value = _node;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [_node]);
+    const { expanded, checked, indeterminate } = useStore();
 
-    const isChecked = useComputed(() => state.value.checked.has(node.value.id));
-    const isIndeterminate = useComputed(() => state.value.indeterminate.has(
-        node.value.id
-    ));
-    const value: Signal<CheckboxValueType> = useComputed(() => {
-        if (isIndeterminate.value) {
-            return 'indeterminate';
-        } else if (isChecked.value) {
-            return true;
-        } else {
-            return false;
-        }
-    });
-    const isExpanded = useComputed(() => expanded.value.has(node.value.id));
+    const isChecked = checked.has(node.id);
+    const isIndeterminate = indeterminate.has(node.id);
+    const isExpanded = expanded.has(node.id);
+
+    const [value, setValue] = useState(getValue(isChecked, isIndeterminate));
+
+    useEffect(() => {
+        setValue(getValue(isChecked, isIndeterminate));
+    }, [isChecked, isIndeterminate]);
 
     const _onToggleExpand = React.useCallback(() => {
-        handleToggleExpand(node.value.id);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        handleToggleExpand(node.id);
+    }, [node.id]);
 
     const _onCheck = React.useCallback(() => {
-        toggleCheckboxes([node.value.id]);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        toggleCheckboxes([node.id]);
+    }, [node.id]);
 
     return (
         <View style={[
@@ -240,17 +235,17 @@ function _Node(props: NodeProps) {
         ]}>
             <View style={styles.nodeCheckboxAndArrowRow}>
                 <CheckboxComponent
-                    text={node.value.name}
+                    text={node.name}
                     onValueChange={_onCheck}
-                    value={value.value}
+                    value={value}
                     {...checkBoxViewStyleProps} />
 
-                {node.value.children?.length ? (
+                {node.children?.length ? (
                     <ExpandCollapseTouchableComponent
                         style={styles.nodeExpandableArrowTouchable}
                         onPress={_onToggleExpand}>
                         <ExpandCollapseIconComponent
-                            isExpanded={isExpanded.value}
+                            isExpanded={isExpanded}
                         />
                     </ExpandCollapseTouchableComponent>
                 ) : null}

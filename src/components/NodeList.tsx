@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
     View,
     StyleSheet,
@@ -58,11 +58,11 @@ function _NodeList(props: NodeListProps) {
         searchText
     } = useStore();
 
-    const [filteredTree, setFilteredTree] = useState<TreeNode[]>([]);
+    const [filteredTree, setFilteredTree] = React.useState<TreeNode[]>([]);
     const [flattenedFilteredNodes, setFlattenedFilteredNodes]
-        = useState<__FlattenedTreeNode__[]>([]);
+        = React.useState<__FlattenedTreeNode__[]>([]);
 
-    useEffect(() => {
+    React.useEffect(() => {
         const searchTrimmed = searchText.trim().toLowerCase();
 
         const filterTreeData = (_nodes: TreeNode[]): TreeNode[] => {
@@ -108,7 +108,7 @@ function _NodeList(props: NodeListProps) {
         setFlattenedFilteredNodes(tempFlattenTreeData);
     }, [filteredTree, expanded]);
 
-    useEffect(() => {
+    React.useEffect(() => {
         const allLeafIds: string[] = [];
         const getLeafNodes = (_nodes: TreeNode[]) => {
             for (let node of _nodes) {
@@ -214,9 +214,9 @@ function _Node(props: NodeProps) {
     const isIndeterminate = indeterminate.has(node.id);
     const isExpanded = expanded.has(node.id);
 
-    const [value, setValue] = useState(getValue(isChecked, isIndeterminate));
+    const [value, setValue] = React.useState(getValue(isChecked, isIndeterminate));
 
-    useEffect(() => {
+    React.useEffect(() => {
         setValue(getValue(isChecked, isIndeterminate));
     }, [isChecked, isIndeterminate]);
 

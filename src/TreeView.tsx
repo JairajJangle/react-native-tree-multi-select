@@ -36,8 +36,6 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
     } = props;
 
     const {
-      cleanUpGlobalSignals,
-
       expanded,
       updateExpanded,
 
@@ -49,7 +47,9 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
 
       updatedSearchKeys,
 
-      checked
+      checked,
+
+      cleanUpGlobalStore,
     } = useStore();
 
     React.useImperativeHandle(ref, () => ({
@@ -110,9 +110,9 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
 
     React.useEffect(() => {
       return () => {
-        cleanUpGlobalSignals();
+        cleanUpGlobalStore();
       };
-    }, [cleanUpGlobalSignals]);
+    }, [cleanUpGlobalStore]);
 
     return (
       <NodeList

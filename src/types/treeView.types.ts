@@ -26,7 +26,6 @@ export type TreeFlatListProps<ItemT = any> = Omit<
     FlashListProps<ItemT>,
     "data"
     | "renderItem"
-    | "keyExtractor"
 >;
 
 export interface TreeViewProps {

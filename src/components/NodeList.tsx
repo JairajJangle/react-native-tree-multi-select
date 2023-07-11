@@ -147,8 +147,6 @@ function _NodeList(props: NodeListProps) {
         checkBoxViewStyleProps
     ]);
 
-    const keyExtractor = React.useCallback((item: TreeNode) => item.id, []);
-
     return (
         <FlashList
             estimatedItemSize={36}
@@ -157,7 +155,6 @@ function _NodeList(props: NodeListProps) {
             drawDistance={50}
             data={flattenedFilteredNodes}
             renderItem={nodeRenderer}
-            keyExtractor={keyExtractor}
             ListHeaderComponent={<HeaderFooterView />}
             ListFooterComponent={<HeaderFooterView />}
             {...treeFlashListProps}

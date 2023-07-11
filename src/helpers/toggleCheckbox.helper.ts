@@ -113,15 +113,15 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
      */
     const updateNodeAndAncestorsState = (nodeId: string) => {
         const node = nodeMap.get(nodeId);
-        const hasOnlyOneChild = node?.children && node.children.length === 1;
 
         // Update the node's state based on the state of its descendants.
         if (areAllDescendantsChecked(nodeId)) {
             tempChecked.add(nodeId);
             tempIndeterminate.delete(nodeId);
         } else if (areAnyDescendantsChecked(nodeId)) {
-            if (hasOnlyOneChild) {
-                // If a node has only one child and it's not checked,
+            // Condition to check if all direct children and all descendants are checked.
+            if (node?.children && node.children.every(childNode => areAllDescendantsChecked(childNode.id))) {
+                // If a node's all direct children and all descendants are checked,
                 // remove this node from both checked and indeterminate sets.
                 tempChecked.delete(nodeId);
                 tempIndeterminate.delete(nodeId);

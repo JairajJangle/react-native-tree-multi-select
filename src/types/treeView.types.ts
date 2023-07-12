@@ -65,9 +65,9 @@ type CheckboxProps = Omit<RNPaperCheckboxAndroidProps, "onPress" | "status">;
 
 export interface CheckBoxViewStyleProps {
     // Optional style modifiers
-    outermostParentViewStyle?: StyleProp<ViewStyle> | {};
-    checkboxParentViewStyle?: StyleProp<ViewStyle> | {};
-    textTouchableStyle?: StyleProp<ViewStyle> | {};
+    outermostParentViewStyle?: StyleProp<ViewStyle>;
+    checkboxParentViewStyle?: StyleProp<ViewStyle>;
+    textTouchableStyle?: StyleProp<ViewStyle>;
 
     // Optional checkbox and text component props
     checkboxProps?: CheckboxProps;

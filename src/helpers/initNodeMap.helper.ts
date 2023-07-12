@@ -1,7 +1,7 @@
 import type { TreeNode } from "../types/treeView.types";
 import {
-    useStore
-} from "../store/global.store";
+    useTreeViewStore
+} from "../store/treeView.store";
 import { toggleCheckboxes } from "./toggleCheckbox.helper";
 
 /**
@@ -20,7 +20,7 @@ export function initializeNodeMaps(
     const {
         updateNodeMap,
         updateChildToParentMap
-    } = useStore.getState();
+    } = useTreeViewStore.getState();
 
     const tempNodeMap: Map<string, TreeNode> = new Map();;
     const tempChildToParentMap: Map<string, string> = new Map();;

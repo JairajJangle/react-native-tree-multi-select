@@ -14,7 +14,7 @@ import {
   expandAll,
   collapseAll
 } from './helpers';
-import { useStore } from './store/global.store';
+import { useTreeViewStore } from './store/treeView.store';
 import { InteractionManager } from 'react-native';
 
 const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
@@ -32,15 +32,17 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
 
       CheckboxComponent,
       ExpandCollapseIconComponent,
-      ExpandCollapseTouchableComponent
+      ExpandCollapseTouchableComponent,
+
+      indentationMultiplier
     } = props;
 
     const {
       expanded,
       updateExpanded,
 
-      globalData,
-      updateGlobalData,
+      initialTreeViewData,
+      updateInitialTreeViewData,
 
       searchText,
       updatedSearchText,
@@ -49,8 +51,8 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
 
       checked,
 
-      cleanUpGlobalStore,
-    } = useStore();
+      cleanUpTreeViewStore,
+    } = useTreeViewStore();
 
     React.useImperativeHandle(ref, () => ({
       selectAll,
@@ -71,12 +73,17 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
     }
 
     React.useEffect(() => {
-      updateGlobalData(data);
+      updateInitialTreeViewData(data);
+
       initializeNodeMaps(
         data,
         preselectedIds,
       );
-    }, [updateGlobalData, data, preselectedIds]);
+    }, [
+      updateInitialTreeViewData,
+      data,
+      preselectedIds
+    ]);
 
 
     const getIds = React.useCallback((node: TreeNode): string[] => {
@@ -98,7 +105,9 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
     React.useEffect(() => {
       if (searchText) {
         InteractionManager.runAfterInteractions(() => {
-          updateExpanded(new Set(globalData.flatMap((item) => getIds(item))));
+          updateExpanded(new Set(initialTreeViewData.flatMap(
+            (item) => getIds(item)
+          )));
         });
       }
       else {
@@ -106,18 +115,19 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
           updateExpanded(new Set());
         });
       }
-    }, [getIds, globalData, searchText, updateExpanded]);
+    }, [getIds, initialTreeViewData, searchText, updateExpanded]);
 
     React.useEffect(() => {
       return () => {
-        cleanUpGlobalStore();
+        cleanUpTreeViewStore();
       };
-    }, [cleanUpGlobalStore]);
+    }, [cleanUpTreeViewStore]);
 
     return (
       <NodeList
         treeFlashListProps={treeFlashListProps}
         checkBoxViewStyleProps={checkBoxViewStyleProps}
+        indentationMultiplier={indentationMultiplier}
 
         CheckboxComponent={CheckboxComponent}
         ExpandCollapseIconComponent={ExpandCollapseIconComponent}

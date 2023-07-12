@@ -1,5 +1,5 @@
 import { TreeNode } from "../types/treeView.types";
-import { useStore } from "../store/global.store";
+import { useTreeViewStore } from "../store/treeView.store";
 
 /**
  * Toggle the expanded state of a tree node by its ID.
@@ -10,7 +10,11 @@ import { useStore } from "../store/global.store";
  * @param id - The ID of the tree node to toggle.
  */
 export function handleToggleExpand(id: string) {
-    const { globalData, expanded, updateExpanded } = useStore.getState();
+    const {
+        initialTreeViewData,
+        expanded,
+        updateExpanded
+    } = useTreeViewStore.getState();
 
     // Create a new Set based on the current expanded state
     const newExpanded = new Set(expanded);
@@ -50,7 +54,7 @@ export function handleToggleExpand(id: string) {
     }
 
     // Find the node to expand or collapse
-    const node = findNode(globalData);
+    const node = findNode(initialTreeViewData);
 
     if (expanded.has(id)) {
         // If the node is currently expanded, collapse it and its descendants
@@ -71,7 +75,7 @@ export function handleToggleExpand(id: string) {
  * Expand all nodes in the tree.
  */
 export function expandAll() {
-    const { nodeMap, updateExpanded } = useStore.getState();
+    const { nodeMap, updateExpanded } = useTreeViewStore.getState();
     // Create a new Set containing the IDs of all nodes
     const newExpanded = new Set(nodeMap.keys());
     updateExpanded(newExpanded);
@@ -81,7 +85,7 @@ export function expandAll() {
  * Collapse all nodes in the tree.
  */
 export function collapseAll() {
-    const { updateExpanded } = useStore.getState();
+    const { updateExpanded } = useTreeViewStore.getState();
     // Create an empty Set
     const newExpanded = new Set<string>();
     updateExpanded(newExpanded);

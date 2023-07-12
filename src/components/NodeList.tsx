@@ -4,22 +4,19 @@ import {
     StyleSheet,
 
     TouchableOpacity,
-    type TouchableOpacityProps,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 
 import type {
-    TreeFlatListProps,
     TreeNode,
 
     CheckboxValueType,
-    ExpandIconProps,
-    CheckBoxViewStyleProps,
-    CheckBoxViewProps,
     __FlattenedTreeNode__,
+    NodeListProps,
+    NodeProps,
 } from "../types/treeView.types";
 
-import { useStore } from "../store/global.store";
+import { useTreeViewStore } from "../store/treeView.store";
 import {
     doesNodeContainSearchTerm,
     handleToggleExpand,
@@ -27,15 +24,7 @@ import {
 } from "../helpers";
 import { CheckboxView } from "./CheckboxView";
 import CustomExpandCollapseIcon from "./CustomExpandCollapseIcon";
-
-interface NodeListProps {
-    treeFlashListProps?: TreeFlatListProps;
-    checkBoxViewStyleProps?: CheckBoxViewStyleProps;
-
-    CheckboxComponent?: React.ComponentType<CheckBoxViewProps>;
-    ExpandCollapseIconComponent?: React.ComponentType<ExpandIconProps>;
-    ExpandCollapseTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
-}
+import { defaultIndentationMultiplier } from "../constants/treeView.constants";
 
 const NodeList = React.memo(_NodeList);
 export default NodeList;
@@ -44,6 +33,7 @@ function _NodeList(props: NodeListProps) {
     const {
         treeFlashListProps,
         checkBoxViewStyleProps,
+        indentationMultiplier,
 
         CheckboxComponent,
         ExpandCollapseIconComponent,
@@ -52,11 +42,11 @@ function _NodeList(props: NodeListProps) {
 
     const {
         expanded,
-        globalData,
+        initialTreeViewData,
         updatedInnerMostChildrenIds,
         searchKeys,
         searchText
-    } = useStore();
+    } = useTreeViewStore();
 
     const [filteredTree, setFilteredTree] = React.useState<TreeNode[]>([]);
     const [flattenedFilteredNodes, setFlattenedFilteredNodes]
@@ -85,9 +75,9 @@ function _NodeList(props: NodeListProps) {
             return filtered;
         };
 
-        const tempFilterTree = filterTreeData(globalData);
+        const tempFilterTree = filterTreeData(initialTreeViewData);
         setFilteredTree(tempFilterTree);
-    }, [searchText, searchKeys, globalData]);
+    }, [searchText, searchKeys, initialTreeViewData]);
 
     React.useEffect(() => {
         const flattenTreeData = (
@@ -134,6 +124,7 @@ function _NodeList(props: NodeListProps) {
                 level={item.level || 0}
 
                 checkBoxViewStyleProps={checkBoxViewStyleProps}
+                indentationMultiplier={indentationMultiplier}
 
                 CheckboxComponent={CheckboxComponent}
                 ExpandCollapseIconComponent={ExpandCollapseIconComponent}
@@ -144,7 +135,8 @@ function _NodeList(props: NodeListProps) {
         CheckboxComponent,
         ExpandCollapseIconComponent,
         ExpandCollapseTouchableComponent,
-        checkBoxViewStyleProps
+        checkBoxViewStyleProps,
+        indentationMultiplier
     ]);
 
     return (
@@ -168,17 +160,6 @@ function HeaderFooterView() {
     );
 }
 
-interface NodeProps {
-    node: __FlattenedTreeNode__;
-    level: number;
-
-    checkBoxViewStyleProps?: CheckBoxViewStyleProps;
-
-    ExpandCollapseIconComponent?: React.ComponentType<ExpandIconProps>;
-    CheckboxComponent?: React.ComponentType<CheckBoxViewProps>;
-    ExpandCollapseTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
-}
-
 function getValue(
     isChecked: boolean,
     isIndeterminate: boolean
@@ -199,13 +180,14 @@ function _Node(props: NodeProps) {
         level,
 
         checkBoxViewStyleProps,
+        indentationMultiplier = defaultIndentationMultiplier,
 
         ExpandCollapseIconComponent = CustomExpandCollapseIcon,
         CheckboxComponent = CheckboxView,
         ExpandCollapseTouchableComponent = TouchableOpacity,
     } = props;
 
-    const { expanded, checked, indeterminate } = useStore();
+    const { expanded, checked, indeterminate } = useTreeViewStore();
 
     const isChecked = checked.has(node.id);
     const isIndeterminate = indeterminate.has(node.id);
@@ -228,7 +210,7 @@ function _Node(props: NodeProps) {
     return (
         <View style={[
             styles.nodeParentView,
-            { marginLeft: level * 15, }
+            { marginStart: level * indentationMultiplier, }
         ]}>
             <View style={styles.nodeCheckboxAndArrowRow}>
                 <CheckboxComponent

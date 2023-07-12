@@ -1,0 +1,1 @@
+export const defaultIndentationMultiplier = 15;

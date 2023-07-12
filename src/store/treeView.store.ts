@@ -2,7 +2,7 @@ import type { TreeNode } from "src/types/treeView.types";
 
 import { create } from 'zustand';
 
-export type GlobalState = {
+type TreeViewState = {
     checked: Set<string>;
     updateChecked: (checked: Set<string>) => void;
 
@@ -12,8 +12,8 @@ export type GlobalState = {
     expanded: Set<string>;
     updateExpanded: (expanded: Set<string>) => void;
 
-    globalData: TreeNode[];
-    updateGlobalData: (globalData: TreeNode[]) => void;
+    initialTreeViewData: TreeNode[];
+    updateInitialTreeViewData: (initialTreeViewData: TreeNode[]) => void;
 
     nodeMap: Map<string, TreeNode>;
     updateNodeMap: (nodeMap: Map<string, TreeNode>) => void;
@@ -30,10 +30,10 @@ export type GlobalState = {
     innerMostChildrenIds: string[];
     updatedInnerMostChildrenIds: (innerMostChildrenIds: string[]) => void;
 
-    cleanUpGlobalStore: () => void;
+    cleanUpTreeViewStore: () => void;
 };
 
-export const useStore = create<GlobalState>((set) => ({
+export const useTreeViewStore = create<TreeViewState>((set) => ({
     checked: new Set(),
     updateChecked: (checked: Set<string>) => set({ checked }),
 
@@ -43,8 +43,10 @@ export const useStore = create<GlobalState>((set) => ({
     expanded: new Set<string>(),
     updateExpanded: (expanded: Set<string>) => set({ expanded }),
 
-    globalData: [],
-    updateGlobalData: (globalData: TreeNode[]) => set({ globalData }),
+    initialTreeViewData: [],
+    updateInitialTreeViewData: (initialTreeViewData: TreeNode[]) => set({
+        initialTreeViewData
+    }),
 
     nodeMap: new Map<string, TreeNode>(),
     updateNodeMap: (nodeMap: Map<string, TreeNode>) => set({ nodeMap }),
@@ -61,12 +63,12 @@ export const useStore = create<GlobalState>((set) => ({
     innerMostChildrenIds: [],
     updatedInnerMostChildrenIds: (innerMostChildrenIds: string[]) => set({ innerMostChildrenIds }),
 
-    cleanUpGlobalStore: () =>
+    cleanUpTreeViewStore: () =>
         set({
             checked: new Set(),
             indeterminate: new Set(),
             expanded: new Set<string>(),
-            globalData: [],
+            initialTreeViewData: [],
             nodeMap: new Map<string, TreeNode>(),
             childToParentMap: new Map<string, string>(),
             searchText: "",

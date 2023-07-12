@@ -1,4 +1,9 @@
-import type { StyleProp, TextProps, TouchableOpacityProps, ViewStyle } from "react-native";
+import type {
+    StyleProp,
+    TextProps,
+    TouchableOpacityProps,
+    ViewStyle
+} from "react-native";
 import type { FlashListProps } from "@shopify/flash-list";
 import {
     type Props as RNPaperCheckboxAndroidProps
@@ -28,20 +33,32 @@ export type TreeFlatListProps<ItemT = any> = Omit<
     | "renderItem"
 >;
 
-export interface TreeViewProps {
+export interface TreeItemCustomizations {
+    checkBoxViewStyleProps?: CheckBoxViewStyleProps;
+
+    indentationMultiplier?: number;
+
+    CheckboxComponent?: React.ComponentType<CheckBoxViewProps>;
+    ExpandCollapseIconComponent?: React.ComponentType<ExpandIconProps>;
+    ExpandCollapseTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
+}
+
+export interface NodeProps extends TreeItemCustomizations {
+    node: __FlattenedTreeNode__;
+    level: number;
+}
+
+export interface NodeListProps extends TreeItemCustomizations {
+    treeFlashListProps?: TreeFlatListProps;
+}
+
+export interface TreeViewProps extends NodeListProps {
     data: TreeNode[];
 
     onCheck?: (checkedIds: string[]) => void;
     onExpand?: (expandedIds: string[]) => void;
 
-    preselectedIds?: string[],
-
-    treeFlashListProps?: TreeFlatListProps;
-    checkBoxViewStyleProps?: CheckBoxViewStyleProps;
-
-    CheckboxComponent?: React.ComponentType<CheckBoxViewProps>;
-    ExpandCollapseIconComponent?: React.ComponentType<ExpandIconProps>;
-    ExpandCollapseTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
+    preselectedIds?: string[];
 }
 
 type CheckboxProps = Omit<RNPaperCheckboxAndroidProps, "onPress" | "status">;

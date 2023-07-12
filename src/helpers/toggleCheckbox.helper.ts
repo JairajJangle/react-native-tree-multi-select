@@ -1,4 +1,4 @@
-import { useStore } from "../store/global.store";
+import { useTreeViewStore } from "../store/treeView.store";
 
 /**
  * Function to toggle checkbox state for a tree structure.
@@ -17,7 +17,7 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
 
         nodeMap,
         childToParentMap
-    } = useStore.getState();
+    } = useTreeViewStore.getState();
 
     // Create new sets for checked and indeterminate state so as not to mutate the original state.
     const tempChecked = new Set(checked);

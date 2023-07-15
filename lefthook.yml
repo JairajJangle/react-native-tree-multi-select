@@ -1,13 +1,14 @@
 pre-commit:
   parallel: true
   commands:
+    test:
+      run: yarn test
     lint:
-      files: git diff --name-only @{push}
       glob: "*.{js,ts,jsx,tsx}"
-      run: npx eslint {files}
+      run: yarn lint
     types:
       files: git diff --name-only @{push}
-      glob: "*.{js,ts, jsx, tsx}"
+      glob: "*.{js,ts,jsx,tsx}"
       run: npx tsc --noEmit
 commit-msg:
   parallel: true

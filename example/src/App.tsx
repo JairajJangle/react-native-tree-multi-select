@@ -6,16 +6,20 @@ import {
   StyleSheet,
   View
 } from 'react-native';
+
+import SearchInput from './components/SearchInput';
+
 import { debounce } from "lodash";
+
 import {
   TreeView,
   type TreeViewRef
 } from 'react-native-tree-multi-select';
-import { sampleData3 } from './sample/sampleData3';
-import SearchInput from './components/SearchInput';
+
+import { sampleData3 as _sampleData } from './sample/sampleData3';
 
 export default function App() {
-  const sampleData = React.useRef(sampleData3);
+  const sampleData = React.useRef(_sampleData);
   const treeViewRef = React.useRef<TreeViewRef | null>(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps

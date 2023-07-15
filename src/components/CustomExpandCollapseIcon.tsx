@@ -3,7 +3,11 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { ExpandIconProps } from "src/types/treeView.types";
 
-export default function CustomExpandCollapseIcon(props: ExpandIconProps) {
+export const CustomExpandCollapseIcon = React.memo(
+    _CustomExpandCollapseIcon
+);
+
+function _CustomExpandCollapseIcon(props: ExpandIconProps) {
     const { isExpanded } = props;
 
     return (

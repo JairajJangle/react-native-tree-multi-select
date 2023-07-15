@@ -2,7 +2,6 @@ import type { TreeNode } from "../types/treeView.types";
 import {
     useTreeViewStore
 } from "../store/treeView.store";
-import { toggleCheckboxes } from "./toggleCheckbox.helper";
 
 /**
  * Initialize the maps for tracking tree nodes and their parent-child relationships.
@@ -13,10 +12,7 @@ import { toggleCheckboxes } from "./toggleCheckbox.helper";
  * @param initialData - An array of TreeNode objects that represent the initial tree structure.
  * @param preselectedIds - An optional array of TreeNode IDs that should be preselected.
  */
-export function initializeNodeMaps(
-    initialData: TreeNode[],
-    preselectedIds: string[] = [],
-) {
+export function initializeNodeMaps(initialData: TreeNode[]) {
     const {
         updateNodeMap,
         updateChildToParentMap
@@ -50,7 +46,4 @@ export function initializeNodeMaps(
 
     updateNodeMap(tempNodeMap);
     updateChildToParentMap(tempChildToParentMap);
-
-    // Check any preselected nodes
-    toggleCheckboxes(preselectedIds, true);
 }

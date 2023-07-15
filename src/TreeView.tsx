@@ -1,4 +1,5 @@
 import React from 'react';
+import { InteractionManager } from 'react-native';
 import type {
   TreeNode,
   TreeViewProps,
@@ -12,10 +13,10 @@ import {
   unselectAllFiltered,
   initializeNodeMaps,
   expandAll,
-  collapseAll
+  collapseAll,
+  toggleCheckboxes
 } from './helpers';
 import { useTreeViewStore } from './store/treeView.store';
-import { InteractionManager } from 'react-native';
 
 const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
   (props, ref) => {
@@ -25,7 +26,7 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       onCheck,
       onExpand,
 
-      preselectedIds,
+      preselectedIds = [],
 
       treeFlashListProps,
       checkBoxViewStyleProps,
@@ -45,9 +46,9 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       updateInitialTreeViewData,
 
       searchText,
-      updatedSearchText,
+      updateSearchText,
 
-      updatedSearchKeys,
+      updateSearchKeys,
 
       checked,
 
@@ -68,17 +69,17 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
     }));
 
     function setSearchText(text: string, keys: string[] = ["name"]) {
-      updatedSearchText(text);
-      updatedSearchKeys(keys);
+      updateSearchText(text);
+      updateSearchKeys(keys);
     }
 
     React.useEffect(() => {
       updateInitialTreeViewData(data);
 
-      initializeNodeMaps(
-        data,
-        preselectedIds,
-      );
+      initializeNodeMaps(data);
+
+      // Check any preselected nodes
+      toggleCheckboxes(preselectedIds, true);
     }, [
       updateInitialTreeViewData,
       data,

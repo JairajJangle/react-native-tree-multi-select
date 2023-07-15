@@ -1,3 +1,4 @@
+import { TreeNode } from "../types/treeView.types";
 import { useTreeViewStore } from "../store/treeView.store";
 import { toggleCheckboxes } from "./toggleCheckbox.helper";
 
@@ -68,3 +69,29 @@ export function unselectAll() {
     updateChecked(new Set());
     updateIndeterminate(new Set());
 };
+
+/**
+ * Get the ids of the innermost children in the tree
+ * 
+ * @param filteredTreeNodes - The filtered tree data
+ * @returns - array of ids of the inner most children only
+ */
+export function getInnerMostChildrenIdsInTree(
+    filteredTreeNodes: TreeNode[]
+): string[] {
+    const allLeafIds: string[] = [];
+
+    const getLeafNodes = (_nodes: TreeNode[]) => {
+        for (let node of _nodes) {
+            if (node.children) {
+                getLeafNodes(node.children);
+            } else {
+                allLeafIds.push(node.id);
+            }
+        }
+    };
+
+    getLeafNodes(filteredTreeNodes);
+
+    return allLeafIds;
+}

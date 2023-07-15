@@ -2,34 +2,44 @@ import type { TreeNode } from "src/types/treeView.types";
 
 import { create } from 'zustand';
 
-type TreeViewState = {
+export type TreeViewState = {
+    // Store ids of checked tree nodes
     checked: Set<string>;
     updateChecked: (checked: Set<string>) => void;
 
+    // Store ids of indeterminate state nodes
     indeterminate: Set<string>;
     updateIndeterminate: (indeterminate: Set<string>) => void;
 
+    // Store ids of expanded parent nodes
     expanded: Set<string>;
     updateExpanded: (expanded: Set<string>) => void;
 
+    // Store initial tree view data exactly as passed by the consumer
     initialTreeViewData: TreeNode[];
     updateInitialTreeViewData: (initialTreeViewData: TreeNode[]) => void;
 
+    // Map to store the id to the tree node map
     nodeMap: Map<string, TreeNode>;
     updateNodeMap: (nodeMap: Map<string, TreeNode>) => void;
 
+    // Map to store child id to parent id map
     childToParentMap: Map<string, string>;
     updateChildToParentMap: (childToParentMap: Map<string, string>) => void;
 
+    // Search text state
     searchText: string;
-    updatedSearchText: (searchText: string) => void;
+    updateSearchText: (searchText: string) => void;
 
+    // Search keys state
     searchKeys: string[];
-    updatedSearchKeys: (searchKeys: string[]) => void;
+    updateSearchKeys: (searchKeys: string[]) => void;
 
+    // To store inner most children ids - required to un/select all filtered-only nodes
     innerMostChildrenIds: string[];
-    updatedInnerMostChildrenIds: (innerMostChildrenIds: string[]) => void;
+    updateInnerMostChildrenIds: (innerMostChildrenIds: string[]) => void;
 
+    // Cleanup all states in this store
     cleanUpTreeViewStore: () => void;
 };
 
@@ -55,13 +65,13 @@ export const useTreeViewStore = create<TreeViewState>((set) => ({
     updateChildToParentMap: (childToParentMap: Map<string, string>) => set({ childToParentMap }),
 
     searchText: "",
-    updatedSearchText: (searchText: string) => set({ searchText }),
+    updateSearchText: (searchText: string) => set({ searchText }),
 
     searchKeys: [""],
-    updatedSearchKeys: (searchKeys: string[]) => set({ searchKeys }),
+    updateSearchKeys: (searchKeys: string[]) => set({ searchKeys }),
 
     innerMostChildrenIds: [],
-    updatedInnerMostChildrenIds: (innerMostChildrenIds: string[]) => set({ innerMostChildrenIds }),
+    updateInnerMostChildrenIds: (innerMostChildrenIds: string[]) => set({ innerMostChildrenIds }),
 
     cleanUpTreeViewStore: () =>
         set({

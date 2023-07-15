@@ -80,12 +80,8 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
 
       // Check any preselected nodes
       toggleCheckboxes(preselectedIds, true);
-    }, [
-      updateInitialTreeViewData,
-      data,
-      preselectedIds
-    ]);
-
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const getIds = React.useCallback((node: TreeNode): string[] => {
       if (!node.children || node.children.length === 0) {

@@ -59,6 +59,13 @@ export function handleToggleExpand(id: string) {
     if (expanded.has(id)) {
         // If the node is currently expanded, collapse it and its descendants
         newExpanded.delete(id);
+        /* 
+            istanbul ignore next:
+             
+            ignore because this condition is just added to satisfy 
+            typescript type check but the node will never be undefined if it is already in 
+            expanded Set 
+        */
         if (node) {
             deleteChildrenFromExpanded(node);
         }

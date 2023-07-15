@@ -33,7 +33,9 @@ describe('getFilteredTreeData', () => {
         const result = getFilteredTreeData(nodes, trimmedSearchTerm, searchKeys);
         expect(result.length).toBeGreaterThan(0);
         result.forEach(node => {
-            expect(node.children?.some(child => child.name === trimmedSearchTerm)).toBeTruthy();
+            expect(node.children?.some(
+                child => child.name === trimmedSearchTerm
+            )).toBeTruthy();
         });
     });
 

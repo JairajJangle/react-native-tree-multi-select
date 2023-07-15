@@ -9,7 +9,49 @@ import {
     initializeNodeMaps
 } from '../helpers';
 import { act } from 'react-test-renderer';
-import { TreeNode } from '../types/treeView.types';
+
+describe('handleToggleExpand', () => {
+    beforeEach(() => {
+        useTreeViewStore.setState(useTreeViewStore.getState(), true);
+
+        useTreeViewStore.getState().updateInitialTreeViewData(tree3d2b);
+        initializeNodeMaps(tree3d2b);
+    });
+
+    test('handleToggleExpand correctly toggles the expanded state of a tree node', () => {
+        act(() => {
+            handleToggleExpand('1');
+        });
+
+        // Node '1' should now be expanded
+        let { expanded } = useTreeViewStore.getState();
+        expect(expanded.has('1')).toBeTruthy();
+
+        act(() => {
+            handleToggleExpand('1.2');
+        });
+
+        // Node '1.2' should now be expanded, Node '1'(parent) should remain expanded
+        expanded = useTreeViewStore.getState().expanded;
+        expect(expanded.has('1.2')).toBeTruthy();
+        expect(expanded.has('1')).toBeTruthy();
+
+        act(() => {
+            handleToggleExpand('1');
+            handleToggleExpand('2');
+        });
+
+        // Node '1' and its descendants should now be collapsed but Node '2' should remain expanded
+        expanded = useTreeViewStore.getState().expanded;
+
+        expect(expanded.has('1')).toBeFalsy();
+        expect(expanded.has('1.1')).toBeFalsy();
+        expect(expanded.has('1.2')).toBeFalsy();
+        expect(expanded.has('1.2.1')).toBeFalsy();
+
+        expect(expanded.has('2')).toBeTruthy();
+    });
+});
 
 describe('expandAll', () => {
     beforeEach(() => {
@@ -83,75 +125,5 @@ describe('collapseAll', () => {
         const { expanded } = useTreeViewStore.getState();
 
         expect(expanded).toEqual(new Set<string>());
-    });
-});
-
-describe('handleToggleExpand', () => {
-    beforeEach(() => {
-        useTreeViewStore.setState(useTreeViewStore.getState(), true);
-    });
-
-    test('handleToggleExpand correctly toggles the expanded state of a tree node', () => {
-        const initialData: TreeNode[] = [
-            {
-                id: '1',
-                name: 'Node 1',
-                children: [
-                    {
-                        id: '1.1',
-                        name: 'Node 1.1'
-                    },
-                    {
-                        id: '1.2',
-                        name: 'Node 1.2',
-                        children: [{
-                            id: '1.2.1',
-                            name: 'Node 1.2.1'
-                        }]
-                    },
-                ],
-            },
-            {
-                id: '2',
-                name: 'Node 2'
-            },
-        ];
-
-        act(() => {
-            useTreeViewStore.getState().updateInitialTreeViewData(initialData);
-            initializeNodeMaps(initialData);
-        });
-
-        act(() => {
-            handleToggleExpand('1');
-        });
-
-        // Node '1' should now be expanded
-        let { expanded } = useTreeViewStore.getState();
-        expect(expanded.has('1')).toBeTruthy();
-
-        act(() => {
-            handleToggleExpand('1.2');
-        });
-
-        // Node '1.2' should now be expanded, Node '1'(parent) should remain expanded
-        expanded = useTreeViewStore.getState().expanded;
-        expect(expanded.has('1.2')).toBeTruthy();
-        expect(expanded.has('1')).toBeTruthy();
-
-        act(() => {
-            handleToggleExpand('1');
-            handleToggleExpand('2');
-        });
-
-        // Node '1' and its descendants should now be collapsed but Node '2' should remain expanded
-        expanded = useTreeViewStore.getState().expanded;
-
-        expect(expanded.has('1')).toBeFalsy();
-        expect(expanded.has('1.1')).toBeFalsy();
-        expect(expanded.has('1.2')).toBeFalsy();
-        expect(expanded.has('1.2.1')).toBeFalsy();
-
-        expect(expanded.has('2')).toBeTruthy();
     });
 });

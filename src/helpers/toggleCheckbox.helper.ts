@@ -120,6 +120,16 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
             tempIndeterminate.delete(nodeId);
         } else if (areAnyDescendantsChecked(nodeId)) {
             // Condition to check if all direct children and all descendants are checked.
+
+            /* 
+                istanbul ignore next
+             
+                NOTE: Below 2 lines in the condition are not covered in unit test
+                This condition will only be true if for some reason areAllDescendantsChecked(nodeId) 
+                is false, while node?.children && node.children.every(childNode => areAllDescendantsChecked(childNode.id)) 
+                is true. Given the current logic of areAllDescendantsChecked, 
+                this scenario is very unlikely to occur.
+             */
             if (node?.children && node.children.every(childNode => areAllDescendantsChecked(childNode.id))) {
                 // If a node's all direct children and all descendants are checked,
                 // remove this node from both checked and indeterminate sets.

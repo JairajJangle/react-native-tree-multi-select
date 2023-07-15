@@ -1,9 +1,9 @@
+jest.mock('zustand');
+
 import { act } from 'react-test-renderer';
 import { useTreeViewStore } from '../store/treeView.store';
 import { TreeNode } from 'src/types/treeView.types';
 import { initializeNodeMaps } from '../helpers';
-
-jest.mock('zustand');
 
 describe('initNodeMap helper', () => {
     beforeEach(() => {

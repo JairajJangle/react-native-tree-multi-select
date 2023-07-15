@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 export * from "./expandCollapse.helper";
 export * from "./initNodeMap.helper";
 export * from "./selectAll.helper";

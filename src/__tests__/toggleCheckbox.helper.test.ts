@@ -20,69 +20,86 @@ describe('toggleCheckboxes', () => {
     it('correctly updates checkbox states', () => {
         // Act
         act(() => {
+            // Pre-selection also got covered in this test
             toggleCheckboxes(['1', '2'], true);
         });
 
         // Assert
         const { checked, indeterminate } = useTreeViewStore.getState();
 
-        expect(checked.has('1')).toBeTruthy();
-        expect(checked.has('1.1')).toBeTruthy();
-        expect(checked.has('1.2')).toBeTruthy();
-        expect(checked.has('1.2.1')).toBeTruthy();
-        expect(checked.has('2')).toBeTruthy();
+        expect(checked).toEqual(new Set([
+            '1',
+            '1.1',
+            '1.1.1',
+            '1.1.2',
+            '1.2',
+            '1.2.1',
+            '1.2.2',
+            '2',
+            '2.1',
+            '2.1.1',
+            '2.1.2',
+            '2.2',
+            '2.2.1',
+            '2.2.2'
+        ]));
 
-        expect(indeterminate.has('1')).toBeFalsy();
-        expect(indeterminate.has('1.1')).toBeFalsy();
-        expect(indeterminate.has('1.2')).toBeFalsy();
-        expect(indeterminate.has('1.2.1')).toBeFalsy();
-        expect(indeterminate.has('2')).toBeFalsy();
+        expect(indeterminate).toEqual(new Set([]));
 
         // Act
         act(() => {
-            toggleCheckboxes(['1.2']);
+            toggleCheckboxes(['1.2']); // Was checked, now should be unchecked
         });
 
         // Assert
-        const { checked: checkedAfterUncheck, indeterminate: indeterminateAfterUncheck } = useTreeViewStore.getState();
+        const {
+            checked: checkedAfterUncheck,
+            indeterminate: indeterminateAfterUncheck
+        } = useTreeViewStore.getState();
 
-        expect(checkedAfterUncheck.has('1')).toBeFalsy();
-        expect(checkedAfterUncheck.has('1.1')).toBeTruthy();
-        expect(checkedAfterUncheck.has('1.2')).toBeFalsy();
-        expect(checkedAfterUncheck.has('1.2.1')).toBeFalsy();
-        expect(checked.has('2')).toBeTruthy();
 
-        expect(indeterminateAfterUncheck.has('1')).toBeTruthy();
-        expect(indeterminateAfterUncheck.has('1.1')).toBeFalsy();
-        expect(indeterminateAfterUncheck.has('1.2')).toBeFalsy();
-        expect(indeterminateAfterUncheck.has('1.2.1')).toBeFalsy();
-        expect(indeterminate.has('2')).toBeFalsy();
+        expect(checkedAfterUncheck).toEqual(new Set([
+            '1.1',
+            '1.1.1',
+            '1.1.2',
+            '2',
+            '2.1',
+            '2.1.1',
+            '2.1.2',
+            '2.2',
+            '2.2.1',
+            '2.2.2'
+        ]));
+
+        expect(indeterminateAfterUncheck).toEqual(new Set([
+            "1"
+        ]));
 
         // Act
         act(() => {
-            toggleCheckboxes(['2']);
+            toggleCheckboxes(['2']); // Was checked, now should be unchecked
         });
 
         // Assert
-        const { checked: checkedAfterUncheck2, indeterminate: indeterminateAfterUncheck2 } = useTreeViewStore.getState();
+        const {
+            checked: checkedAfterUncheck2,
+            indeterminate: indeterminateAfterUncheck2
+        } = useTreeViewStore.getState();
 
-        expect(checkedAfterUncheck2.has('1')).toBeFalsy();
-        expect(checkedAfterUncheck2.has('1.1')).toBeTruthy();
-        expect(checkedAfterUncheck2.has('1.2')).toBeFalsy();
-        expect(checkedAfterUncheck2.has('1.2.1')).toBeFalsy();
-        expect(checkedAfterUncheck2.has('2')).toBeFalsy();
+        expect(checkedAfterUncheck2).toEqual(new Set([
+            '1.1',
+            '1.1.1',
+            '1.1.2'
+        ]));
 
-        expect(indeterminateAfterUncheck2.has('1')).toBeTruthy();
-        expect(indeterminateAfterUncheck2.has('1.1')).toBeFalsy();
-        expect(indeterminateAfterUncheck2.has('1.2')).toBeFalsy();
-        expect(indeterminateAfterUncheck2.has('1.2.1')).toBeFalsy();
-        expect(indeterminateAfterUncheck2.has('2')).toBeFalsy();
+        expect(indeterminateAfterUncheck2).toEqual(new Set([
+            "1"
+        ]));
 
         // Act
         act(() => {
-            toggleCheckboxes(['1.2']);
+            toggleCheckboxes(['1.2']); // Was unchecked, now should be checked
         });
-
 
         // Assert
         const {
@@ -91,16 +108,17 @@ describe('toggleCheckboxes', () => {
         } = useTreeViewStore.getState();
 
         // As all children of node 1 are checked, it should also be checked
-        expect(checkedAfter1ChildrenCheck.has('1')).toBeTruthy();
-        expect(checkedAfter1ChildrenCheck.has('1.1')).toBeTruthy();
-        expect(checkedAfter1ChildrenCheck.has('1.2')).toBeTruthy();
-        expect(checkedAfter1ChildrenCheck.has('1.2.1')).toBeTruthy();
-        expect(checkedAfter1ChildrenCheck.has('2')).toBeFalsy();
+        expect(checkedAfter1ChildrenCheck).toEqual(new Set([
+            '1', // All children are checked again
+            '1.1',
+            '1.1.1',
+            '1.1.2',
+            '1.2',
+            '1.2.1',
+            '1.2.2'
+        ]));
 
-        expect(indeterminateAfter1ChildrenCheck.has('1')).toBeFalsy();
-        expect(indeterminateAfter1ChildrenCheck.has('1.1')).toBeFalsy();
-        expect(indeterminateAfter1ChildrenCheck.has('1.2')).toBeFalsy();
-        expect(indeterminateAfter1ChildrenCheck.has('1.2.1')).toBeFalsy();
-        expect(indeterminateAfter1ChildrenCheck.has('2')).toBeFalsy();
+        // 1 is all checked whereas all children of 2 are unchecked
+        expect(indeterminateAfter1ChildrenCheck).toEqual(new Set([]));
     });
 });

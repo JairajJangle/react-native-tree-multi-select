@@ -28,7 +28,7 @@
   ],
   "scripts": {
     "test": "jest",
-    "test:cov": "jest --coverage --maxWorkers=2",
+    "test:cov": "jest --coverage --maxWorkers=2 --coverageReporters=\"json-summary\"",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "prepack": "bob build",

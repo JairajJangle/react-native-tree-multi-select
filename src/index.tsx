@@ -7,7 +7,7 @@ import type {
     ExpandIconProps,
     CheckBoxViewProps,
     CheckboxValueType,
-    CheckBoxViewStyleProps
+    BuiltInCheckBoxViewStyleProps
 } from "./types/treeView.types";
 
 export * from "./TreeView";
@@ -22,5 +22,5 @@ export type {
     ExpandIconProps,
     CheckBoxViewProps,
     CheckboxValueType,
-    CheckBoxViewStyleProps
+    BuiltInCheckBoxViewStyleProps
 };

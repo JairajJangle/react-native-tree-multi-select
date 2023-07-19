@@ -30,12 +30,13 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
 
       treeFlashListProps,
       checkBoxViewStyleProps,
+      indentationMultiplier,
 
       CheckboxComponent,
       ExpandCollapseIconComponent,
       ExpandCollapseTouchableComponent,
 
-      indentationMultiplier
+      CustomNodeRowComponent,
     } = props;
 
     const {
@@ -129,6 +130,8 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
         CheckboxComponent={CheckboxComponent}
         ExpandCollapseIconComponent={ExpandCollapseIconComponent}
         ExpandCollapseTouchableComponent={ExpandCollapseTouchableComponent}
+
+        CustomNodeRowComponent={CustomNodeRowComponent}
       />
     );
   }

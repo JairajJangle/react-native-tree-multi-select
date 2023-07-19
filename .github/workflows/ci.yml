@@ -33,7 +33,13 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Run unit tests
-        run: yarn test --maxWorkers=2 --coverage
+        run: yarn test:cov
+
+      - name: Update Coverage Badge
+        # GitHub actions: default branch variable
+        # https://stackoverflow.com/questions/64781462/github-actions-default-branch-variable
+        if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        uses: we-cli/coverage-badge-action@main
 
   build-library:
     runs-on: ubuntu-latest

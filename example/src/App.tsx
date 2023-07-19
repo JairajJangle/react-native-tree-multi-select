@@ -1,120 +1,70 @@
 import * as React from 'react';
 
+import SmallDataScreen from './screens/SmallDataScreen';
+import { ShowcaseApp } from '@gorhom/showcase-template';
 import {
-  Button,
-  SafeAreaView,
-  StyleSheet,
-  View
-} from 'react-native';
+  ShowcaseExampleScreenSectionType
+} from '@gorhom/showcase-template/lib/typescript/types';
+import MediumDataScreen from './screens/MediumDataScreen';
+import LargeDataScreen from './screens/LargeDataScreen';
+import CustomCheckboxScreen from './screens/CustomCheckboxScreen';
+import CustomArrowScreen from './screens/CustomArrowScreen';
+import CustomNodeRowViewScreen from './screens/CustomNodeRowViewScreen';
 
-import SearchInput from './components/SearchInput';
-
-import { debounce } from "lodash";
-
-import {
-  TreeView,
-  type TreeViewRef
-} from 'react-native-tree-multi-select';
-
-import { sampleData3 as _sampleData } from './sample/sampleData3';
+const data: ShowcaseExampleScreenSectionType[] = [
+  {
+    title: 'Default UI',
+    data: [
+      {
+        name: 'Small Data',
+        slug: 'small-data',
+        getScreen: () => SmallDataScreen,
+      },
+      {
+        name: 'Medium Data',
+        slug: 'medium-data',
+        getScreen: () => MediumDataScreen,
+      },
+      {
+        name: 'Large Data',
+        slug: 'large-data',
+        getScreen: () => LargeDataScreen,
+      }
+    ],
+  },
+  {
+    title: 'Customizations',
+    data: [
+      {
+        name: 'Custom Checkbox',
+        slug: 'custom-checkbox',
+        getScreen: () => CustomCheckboxScreen,
+      },
+      {
+        name: 'Custom Arrow',
+        slug: 'custom-arrow',
+        getScreen: () => CustomArrowScreen,
+      },
+      {
+        name: 'Custom Row Item',
+        slug: 'custom-row-item',
+        getScreen: () => CustomNodeRowViewScreen,
+      },
+    ],
+  },
+];
 
 export default function App() {
-  const sampleData = React.useRef(_sampleData);
-  const treeViewRef = React.useRef<TreeViewRef | null>(null);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debouncedSetSearchText = React.useCallback(
-    debounce((text) => treeViewRef.current?.setSearchText(text), 375, {
-      leading: true,
-      trailing: true,
-      maxWait: 750
-    }),
-    []
-  );
-
-  const handleSelectionChange = (_checkedIds: string[]) => {
-    // NOTE: Handle _checkedIds here
-  };
-  const handleExpanded = (_expandedIds: string[]) => {
-    // NOTE: Handle _expandedIds here
-  };
-
-  // Expand collapse calls using ref
-  const expandAllPress = () => treeViewRef.current?.expandAll?.();
-  const collapseAllPress = () => treeViewRef.current?.collapseAll?.();
-
-  // Multi-select calls using ref
-  const onSelectAllPress = () => treeViewRef.current?.selectAll?.();
-  const onUnselectAllPress = () => treeViewRef.current?.unselectAll?.();
-  const onSelectAllFilteredPress = () => treeViewRef.current?.selectAllFiltered?.();
-  const onUnselectAllFilteredPress = () => treeViewRef.current?.unselectAllFiltered?.();
-
   return (
-    <SafeAreaView
-      style={styles.mainView}>
-      <SearchInput onChange={debouncedSetSearchText} />
-      <View
-        style={styles.selectionButtonRow}>
-        <Button
-          title='Select All'
-          onPress={onSelectAllPress} />
-        <Button
-          title='Unselect All'
-          onPress={onUnselectAllPress} />
-      </View>
-      <View
-        style={styles.selectionButtonRow}>
-        <Button
-          title='Select Filtered'
-          onPress={onSelectAllFilteredPress} />
-        <Button
-          title='Unselect Filtered'
-          onPress={onUnselectAllFilteredPress} />
-      </View>
-
-      <View
-        style={[styles.selectionButtonRow, styles.selectionButtonBottom]}>
-        <Button
-          title='Expand All'
-          onPress={expandAllPress} />
-        <Button
-          title='Collapse All'
-          onPress={collapseAllPress} />
-      </View>
-
-      <View
-        style={styles.treeViewParent}>
-        <TreeView
-          ref={treeViewRef}
-          data={sampleData.current}
-          onCheck={handleSelectionChange}
-          onExpand={handleExpanded}
-        />
-      </View>
-    </SafeAreaView>
+    <ShowcaseApp
+      version="1.0.0"
+      name="react-native-tree-multi-select"
+      description="⚡️Super-fast tree view with multi-selection capabilities, using checkboxes and search filtering"
+      author={{
+        username: '@JairajJangle',
+        url: 'https://github.com/JairajJangle',
+      }}
+      data={data}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  mainView: {
-    flex: 1,
-    alignSelf: "flex-start",
-    backgroundColor: "white",
-  },
-  selectionButtonRow: {
-    borderTopWidth: 0.5,
-    borderColor: "lightgrey",
-    paddingVertical: 2,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginHorizontal: 10,
-  },
-  selectionButtonBottom: {
-    borderBottomWidth: 0.5,
-    borderColor: "lightgrey"
-  },
-  treeViewParent: {
-    flex: 1,
-    minWidth: "100%"
-  }
-});

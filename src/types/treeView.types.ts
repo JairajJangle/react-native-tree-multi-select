@@ -33,14 +33,27 @@ export type TreeFlatListProps<ItemT = any> = Omit<
     | "renderItem"
 >;
 
+export interface NodeRowProps {
+    node: TreeNode;
+    level: number;
+
+    checkedValue: CheckboxValueType;
+    isExpanded: boolean;
+
+    onCheck: () => void;
+    onExpand: () => void;
+}
+
 export interface TreeItemCustomizations {
-    checkBoxViewStyleProps?: CheckBoxViewStyleProps;
+    checkBoxViewStyleProps?: BuiltInCheckBoxViewStyleProps;
 
     indentationMultiplier?: number;
 
     CheckboxComponent?: React.ComponentType<CheckBoxViewProps>;
     ExpandCollapseIconComponent?: React.ComponentType<ExpandIconProps>;
     ExpandCollapseTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
+
+    CustomNodeRowComponent?: React.ComponentType<NodeRowProps>;
 }
 
 export interface NodeProps extends TreeItemCustomizations {
@@ -63,7 +76,13 @@ export interface TreeViewProps extends NodeListProps {
 
 type CheckboxProps = Omit<RNPaperCheckboxAndroidProps, "onPress" | "status">;
 
-export interface CheckBoxViewStyleProps {
+export interface CheckBoxViewProps {
+    value: CheckboxValueType;
+    onValueChange: (value: boolean) => void;
+    text: string;
+}
+
+export interface BuiltInCheckBoxViewStyleProps {
     // Optional style modifiers
     outermostParentViewStyle?: StyleProp<ViewStyle>;
     checkboxParentViewStyle?: StyleProp<ViewStyle>;
@@ -74,11 +93,9 @@ export interface CheckBoxViewStyleProps {
     textProps?: TextProps;
 }
 
-export interface CheckBoxViewProps extends CheckBoxViewStyleProps {
-    value: CheckboxValueType;
-    onValueChange: (value: boolean) => void;
-    text: string;
-}
+export type BuiltInCheckBoxViewProps =
+    CheckBoxViewProps
+    & BuiltInCheckBoxViewStyleProps;
 
 export interface TreeViewRef {
     selectAll: () => void;

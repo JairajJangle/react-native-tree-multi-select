@@ -1,6 +1,6 @@
 {
   "name": "react-native-tree-multi-select",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Tree view with multi selection using checkbox",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -53,7 +53,7 @@
     "react-native-tree-select",
     "react-native-checkbox-list",
     "react-native-tree-checkbox"
-],
+  ],
   "repository": "https://github.com/JairajJangle/react-native-tree-multi-select",
   "author": "Jairaj Jangle <jairaj.jangle@gmail.com> (https://github.com/JairajJangle)",
   "license": "MIT",
@@ -123,7 +123,10 @@
       "<rootDir>/lib/"
     ],
     "collectCoverage": true,
-    "coverageReporters": ["json", "html"]
+    "coverageReporters": [
+      "json",
+      "html"
+    ]
   },
   "commitlint": {
     "extends": [

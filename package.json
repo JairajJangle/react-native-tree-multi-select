@@ -28,6 +28,7 @@
   ],
   "scripts": {
     "test": "jest",
+    "test:cov": "jest --coverage --maxWorkers=2",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "prepack": "bob build",
@@ -120,7 +121,9 @@
     "modulePathIgnorePatterns": [
       "<rootDir>/example/node_modules",
       "<rootDir>/lib/"
-    ]
+    ],
+    "collectCoverage": true,
+    "coverageReporters": ["json", "html"]
   },
   "commitlint": {
     "extends": [

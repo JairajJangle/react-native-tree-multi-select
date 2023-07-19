@@ -1,13 +1,17 @@
 # react-native-tree-multi-select
 
-Super-fast Tree view with multi-selection capabilities, using checkboxes and search filtering.
+⚡️Super-fast Tree view with multi-selection capabilities, using checkboxes and search filtering.
 
 [![npm version](https://img.shields.io/npm/v/react-native-tree-multi-select)](https://badge.fury.io/js/react-native-tree-multi-select) ![License](https://img.shields.io/github/license/JairajJangle/react-native-tree-multi-select) ![Workflow Status](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml/badge.svg) ![Static Badge](https://img.shields.io/badge/platform-android%20%26%20ios-blue) ![GitHub issues](https://img.shields.io/github/issues/JairajJangle/react-native-tree-multi-select)
 
+
+
 <div style="display: flex; justify-content: space-around;">
-  <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHFleDNleTZsMXVoMjk1YnlpdXFtanZyZGprMDkwcDdteGhqYTNhcCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L0w26RrC32gdfWZ8Ux/giphy.gif" alt="demo" style="border: 1px solid gray;" />
-  <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdGxuZHNqaGhrZmdyZzRtY21icHNtbHZoM3N4aHlyMDFxZjJrd25rMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/KY6Y0gkSPYAFxffL8r/giphy.gif" alt="demo2" style="border: 1px solid gray;" />
+  <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHFleDNleTZsMXVoMjk1YnlpdXFtanZyZGprMDkwcDdteGhqYTNhcCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L0w26RrC32gdfWZ8Ux/giphy.gif" alt="Expand/collapse demo" style="border: 1px solid gray;" />
+  <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdGxuZHNqaGhrZmdyZzRtY21icHNtbHZoM3N4aHlyMDFxZjJrd25rMyZlcD12MV9pbnRtZXJuYWxfZ2lmX2J5X2lkJmN0PWc/KY6Y0gkSPYAFxffL8r/giphy.gif" alt="Search demo" style="border: 1px solid gray;" />
+  <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdXI4aWxpazdhaDk2MDk1a3BpaHphcmVoY2FpNGw3aHExZ3hwYmY3OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ZXtvX5eqGzoCuD3hus/giphy.gif" alt="Customization demo" style="border: 1px solid gray;" />
 </div>
+
 
 
 ## Installation
@@ -93,10 +97,23 @@ export function TreeViewUsageExample(){
 | `preselectedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be preselected                 |
 | `indentationMultiplier`            | `number`                                                     | No       | Indentation (`marginStart`) per level (defaults to 15)       |
 | `treeFlashListProps`               | `TreeFlatListProps`                                          | No       | Props for the flash list                                     |
-| `checkBoxViewStyleProps`           | `CheckBoxViewStyleProps`                                     | No       | Props for the checkbox view                                  |
+| `checkBoxViewStyleProps`           | `BuiltInCheckBoxViewStyleProps`                              | No       | Props for the checkbox view                                  |
 | `CheckboxComponent`                | `ComponentType<CheckBoxViewProps>`                           | No       | A custom checkbox component. Defaults to React Native Paper's Checkbox |
 | `ExpandCollapseIconComponent`      | `ComponentType<ExpandIconProps>`                             | No       | A custom expand/collapse icon component                      |
 | `ExpandCollapseTouchableComponent` | `ComponentType<TouchableOpacityProps>`<br />(React Native's `TouchableOpacityProps`) | No       | A custom expand/collapse touchable component                 |
+| `CustomNodeRowComponent`           | `React.ComponentType<NodeRowProps>`                          | No       | Custom row item component                                    |
+
+ℹ️ If `CustomNodeRowComponent` is provided then below props are not applied:
+
+1. `indentationMultiplier`
+2. `checkBoxViewStyleProps`
+3. `CheckboxComponent`
+4. `ExpandCollapseIconComponent`
+5. `ExpandCollapseTouchableComponent`.
+
+⚠️ If the tree view doesn't scroll if rendered in a complex nested scroll view/s then try setting the `renderScrollComponent` value in  `treeFlashListProps` to `ScrollView` from `react-native-gesture-handler`.
+
+---
 
 #### TreeNode
 
@@ -106,6 +123,8 @@ export function TreeViewUsageExample(){
 | `name`          | `string`     | Yes      | The display name of the node                                 |
 | `children`      | `TreeNode[]` | No       | An array of child `TreeNode` objects                         |
 | `[key: string]` | `any`        | No       | Any additional properties for the node <br />(May be useful to perform search on) |
+
+---
 
 #### TreeViewRef
 
@@ -119,7 +138,15 @@ export function TreeViewUsageExample(){
 | `collapseAll`         | `() => void`                                          | Collapses all nodes                                          |
 | `setSearchText`       | `(searchText: string, searchKeys?: string[]) => void` | Set the search text and optionally the search keys. Default search key is "name"<br /><br />Recommended to call this inside a debounced function if you find any performance issue otherwise. |
 
-#### CheckBoxViewStyleProps
+---
+
+#### TreeFlatListProps
+
+All properties of `FlashListProps`(from `@shopify/flash-list`) except for `data` and `renderItem`
+
+---
+
+#### BuiltInCheckBoxViewStyleProps
 
 | Property                   | Type                             | Required | Description                                            |
 | -------------------------- | -------------------------------- | -------- | ------------------------------------------------------ |
@@ -133,9 +160,21 @@ export function TreeViewUsageExample(){
 
 All properties of `RNPaperCheckboxAndroidProps`(from `react-native-paper`) except for `onPress` and `status`
 
-#### TreeFlatListProps
+---
 
-All properties of `FlashListProps`(from `@shopify/flash-list`) except for `data` and `renderItem`
+#### CheckBoxViewProps
+
+| Property        | Type                       | Required | Description                                        |
+| --------------- | -------------------------- | -------- | -------------------------------------------------- |
+| `value`         | `CheckboxValueType`        | Yes      | The current value of the checkbox                  |
+| `onValueChange` | `(value: boolean) => void` | Yes      | Function to be called when the checkbox is pressed |
+| `text`          | `string`                   | Yes      | The display text besides the checkbox              |
+
+#### CheckboxValueType
+
+Type: `boolean` OR ` "indeterminate"`
+
+---
 
 #### ExpandIconProps
 
@@ -145,7 +184,29 @@ All properties of `FlashListProps`(from `@shopify/flash-list`) except for `data`
 
 ---
 
-More customization options are on the way 🙌
+#### NodeRowProps
+
+| Property       | Type                | Required | Description                                             |
+| -------------- | ------------------- | -------- | ------------------------------------------------------- |
+| `node`         | `TreeNode`          | Yes      | The node to be rendered                                 |
+| `level`        | `number`            | Yes      | The depth of the node in the tree                       |
+| `checkedValue` | `CheckboxValueType` | Yes      | The current value of the checkbox                       |
+| `isExpanded`   | `boolean`           | Yes      | Whether the node is expanded or not                     |
+| `onCheck`      | `() => void`        | Yes      | Function to be called when the checkbox is pressed      |
+| `onExpand`     | `() => void`        | Yes      | Function to be called when the expand button is pressed |
+
+---
+
+ ### 🙌 Planned features
+
+- [x] Row Item full-customization
+- [ ] Prop to set the maximum checked item limit
+- [ ] Prop to disable certain nodes from getting checked
+- [ ] Ref function to programatically expand/collapse a certain node 
+- [ ] Ref function to programatically un/check a certain node
+- [ ] Ref function to auto-scroll to a certain node's position
+
+If you do not see what you want in the planned feature list, raise a feature request. 
 
 ---
 
@@ -174,6 +235,12 @@ MIT
 </p>
 
 
----
+## ❤️ Thanks to 
 
-Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)
+- Module built using [create-react-native-library](https://github.com/callstack/react-native-builder-bob)
+- To allow super fast list rendering [@shopify/flash-list](https://github.com/Shopify/flash-list)
+- Super easy state management done using [zustand](https://github.com/pmndrs/zustand)
+- Readme is edited using [Typora](https://typora.io/)
+- Example app uses [@gorhom/showcase-template](https://github.com/gorhom/showcase-template)
+
+---

@@ -40,6 +40,7 @@ function _NodeList(props: NodeListProps) {
         CheckboxComponent,
         ExpandCollapseIconComponent,
         ExpandCollapseTouchableComponent,
+        CustomNodeRowComponent
     } = props;
 
     const {
@@ -96,12 +97,14 @@ function _NodeList(props: NodeListProps) {
                 CheckboxComponent={CheckboxComponent}
                 ExpandCollapseIconComponent={ExpandCollapseIconComponent}
                 ExpandCollapseTouchableComponent={ExpandCollapseTouchableComponent}
+                CustomNodeRowComponent={CustomNodeRowComponent}
             />
         );
     }, [
         CheckboxComponent,
         ExpandCollapseIconComponent,
         ExpandCollapseTouchableComponent,
+        CustomNodeRowComponent,
         checkBoxViewStyleProps,
         indentationMultiplier
     ]);
@@ -152,6 +155,7 @@ function _Node(props: NodeProps) {
         ExpandCollapseIconComponent = CustomExpandCollapseIcon,
         CheckboxComponent = CheckboxView,
         ExpandCollapseTouchableComponent = TouchableOpacity,
+        CustomNodeRowComponent
     } = props;
 
     const { expanded, checked, indeterminate } = useTreeViewStore();
@@ -174,12 +178,12 @@ function _Node(props: NodeProps) {
         toggleCheckboxes([node.id]);
     }, [node.id]);
 
-    return (
-        <View style={[
-            styles.nodeParentView,
-            { marginStart: level * indentationMultiplier, }
-        ]}>
-            <View style={styles.nodeCheckboxAndArrowRow}>
+    if (!CustomNodeRowComponent) {
+        return (
+            <View style={[
+                styles.nodeCheckboxAndArrowRow,
+                { paddingStart: level * indentationMultiplier }
+            ]}>
                 <CheckboxComponent
                     text={node.name}
                     onValueChange={_onCheck}
@@ -196,24 +200,33 @@ function _Node(props: NodeProps) {
                     </ExpandCollapseTouchableComponent>
                 ) : null}
             </View>
-        </View>
-    );
+        );
+    }
+    else {
+        return (
+            <CustomNodeRowComponent
+                node={node}
+                level={level}
+                checkedValue={value}
+                isExpanded={isExpanded}
+                onCheck={_onCheck}
+                onExpand={_onToggleExpand} />
+        );
+    }
 };
 
 const styles = StyleSheet.create({
     defaultHeaderFooter: {
         padding: 5
     },
-    nodeParentView: {
-        flex: 1
-    },
     nodeExpandableArrowTouchable: {
         flex: 1
     },
     nodeCheckboxAndArrowRow: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        minWidth: "100%",
+        minWidth: "100%"
     }
 });
 

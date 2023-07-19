@@ -9,13 +9,13 @@ import {
 
 import { Checkbox } from 'react-native-paper';
 import type {
-    CheckBoxViewProps,
+    BuiltInCheckBoxViewProps,
     CheckboxValueType
 } from "../types/treeView.types";
 
 function arePropsEqual(
-    prevProps: CheckBoxViewProps,
-    nextProps: CheckBoxViewProps
+    prevProps: BuiltInCheckBoxViewProps,
+    nextProps: BuiltInCheckBoxViewProps
 ) {
     return (
         prevProps.value === nextProps.value &&
@@ -25,7 +25,7 @@ function arePropsEqual(
 
 export const CheckboxView = React.memo(_CheckboxView, arePropsEqual);
 
-function _CheckboxView(props: CheckBoxViewProps) {
+function _CheckboxView(props: BuiltInCheckBoxViewProps) {
     const {
         value,
         onValueChange,

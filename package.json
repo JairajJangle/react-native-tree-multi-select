@@ -113,7 +113,7 @@
   "jest": {
     "preset": "react-native",
     "setupFilesAfterEnv": [
-      "./jest.setup.ts"
+      "./src/jest.setup.ts"
     ],
     "transformIgnorePatterns": [
       "node_modules/(?!(jest-)?react-native|@react-native-community|@react-navigation|@react-native/js-polyfills)"

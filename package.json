@@ -1,6 +1,6 @@
 {
   "name": "react-native-tree-multi-select",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Super-fast Tree view with multi-selection capabilities, using checkboxes and search filtering.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -63,7 +63,7 @@
     "dropdown-menu",
     "expandable-list",
     "customizable"
-  ],  
+  ],
   "repository": "https://github.com/JairajJangle/react-native-tree-multi-select",
   "author": "Jairaj Jangle <jairaj.jangle@gmail.com> (https://github.com/JairajJangle)",
   "license": "MIT",

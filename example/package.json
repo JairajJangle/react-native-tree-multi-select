@@ -12,6 +12,7 @@
   "dependencies": {
     "@gorhom/showcase-template": "^2.1.0",
     "@react-navigation/native": "^6.1.7",
+    "@react-navigation/native-stack": "^6.9.15",
     "@react-navigation/stack": "^6.3.17",
     "@shopify/flash-list": "^1.4.3",
     "lodash": "^4.17.21",

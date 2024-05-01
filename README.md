@@ -68,6 +68,12 @@ export function TreeViewUsageExample(){
   // Expand collapse calls using ref
   const expandAllPress = () => treeViewRef.current?.expandAll?.();
   const collapseAllPress = () => treeViewRef.current?.collapseAll?.();
+  const expandNodes = (idsToExpand: string[]) => treeViewRef.current?.expandNodes?.(
+    idsToExpand
+  );
+  const collapseNodes = (idsToCollapse: string[]) => treeViewRef.current?.collapseNodes?.(
+    idsToCollapse
+  );
 
   // Multi-selection function calls using ref
   const onSelectAllPress = () => treeViewRef.current?.selectAll?.();

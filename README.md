@@ -94,7 +94,8 @@ export function TreeViewUsageExample(){
 | `data`                             | `TreeNode[]`                                                 | Yes      | An array of `TreeNode` objects                               |
 | `onCheck`                          | `(checkedIds: string[]) => void`                             | No       | Callback when a checkbox is checked                          |
 | `onExpand`                         | `(expandedIds: string[]) => void`                            | No       | Callback when a node is expanded                             |
-| `preselectedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be preselected                 |
+| `preselectedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-selected                 |
+| `preExpandedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-expanded                 |
 | `indentationMultiplier`            | `number`                                                     | No       | Indentation (`marginStart`) per level (defaults to 15)       |
 | `treeFlashListProps`               | `TreeFlatListProps`                                          | No       | Props for the flash list                                     |
 | `checkBoxViewStyleProps`           | `BuiltInCheckBoxViewStyleProps`                              | No       | Props for the checkbox view                                  |
@@ -135,7 +136,9 @@ export function TreeViewUsageExample(){
 | `selectAllFiltered`   | `() => void`                                          | Selects all **filtered** nodes                               |
 | `unselectAllFiltered` | `() => void`                                          | Unselects all **filtered** nodes                             |
 | `expandAll`           | `() => void`                                          | Expands all nodes                                            |
+| `expandNodes`           | `() => void`                                          | Expands specified nodes    
 | `collapseAll`         | `() => void`                                          | Collapses all nodes                                          |
+| `collapseNodes`           | `() => void`                                          | Collapses specified nodes    
 | `setSearchText`       | `(searchText: string, searchKeys?: string[]) => void` | Set the search text and optionally the search keys. Default search key is "name"<br /><br />Recommended to call this inside a debounced function if you find any performance issue otherwise. |
 
 ---
@@ -202,7 +205,7 @@ Type: `boolean` OR ` "indeterminate"`
 - [x] Row Item full-customization
 - [ ] Prop to set the maximum checked item limit
 - [ ] Prop to disable certain nodes from getting checked
-- [ ] Ref function to programatically expand/collapse a certain node 
+- [x] Ref function to programatically expand/collapse a certain node 
 - [ ] Ref function to programatically un/check a certain node
 - [ ] Ref function to auto-scroll to a certain node's position
 

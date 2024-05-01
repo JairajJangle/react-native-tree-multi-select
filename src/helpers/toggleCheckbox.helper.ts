@@ -163,4 +163,4 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
     // Update the state object with the new checked and indeterminate sets.
     updateChecked(tempChecked);
     updateIndeterminate(tempIndeterminate);
-};
+}

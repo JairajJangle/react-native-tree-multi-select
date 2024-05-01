@@ -14,9 +14,12 @@ import {
   initializeNodeMaps,
   expandAll,
   collapseAll,
-  toggleCheckboxes
+  toggleCheckboxes,
+  expandNodes,
+  collapseNodes
 } from './helpers';
 import { useTreeViewStore } from './store/treeView.store';
+import usePreviousState from './utils/usePreviousState';
 
 const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
   (props, ref) => {
@@ -27,6 +30,8 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       onExpand,
 
       preselectedIds = [],
+
+      preExpandedIds = [],
 
       treeFlashListProps,
       checkBoxViewStyleProps,
@@ -66,8 +71,13 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       expandAll,
       collapseAll,
 
+      expandNodes,
+      collapseNodes,
+
       setSearchText
     }));
+
+    const prevSearchText = usePreviousState(searchText);
 
     function setSearchText(text: string, keys: string[] = ["name"]) {
       updateSearchText(text);
@@ -79,8 +89,11 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
 
       initializeNodeMaps(data);
 
-      // Check any preselected nodes
+      // Check any pre-selected nodes
       toggleCheckboxes(preselectedIds, true);
+
+      // Expand pre-expanded nodes
+      expandNodes(preExpandedIds);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -108,12 +121,20 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
           )));
         });
       }
-      else {
+      else if (prevSearchText && prevSearchText !== "") {
+        /* Collapse all nodes only if previous search query was non-empty: this is 
+        done to prevent node collapse on first render if preExpandedIds is provided */
         InteractionManager.runAfterInteractions(() => {
           updateExpanded(new Set());
         });
       }
-    }, [getIds, initialTreeViewData, searchText, updateExpanded]);
+    }, [
+      getIds,
+      initialTreeViewData,
+      prevSearchText,
+      searchText,
+      updateExpanded
+    ]);
 
     React.useEffect(() => {
       return () => {

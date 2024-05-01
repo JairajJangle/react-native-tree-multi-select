@@ -33,28 +33,8 @@ export function handleToggleExpand(id: string) {
         }
     }
 
-    /**
-     * Finds a node in the tree by its ID.
-     *
-     * @param nodes - The array of tree nodes to search through.
-     * @returns The found tree node, or undefined if not found.
-     */
-    function findNode(nodes: TreeNode[]): TreeNode | undefined {
-        for (let node of nodes) {
-            if (node.id === id) {
-                return node;
-            } else if (node.children) {
-                const found = findNode(node.children);
-                if (found) {
-                    return found;
-                }
-            }
-        }
-        return undefined;
-    }
-
     // Find the node to expand or collapse
-    const node = findNode(initialTreeViewData);
+    const node = findNode(initialTreeViewData, id);
 
     if (expanded.has(id)) {
         // If the node is currently expanded, collapse it and its descendants
@@ -97,3 +77,84 @@ export function collapseAll() {
     const newExpanded = new Set<string>();
     updateExpanded(newExpanded);
 };
+
+/**
+ * Expand tree nodes of given ids. If the id is of a child, it also expands
+ * the parent which it belongs to. 
+ * @param ids Ids of nodes to expand.
+ */
+export function expandNodes(ids: string[]) {
+    const { expanded, updateExpanded, childToParentMap } = useTreeViewStore.getState();
+    const newExpanded = new Set(expanded);
+    const processedParents = new Set();  // To track already processed parents
+
+    ids.forEach(id => {
+        newExpanded.add(id);  // Start by adding the node ID to the set
+        let currentId = id;
+
+        while (currentId && childToParentMap.has(currentId) && !processedParents.has(currentId)) {
+            const parentId = childToParentMap.get(currentId);
+            if (parentId) {
+                if (!newExpanded.has(parentId)) {
+                    newExpanded.add(parentId);  // Add the parent ID only if not already processed
+                    processedParents.add(parentId);
+                }
+                currentId = parentId;  // Move up to the next parent
+            } else {
+                break;  // Break the loop if there's no further parent
+            }
+        }
+    });
+
+    updateExpanded(newExpanded);
+}
+
+/**
+ * Collapse tree nodes of given ids. If the id is of a parent, it also collapses
+ * the children inside it. 
+ * @param ids Ids of nodes to collapse.
+ */
+export function collapseNodes(ids: string[]) {
+    const { expanded, updateExpanded, nodeMap } = useTreeViewStore.getState();
+    const newExpanded = new Set(expanded);
+
+    // Function to recursively remove child nodes from the expanded set
+    const deleteChildrenFromExpanded = (nodeId: string, visited = new Set()) => {
+        if (visited.has(nodeId)) return; // Prevent redundant processing
+        visited.add(nodeId);
+
+        const node = nodeMap.get(nodeId);
+        node?.children?.forEach(child => {
+            newExpanded.delete(child.id);
+            deleteChildrenFromExpanded(child.id, visited);
+        });
+    };
+
+    ids.forEach(id => {
+        // Remove the node ID from the set and all its children
+        newExpanded.delete(id);
+        deleteChildrenFromExpanded(id);
+    });
+
+    updateExpanded(newExpanded);
+}
+
+/**
+ * Finds a node in the tree by its ID.
+ *
+ * @param nodes - The array of tree nodes to search through.
+ * @returns The found tree node, or undefined if not found.
+ */
+function findNode(nodes: TreeNode[], parentId: string): TreeNode | undefined {
+    for (let node of nodes) {
+        if (node.id === parentId) {
+            return node;
+        } else if (node.children) {
+            const found = findNode(node.children, parentId);
+            if (found) {
+                return found;
+            }
+        }
+    }
+    return undefined;
+}

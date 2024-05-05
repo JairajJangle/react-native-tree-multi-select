@@ -183,16 +183,19 @@ jobs:
   
       - name: Generate changelog
         run: yarn generate-changelog
-  
-      - name: Use existing version, create tag and commit changelog
+
+      - name: Commit changes if any
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Actions"
+          git add CHANGELOG.md
+          git commit -m "Update CHANGELOG.md for version ${{ env.VERSION }} [skip ci]" || echo "No changes to commit"
+
+      - name: Use existing version, create tag
         id: versioning
         run: |
-          git fetch --all
-          git pull --rebase origin ${{ github.ref_name }}
           VERSION=$(node -p "require('./package.json').version")
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          git add CHANGELOG.md package.json
-          git commit -m "Update CHANGELOG.md for version $VERSION [skip ci]" || echo "No changes to commit"
           git tag -a "v$VERSION" -m "Release v$VERSION"
           git push --follow-tags
         env:

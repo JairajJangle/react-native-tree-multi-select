@@ -219,7 +219,7 @@ jobs:
         run: yarn prepack
   
       - name: Publish to npm
-        run: yarn publish --non-interactive
+        run: yarn publish --non-interactive --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         

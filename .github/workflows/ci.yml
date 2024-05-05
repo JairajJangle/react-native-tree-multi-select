@@ -184,9 +184,11 @@ jobs:
       - name: Generate changelog
         run: yarn generate-changelog
   
-      - name: Use existing package.json version, create tag and commit changelog
+      - name: Use existing version, create tag and commit changelog
         id: versioning
         run: |
+          git fetch --all
+          git pull --rebase origin ${{ github.ref_name }}
           VERSION=$(node -p "require('./package.json').version")
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           git add CHANGELOG.md package.json

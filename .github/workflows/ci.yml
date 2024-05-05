@@ -184,14 +184,13 @@ jobs:
       - name: Generate changelog
         run: yarn generate-changelog
   
-      - name: Bump version, create tag and commit changelog
+      - name: Use existing package.json version, create tag and commit changelog
         id: versioning
         run: |
-          yarn version --patch --no-git-tag-version
           VERSION=$(node -p "require('./package.json').version")
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           git add CHANGELOG.md package.json
-          git commit -m "Bump version to $VERSION and update CHANGELOG.md [skip ci]"
+          git commit -m "Update CHANGELOG.md for version $VERSION [skip ci]" || echo "No changes to commit"
           git tag -a "v$VERSION" -m "Release v$VERSION"
           git push --follow-tags
         env:

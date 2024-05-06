@@ -191,6 +191,15 @@ jobs:
           git fetch origin
           git checkout main
           git pull --rebase origin main
+
+      - name: Generate changelog
+        run: yarn generate-changelog
+  
+      - name: Commit changes if any
+        run: |
+          git add CHANGELOG.md
+          git commit -m "docs: updated CHANGELOG.md for version ${{ env.VERSION }} [skip ci]" || echo "No changes to commit"
+          git push origin main
   
       - name: Use existing version, create tag
         id: versioning
@@ -215,15 +224,6 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
-      - name: Generate changelog
-        run: yarn generate-changelog
-  
-      - name: Commit changes if any
-        run: |
-          git add CHANGELOG.md
-          git commit -m "docs: updated CHANGELOG.md for version ${{ env.VERSION }} [skip ci]" || echo "No changes to commit"
-          git push origin main
 
       - name: Build package
         run: yarn prepack

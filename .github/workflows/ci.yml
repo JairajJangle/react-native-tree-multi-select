@@ -221,6 +221,7 @@ jobs:
       - name: Publish to npm
         run: |
           npm install -g npm
+          npm install --package-lock-only
           npm ci
           npm publish --non-interactive --provenance --access public
         env:

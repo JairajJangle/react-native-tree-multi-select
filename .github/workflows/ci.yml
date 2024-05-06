@@ -166,7 +166,7 @@ jobs:
     needs: [lint, test, build-library, build-android, build-ios]
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     if: github.ref == 'refs/heads/main'
     steps:
@@ -203,7 +203,7 @@ jobs:
           npm publish --non-interactive --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      
+
       - name: Use existing version, create tag
         id: versioning
         run: |
@@ -227,4 +227,4 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
+          

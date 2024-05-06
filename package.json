@@ -80,6 +80,9 @@
     "@evilmartians/lefthook": "^1.2.2",
     "@react-native-community/eslint-config": "^3.0.2",
     "@release-it/conventional-changelog": "^5.0.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/github": "^10.0.3",
+    "@semantic-release/npm": "^12.0.0",
     "@shopify/flash-list": "1.x.x",
     "@testing-library/jest-native": "^5.4.2",
     "@testing-library/react-native": "^12.1.2",
@@ -104,6 +107,7 @@
     "react-native-paper": "5.x.x",
     "react-test-renderer": "18.2.0",
     "release-it": "^15.0.0",
+    "semantic-release": "^23.0.8",
     "ts-jest": "^29.1.1",
     "turbo": "^1.10.7",
     "typescript": "^5.0.2"

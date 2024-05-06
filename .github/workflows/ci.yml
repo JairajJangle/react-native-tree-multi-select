@@ -166,72 +166,31 @@ jobs:
     needs: [lint, test, build-library, build-android, build-ios]
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      id-token: write
+      contents: write # To publish a GitHub release
+      issues: write # To comment on released issues
+      pull-requests: write # To comment on released pull requests
+      id-token: write # To enable use of OIDC for npm provenance
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Important for tags and history
-  
+          fetch-depth: 0  # Ensures all tags are fetched
+
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
-          node-version-file: .nvmrc
-          registry-url: 'https://registry.npmjs.org/'
-  
+          node-version: "lts/*"  # Use the latest LTS version of Node.js
+          registry-url: 'https://registry.npmjs.org/'  # Specify npm registry
+
       - name: Install dependencies
-        run: yarn install
-  
-      - name: Pull latest changes and rebase
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-          git fetch origin
-          git checkout main
-          git pull --rebase origin main
+        run: npm ci  # Clean install dependencies based on the lock file
 
-      - name: Generate changelog
-        run: yarn generate-changelog
-  
-      - name: Commit changes if any
-        run: |
-          git add CHANGELOG.md
-          git commit -m "docs: updated CHANGELOG.md for version ${{ env.VERSION }} [skip ci]" || echo "No changes to commit"
-          git push origin main
-  
-      - name: Use existing version, create tag
-        id: versioning
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          git tag -a "v$VERSION" -m "Release v$VERSION"
-          git push --follow-tags
-        env:
-          GIT_COMMITTER_NAME: github-actions
-          GIT_COMMITTER_EMAIL: github-actions@github.com
-          GIT_AUTHOR_NAME: github-actions
-          GIT_AUTHOR_EMAIL: github-actions@github.com
+      - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
+        run: npm audit signatures  # Check the signatures to verify integrity
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ env.VERSION }}
-          name: Release ${{ env.VERSION }}
-          body: "See the [changelog](CHANGELOG.md) for details."
-          draft: false
-          prerelease: false
+      - name: Release
+        run: npx semantic-release  # Run semantic-release to manage versioning and publishing
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build package
-        run: yarn prepack
-  
-      - name: Publish to npm
-        run: |
-          yarn install --frozen-lockfile
-          npm publish --non-interactive --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub token for authentication
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}  # npm token for publishing package

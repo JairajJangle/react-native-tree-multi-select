@@ -196,7 +196,7 @@ jobs:
   
       - name: Publish to npm
         run: |
-          npm ci
+          yarn install --frozen-lockfile
           npm publish --non-interactive --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

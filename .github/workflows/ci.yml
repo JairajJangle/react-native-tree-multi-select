@@ -165,6 +165,9 @@ jobs:
   publish-npm:
     needs: [lint, test, build-library, build-android, build-ios]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout
@@ -197,7 +200,7 @@ jobs:
       - name: Publish to npm
         run: |
           yarn install --frozen-lockfile
-          npm publish --non-interactive --provenance --access public
+          npm publish --non-interactive --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       

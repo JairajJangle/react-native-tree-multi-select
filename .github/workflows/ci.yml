@@ -184,26 +184,14 @@ jobs:
       - name: Install dependencies
         run: yarn install
   
-      - name: Generate changelog
-        run: yarn generate-changelog
-
-      - name: Commit changes if any
+      - name: Pull latest changes and rebase
         run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Actions"
-          git add CHANGELOG.md
-          git commit -m "Update CHANGELOG.md for version ${{ env.VERSION }} [skip ci]" || echo "No changes to commit"
-
-      - name: Build package
-        run: yarn prepack
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git fetch origin
+          git checkout main
+          git pull --rebase origin main
   
-      - name: Publish to npm
-        run: |
-          yarn install --frozen-lockfile
-          npm publish --non-interactive --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Use existing version, create tag
         id: versioning
         run: |
@@ -216,7 +204,7 @@ jobs:
           GIT_COMMITTER_EMAIL: github-actions@github.com
           GIT_AUTHOR_NAME: github-actions
           GIT_AUTHOR_EMAIL: github-actions@github.com
-        
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -227,4 +215,23 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+      - name: Generate changelog
+        run: yarn generate-changelog
+  
+      - name: Commit changes if any
+        run: |
+          git add CHANGELOG.md
+          git commit -m "docs: updated CHANGELOG.md for version ${{ env.VERSION }} [skip ci]" || echo "No changes to commit"
+          git push origin main
+
+      - name: Build package
+        run: yarn prepack
+  
+      - name: Publish to npm
+        run: |
+          yarn install --frozen-lockfile
+          npm publish --non-interactive --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           

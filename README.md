@@ -97,18 +97,18 @@ export function TreeViewUsageExample(){
 
 | Property                           | Type                                                         | Required | Description                                                  |
 | ---------------------------------- | ------------------------------------------------------------ | -------- | ------------------------------------------------------------ |
-| `data`                             | `TreeNode[]`                                                 | Yes      | An array of `TreeNode` objects                               |
+| `data`                             | [TreeNode](#treenode)                                        | Yes      | An array of `TreeNode` objects                               |
 | `onCheck`                          | `(checkedIds: string[]) => void`                             | No       | Callback when a checkbox is checked                          |
 | `onExpand`                         | `(expandedIds: string[]) => void`                            | No       | Callback when a node is expanded                             |
-| `preselectedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-selected                 |
-| `preExpandedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-expanded                 |
+| `preselectedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-selected                |
+| `preExpandedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-expanded                |
 | `indentationMultiplier`            | `number`                                                     | No       | Indentation (`marginStart`) per level (defaults to 15)       |
-| `treeFlashListProps`               | `TreeFlatListProps`                                          | No       | Props for the flash list                                     |
-| `checkBoxViewStyleProps`           | `BuiltInCheckBoxViewStyleProps`                              | No       | Props for the checkbox view                                  |
-| `CheckboxComponent`                | `ComponentType<CheckBoxViewProps>`                           | No       | A custom checkbox component. Defaults to React Native Paper's Checkbox |
-| `ExpandCollapseIconComponent`      | `ComponentType<ExpandIconProps>`                             | No       | A custom expand/collapse icon component                      |
-| `ExpandCollapseTouchableComponent` | `ComponentType<TouchableOpacityProps>`<br />(React Native's `TouchableOpacityProps`) | No       | A custom expand/collapse touchable component                 |
-| `CustomNodeRowComponent`           | `React.ComponentType<NodeRowProps>`                          | No       | Custom row item component                                    |
+| `treeFlashListProps`               | [TreeFlatListProps](#treeflatlistprops)                      | No       | Props for the flash list                                     |
+| `checkBoxViewStyleProps`           | [BuiltInCheckBoxViewStyleProps](#builtincheckboxviewstyleprops) | No       | Props for the checkbox view                                  |
+| `CheckboxComponent`                | `ComponentType<`[CheckBoxViewProps](#checkboxviewprops)`>`   | No       | A custom checkbox component. Defaults to React Native Paper's Checkbox |
+| `ExpandCollapseIconComponent`      | `ComponentType<`[ExpandIconProps](#expandiconprops)`>`       | No       | A custom expand/collapse icon component                      |
+| `ExpandCollapseTouchableComponent` | `ComponentType<`[TouchableOpacityProps](https://reactnative.dev/docs/touchableopacity#props)`>` | No       | A custom expand/collapse touchable component                 |
+| `CustomNodeRowComponent`           | `React.ComponentType<`[NodeRowProps](#noderowprops)`>`       | No       | Custom row item component                                    |
 
 ℹ️ If `CustomNodeRowComponent` is provided then below props are not applied:
 

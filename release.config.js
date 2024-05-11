@@ -1,18 +1,11 @@
 module.exports = {
-  branches: ["main"],
+  branches: ['main'],
   plugins: [
-    "@semantic-release/commit-analyzer",
-    "@semantic-release/release-notes-generator",
-    "@semantic-release/changelog",
-    "@semantic-release/npm",
-    {
-      "@semantic-release/github": {
-        assets: [
-          { path: "build/package.zip", label: "Package" },
-          { path: "CHANGELOG.md", label: "Changelog" }
-        ]
-      }
-    },
-    "@semantic-release/git"
-  ]
+    '@semantic-release/commit-analyzer', // Analyzes commits for version bumping
+    '@semantic-release/release-notes-generator', // Generates release notes
+    '@semantic-release/changelog', // Generates the changelog
+    '@semantic-release/git', // Commits changed files including the changelog
+    '@semantic-release/github',
+    '@semantic-release/npm', // Handles npm publishing
+  ],
 };

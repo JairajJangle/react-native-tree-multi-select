@@ -6,7 +6,7 @@
 
 
 
-<div align="center" style="display: flex; justify-content: space-around;">
+<div style="display: flex; justify-content: space-around;">
   <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHFleDNleTZsMXVoMjk1YnlpdXFtanZyZGprMDkwcDdteGhqYTNhcCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L0w26RrC32gdfWZ8Ux/giphy.gif" alt="Expand/collapse demo" style="border: 1px solid gray;" />
   <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdGxuZHNqaGhrZmdyZzRtY21icHNtbHZoM3N4aHlyMDFxZjJrd25rMyZlcD12MV9pbnRtZXJuYWxfZ2lmX2J5X2lkJmN0PWc/KY6Y0gkSPYAFxffL8r/giphy.gif" alt="Search demo" style="border: 1px solid gray;" />
   <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdXI4aWxpazdhaDk2MDk1a3BpaHphcmVoY2FpNGw3aHExZ3hwYmY3OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ZXtvX5eqGzoCuD3hus/giphy.gif" alt="Customization demo" style="border: 1px solid gray;" />
@@ -162,7 +162,7 @@ All properties of `FlashListProps`(from `@shopify/flash-list`) except for `data`
 | `outermostParentViewStyle` | `StyleProp<ViewStyle>`           | No       | Optional style modifier for the outermost parent view. |
 | `checkboxParentViewStyle`  | `StyleProp<ViewStyle>`           | No       | Optional style modifier for the checkbox parent view.  |
 | `textTouchableStyle`       | `StyleProp<ViewStyle>`           | No       | Optional style modifier for the text touchable style.  |
-| `checkboxProps`            | `CheckboxProps`                  | No       | Optional props for the checkbox component.             |
+| `checkboxProps`            | [CheckboxProps](#checkboxprops)  | No       | Optional props for the checkbox component.             |
 | `textProps`                | `TextProps` <br />(React Native) | No       | Optional props for the text component.                 |
 
 #### CheckboxProps
@@ -173,11 +173,11 @@ All properties of `RNPaperCheckboxAndroidProps`(from `react-native-paper`) excep
 
 #### CheckBoxViewProps
 
-| Property        | Type                       | Required | Description                                        |
-| --------------- | -------------------------- | -------- | -------------------------------------------------- |
-| `value`         | `CheckboxValueType`        | Yes      | The current value of the checkbox                  |
-| `onValueChange` | `(value: boolean) => void` | Yes      | Function to be called when the checkbox is pressed |
-| `text`          | `string`                   | Yes      | The display text besides the checkbox              |
+| Property        | Type                                    | Required | Description                                        |
+| --------------- | --------------------------------------- | -------- | -------------------------------------------------- |
+| `value`         | [CheckboxValueType](#checkboxvaluetype) | Yes      | The current value of the checkbox                  |
+| `onValueChange` | `(value: boolean) => void`              | Yes      | Function to be called when the checkbox is pressed |
+| `text`          | `string`                                | Yes      | The display text besides the checkbox              |
 
 #### CheckboxValueType
 
@@ -195,14 +195,14 @@ Type: `boolean` OR ` "indeterminate"`
 
 #### NodeRowProps
 
-| Property       | Type                | Required | Description                                             |
-| -------------- | ------------------- | -------- | ------------------------------------------------------- |
-| `node`         | `TreeNode`          | Yes      | The node to be rendered                                 |
-| `level`        | `number`            | Yes      | The depth of the node in the tree                       |
-| `checkedValue` | `CheckboxValueType` | Yes      | The current value of the checkbox                       |
-| `isExpanded`   | `boolean`           | Yes      | Whether the node is expanded or not                     |
-| `onCheck`      | `() => void`        | Yes      | Function to be called when the checkbox is pressed      |
-| `onExpand`     | `() => void`        | Yes      | Function to be called when the expand button is pressed |
+| Property       | Type                                    | Required | Description                                             |
+| -------------- | --------------------------------------- | -------- | ------------------------------------------------------- |
+| `node`         | [TreeNode](#treenode)                   | Yes      | The node to be rendered                                 |
+| `level`        | `number`                                | Yes      | The depth of the node in the tree                       |
+| `checkedValue` | [CheckboxValueType](#checkboxvaluetype) | Yes      | The current value of the checkbox                       |
+| `isExpanded`   | `boolean`                               | Yes      | Whether the node is expanded or not                     |
+| `onCheck`      | `() => void`                            | Yes      | Function to be called when the checkbox is pressed      |
+| `onExpand`     | `() => void`                            | Yes      | Function to be called when the expand button is pressed |
 
 ---
 

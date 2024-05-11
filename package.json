@@ -72,7 +72,8 @@
   },
   "homepage": "https://github.com/JairajJangle/react-native-tree-multi-select#readme",
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://registry.npmjs.org/",
+    "provenance": true
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^17.0.2",

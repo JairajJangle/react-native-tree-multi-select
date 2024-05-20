@@ -62,7 +62,9 @@
     "multi-select",
     "dropdown-menu",
     "expandable-list",
-    "customizable"
+    "customizable",
+    "expo",
+    "web"
   ],
   "repository": "https://github.com/JairajJangle/react-native-tree-multi-select",
   "author": "Jairaj Jangle <jairaj.jangle@gmail.com> (https://github.com/JairajJangle)",

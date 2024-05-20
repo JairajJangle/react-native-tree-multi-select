@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.2.8...v1.3.0) (2024-05-20)
+
+
+### Features
+
+* added ref function to check/uncheck node ids ([caec003](https://github.com/JairajJangle/react-native-tree-multi-select/commit/caec0030f2f19645d9950018ec85f1c5608cff9e))
+
 ## [1.2.8](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.2.7...v1.2.8) (2024-05-11)
 
 

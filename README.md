@@ -2,7 +2,7 @@
 
 ⚡️Super-fast Tree view with multi-selection capabilities, using checkboxes and search filtering.
 
-[![npm version](https://img.shields.io/npm/v/react-native-tree-multi-select)](https://badge.fury.io/js/react-native-tree-multi-select) [![License](https://img.shields.io/github/license/JairajJangle/react-native-tree-multi-select)](https://github.com/JairajJangle/react-native-tree-multi-select/blob/main/LICENSE) [![Workflow Status](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml/badge.svg)](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml) [![Supported Platform Badge](https://img.shields.io/badge/platform-android%20%26%20ios-blue)](https://github.com/JairajJangle/react-native-tree-multi-select/tree/main/example) [![GitHub issues](https://img.shields.io/github/issues/JairajJangle/react-native-tree-multi-select)](https://github.com/JairajJangle/react-native-tree-multi-select/issues?q=is%3Aopen+is%3Aissue) [![cov](https://raw.githubusercontent.com/JairajJangle/react-native-tree-multi-select/gh-pages/badges/coverage.svg)](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml) ![TS](https://img.shields.io/badge/TypeScript-strict_💪-blue)
+[![npm version](https://img.shields.io/npm/v/react-native-tree-multi-select)](https://badge.fury.io/js/react-native-tree-multi-select) [![License](https://img.shields.io/github/license/JairajJangle/react-native-tree-multi-select)](https://github.com/JairajJangle/react-native-tree-multi-select/blob/main/LICENSE) [![Workflow Status](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml/badge.svg)](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml) ![Android](https://img.shields.io/badge/-Android-555555?logo=android&logoColor=3DDC84) ![iOS](https://img.shields.io/badge/-iOS-555555?logo=apple&logoColor=white) ![Web](https://img.shields.io/badge/-Web-555555?logo=google-chrome&logoColor=0096FF) [![GitHub issues](https://img.shields.io/github/issues/JairajJangle/react-native-tree-multi-select)](https://github.com/JairajJangle/react-native-tree-multi-select/issues?q=is%3Aopen+is%3Aissue) [![cov](https://raw.githubusercontent.com/JairajJangle/react-native-tree-multi-select/gh-pages/badges/coverage.svg)](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml) ![TS](https://img.shields.io/badge/TypeScript-strict_💪-blue) [![Expo Snack](https://img.shields.io/badge/Expo%20Snack-555555?style=flat&logo=expo&logoColor=white)](https://snack.expo.dev/@futurejj/ludicrous-red-popcorn) [![CodeFactor](https://www.codefactor.io/repository/github/jairajjangle/react-native-tree-multi-select/badge)](https://www.codefactor.io/repository/github/jairajjangle/react-native-tree-multi-select) 
 
 
 
@@ -11,7 +11,6 @@
   <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdGxuZHNqaGhrZmdyZzRtY21icHNtbHZoM3N4aHlyMDFxZjJrd25rMyZlcD12MV9pbnRtZXJuYWxfZ2lmX2J5X2lkJmN0PWc/KY6Y0gkSPYAFxffL8r/giphy.gif" alt="Search demo" style="border: 1px solid gray;" />
   <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdXI4aWxpazdhaDk2MDk1a3BpaHphcmVoY2FpNGw3aHExZ3hwYmY3OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ZXtvX5eqGzoCuD3hus/giphy.gif" alt="Customization demo" style="border: 1px solid gray;" />
 </div>
-
 
 
 ## Installation
@@ -80,6 +79,12 @@ export function TreeViewUsageExample(){
   const onUnselectAllPress = () => treeViewRef.current?.unselectAll?.();
   const onSelectAllFilteredPress = () => treeViewRef.current?.selectAllFiltered?.();
   const onUnselectAllFilteredPress = () => treeViewRef.current?.unselectAllFiltered?.();
+  const selectNodes = (idsToExpand: string[]) => treeViewRef.current?.selectNodes?.(
+    idsToSelect
+  );
+  const unselectNodes = (idsToCollapse: string[]) => treeViewRef.current?.unselectNodes?.(
+    idsToUnselect
+  );
   
   return(
     // ... Remember to keep a fixed height for the parent. Read Flash List docs to know why
@@ -142,9 +147,11 @@ export function TreeViewUsageExample(){
 | `selectAllFiltered`   | `() => void`                                          | Selects all **filtered** nodes                               |
 | `unselectAllFiltered` | `() => void`                                          | Unselects all **filtered** nodes                             |
 | `expandAll`           | `() => void`                                          | Expands all nodes                                            |
-| `expandNodes`           | `() => void`                                          | Expands specified nodes    
 | `collapseAll`         | `() => void`                                          | Collapses all nodes                                          |
-| `collapseNodes`           | `() => void`                                          | Collapses specified nodes    
+| `expandNodes`           | `(ids: string[]) => void`                           | Expands specified nodes    |
+| `collapseNodes`           | `(ids: string[]) => void`                             | Collapses specified nodes    |
+| `selectNodes`           | `(ids: string[]) => void`                           | Selects specified nodes    |
+| `unSelectNodes`           | `(ids: string[]) => void`                           | Unselects specified nodes    |
 | `setSearchText`       | `(searchText: string, searchKeys?: string[]) => void` | Set the search text and optionally the search keys. Default search key is "name"<br /><br />Recommended to call this inside a debounced function if you find any performance issue otherwise. |
 
 ---
@@ -212,7 +219,7 @@ Type: `boolean` OR ` "indeterminate"`
 - [ ] Prop to set the maximum checked item limit
 - [ ] Prop to disable certain nodes from getting checked
 - [x] Ref function to programatically expand/collapse a certain node 
-- [ ] Ref function to programatically un/check a certain node
+- [x] Ref function to programatically un/check a certain node
 - [ ] Ref function to auto-scroll to a certain node's position
 
 If you do not see what you want in the planned feature list, raise a feature request. 

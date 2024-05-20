@@ -1,3 +1,10 @@
+## [1.2.8](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.2.7...v1.2.8) (2024-05-11)
+
+
+### Bug Fixes
+
+* **semantic_release:** remove duplicate release config from package json and updated lock files ([dcf432d](https://github.com/JairajJangle/react-native-tree-multi-select/commit/dcf432dd483a34b2f073b8b898b4b3133eeaa54e))
+
 ### Changelog
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.

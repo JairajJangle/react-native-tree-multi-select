@@ -74,8 +74,8 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       expandNodes,
       collapseNodes,
 
-      checkNodes,
-      uncheckNodes,
+      selectNodes,
+      unselectNodes,
 
       setSearchText
     }));
@@ -95,11 +95,11 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    function checkNodes(ids: string[]) {
+    function selectNodes(ids: string[]) {
       toggleCheckboxes(ids, true);
     }
 
-    function uncheckNodes(ids: string[]) {
+    function unselectNodes(ids: string[]) {
       toggleCheckboxes(ids, false);
     }
 

@@ -112,11 +112,8 @@ export interface TreeViewRef {
     expandNodes: (ids: string[]) => void;
     collapseNodes: (ids: string[]) => void;
 
-    // TODO: Add option to expand the parent of the ids
-    checkNodes: (ids: string[]) => void;
-    // TODO: Add option to collapse the parent of the ids
-    uncheckNodes: (ids: string[]) => void;
-    // TODO: Update Readme
+    selectNodes: (ids: string[]) => void;
+    unselectNodes: (ids: string[]) => void;
 
     setSearchText: (searchText: string, searchKeys?: string[]) => void;
 }

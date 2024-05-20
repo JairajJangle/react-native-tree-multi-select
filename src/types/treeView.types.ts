@@ -112,5 +112,8 @@ export interface TreeViewRef {
     expandNodes: (ids: string[]) => void;
     collapseNodes: (ids: string[]) => void;
 
+    selectNodes: (ids: string[]) => void;
+    unselectNodes: (ids: string[]) => void;
+
     setSearchText: (searchText: string, searchKeys?: string[]) => void;
 }

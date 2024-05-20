@@ -74,15 +74,13 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       expandNodes,
       collapseNodes,
 
+      selectNodes,
+      unselectNodes,
+
       setSearchText
     }));
 
     const prevSearchText = usePreviousState(searchText);
-
-    function setSearchText(text: string, keys: string[] = ["name"]) {
-      updateSearchText(text);
-      updateSearchKeys(keys);
-    }
 
     React.useEffect(() => {
       updateInitialTreeViewData(data);
@@ -96,6 +94,19 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       expandNodes(preExpandedIds);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    function selectNodes(ids: string[]) {
+      toggleCheckboxes(ids, true);
+    }
+
+    function unselectNodes(ids: string[]) {
+      toggleCheckboxes(ids, false);
+    }
+
+    function setSearchText(text: string, keys: string[] = ["name"]) {
+      updateSearchText(text);
+      updateSearchKeys(keys);
+    }
 
     const getIds = React.useCallback((node: TreeNode): string[] => {
       if (!node.children || node.children.length === 0) {

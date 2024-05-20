@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.3.0...v1.3.1) (2024-05-20)
+
+
+### Bug Fixes
+
+* workflow action not upgrading package json version ([e51cbd7](https://github.com/JairajJangle/react-native-tree-multi-select/commit/e51cbd78c7790db7d33d2ea6e9b269e0ae51609f))
+
 # [1.3.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.2.8...v1.3.0) (2024-05-20)
 
 

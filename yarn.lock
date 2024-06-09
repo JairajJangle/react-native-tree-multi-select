@@ -9409,10 +9409,10 @@ pkg-dir@^4.2.0:
   dependencies:
     find-up "^4.0.0"
 
-pod-install@^0.1.0:
-  version "0.1.39"
-  resolved "https://registry.npmjs.org/pod-install/-/pod-install-0.1.39.tgz"
-  integrity sha512-0kVvdLYe0CtfJEr+ISvTMxAEB0UF4JMRToPjuu9xAAq1mEqA2Ql5u7uLWX1m45BMM+7NfU4LnBbnfNjmQE9GCw==
+pod-install@^0.2.0:
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/pod-install/-/pod-install-0.2.2.tgz#3375026ff1e317f87140b8f51ed955084d0c35e5"
+  integrity sha512-NgQpKiuWZo8mWU+SVxmrn+ARy9+fFYzW53ze6CDTo70u5Ie8AVSn7FqolDC/c7+N4/kQ1BldAnXEab6SNYA8xw==
 
 possible-typed-array-names@^1.0.0:
   version "1.0.0"

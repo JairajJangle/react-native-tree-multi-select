@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.3.1...v1.3.2) (2024-06-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency react-native-safe-area-context to v4.10.4 ([89db0eb](https://github.com/JairajJangle/react-native-tree-multi-select/commit/89db0eb44a20d27b2d0e72d4586bdecd29bfef85))
+
 ## [1.3.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.3.0...v1.3.1) (2024-05-20)
 
 

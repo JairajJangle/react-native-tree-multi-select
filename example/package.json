@@ -33,7 +33,7 @@
     "@types/lodash": "^4.14.195",
     "@types/metro-config": "^0.76.3",
     "babel-plugin-module-resolver": "^5.0.0",
-    "metro-react-native-babel-preset": "0.76.5"
+    "metro-react-native-babel-preset": "0.77.0"
   },
   "engines": {
     "node": ">=16"

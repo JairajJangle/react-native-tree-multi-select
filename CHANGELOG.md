@@ -1,3 +1,10 @@
+## [1.3.3](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.3.2...v1.3.3) (2024-08-03)
+
+
+### Performance Improvements
+
+* optimized state usage using useShallow and memoization ([0c8d9c6](https://github.com/JairajJangle/react-native-tree-multi-select/commit/0c8d9c66d6239bc6447fef64fee3841f8a2f8620))
+
 ## [1.3.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.3.1...v1.3.2) (2024-06-09)
 
 

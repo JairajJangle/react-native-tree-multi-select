@@ -1,5 +1,5 @@
 import React from "react";
-import Icon from 'react-native-vector-icons/FontAwesome';
+import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 
 import { ExpandIconProps } from "src/types/treeView.types";
 
@@ -11,7 +11,7 @@ function _CustomExpandCollapseIcon(props: ExpandIconProps) {
     const { isExpanded } = props;
 
     return (
-        <Icon
+        <FontAwesomeIcon
             name={
                 isExpanded
                     ? 'caret-down'

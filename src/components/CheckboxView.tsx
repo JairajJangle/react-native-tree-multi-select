@@ -43,15 +43,15 @@ function _CheckboxView(props: BuiltInCheckBoxViewProps) {
         },
     } = props;
 
-    function customCheckboxValueTypeToRNPaperType(
+    const customCheckboxValueTypeToRNPaperType = React.useCallback((
         customCheckboxValueType: CheckboxValueType
-    ) {
+    ) => {
         return customCheckboxValueType === 'indeterminate'
             ? 'indeterminate'
             : customCheckboxValueType
                 ? 'checked'
                 : 'unchecked';
-    }
+    }, []);
 
     /**
      * This function modifies the change in value when the previous state was indeterminate.
@@ -59,11 +59,11 @@ function _CheckboxView(props: BuiltInCheckBoxViewProps) {
      *
      * @param newValue This represents the updated CheckBox value after it's clicked.
      */
-    function onValueChangeModifier() {
+    const onValueChangeModifier = React.useCallback(() => {
         // If the previous state was 'indeterminate', set checked to true
         if (value === 'indeterminate') onValueChange(true);
         else onValueChange(!value);
-    }
+    }, [onValueChange, value]);
 
     return (
         <View

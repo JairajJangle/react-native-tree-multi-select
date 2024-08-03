@@ -8,7 +8,7 @@ import {
 
 import SearchInput from '../components/SearchInput';
 
-import { debounce } from "lodash";
+import debounce from "lodash/debounce";
 
 import {
     TreeView,

@@ -20,6 +20,7 @@ import {
 } from './helpers';
 import { useTreeViewStore } from './store/treeView.store';
 import usePreviousState from './utils/usePreviousState';
+import { useShallow } from "zustand/react/shallow";
 
 const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
   (props, ref) => {
@@ -59,7 +60,24 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       checked,
 
       cleanUpTreeViewStore,
-    } = useTreeViewStore();
+    } = useTreeViewStore(useShallow(
+      state => ({
+        expanded: state.expanded,
+        updateExpanded: state.updateExpanded,
+
+        initialTreeViewData: state.initialTreeViewData,
+        updateInitialTreeViewData: state.updateInitialTreeViewData,
+
+        searchText: state.searchText,
+        updateSearchText: state.updateSearchText,
+
+        updateSearchKeys: state.updateSearchKeys,
+
+        checked: state.checked,
+
+        cleanUpTreeViewStore: state.cleanUpTreeViewStore,
+      })
+    ));
 
     React.useImperativeHandle(ref, () => ({
       selectAll,

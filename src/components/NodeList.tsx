@@ -8,8 +8,6 @@ import {
 import { FlashList } from "@shopify/flash-list";
 
 import type {
-    TreeNode,
-
     CheckboxValueType,
     __FlattenedTreeNode__,
     NodeListProps,
@@ -27,6 +25,7 @@ import {
 import { CheckboxView } from "./CheckboxView";
 import { CustomExpandCollapseIcon } from "./CustomExpandCollapseIcon";
 import { defaultIndentationMultiplier } from "../constants/treeView.constants";
+import { useShallow } from 'zustand/react/shallow';
 
 const NodeList = React.memo(_NodeList);
 export default NodeList;
@@ -49,31 +48,28 @@ function _NodeList(props: NodeListProps) {
         updateInnerMostChildrenIds,
         searchKeys,
         searchText
-    } = useTreeViewStore();
-
-    const [filteredTree, setFilteredTree] = React.useState<TreeNode[]>([]);
-    const [flattenedFilteredNodes, setFlattenedFilteredNodes]
-        = React.useState<__FlattenedTreeNode__[]>([]);
+    } = useTreeViewStore(useShallow(
+        state => ({
+            expanded: state.expanded,
+            initialTreeViewData: state.initialTreeViewData,
+            updateInnerMostChildrenIds: state.updateInnerMostChildrenIds,
+            searchKeys: state.searchKeys,
+            searchText: state.searchText,
+        })
+    ));
 
     // First we filter the tree as per the search term and keys
-    React.useEffect(() => {
-        const searchTrimmed = searchText.trim().toLowerCase();
-        const tempFilterTree = getFilteredTreeData(
-            initialTreeViewData,
-            searchTrimmed,
-            searchKeys
-        );
-        setFilteredTree(tempFilterTree);
-    }, [searchText, searchKeys, initialTreeViewData]);
+    const filteredTree = React.useMemo(() => getFilteredTreeData(
+        initialTreeViewData,
+        searchText.trim().toLowerCase(),
+        searchKeys
+    ), [initialTreeViewData, searchText, searchKeys]);
 
     // Then we flatten the treen to make it "render-compatible" in a "flat" list
-    React.useEffect(() => {
-        const tempFlattenTreeData = getFlattenedTreeData(
-            filteredTree,
-            expanded,
-        );
-        setFlattenedFilteredNodes(tempFlattenTreeData);
-    }, [filteredTree, expanded]);
+    const flattenedFilteredNodes = React.useMemo(() => getFlattenedTreeData(
+        filteredTree,
+        expanded,
+    ), [filteredTree, expanded]);
 
     // And update the innermost children id -> required to un/select filtered tree
     React.useEffect(() => {
@@ -158,17 +154,18 @@ function _Node(props: NodeProps) {
         CustomNodeRowComponent
     } = props;
 
-    const { expanded, checked, indeterminate } = useTreeViewStore();
-
-    const isChecked = checked.has(node.id);
-    const isIndeterminate = indeterminate.has(node.id);
-    const isExpanded = expanded.has(node.id);
-
-    const [value, setValue] = React.useState(getValue(isChecked, isIndeterminate));
-
-    React.useEffect(() => {
-        setValue(getValue(isChecked, isIndeterminate));
-    }, [isChecked, isIndeterminate]);
+    const {
+        isExpanded,
+        value,
+    } = useTreeViewStore(useShallow(
+        state => ({
+            isExpanded: state.expanded.has(node.id),
+            value: getValue(
+                state.checked.has(node.id), // isChecked
+                state.indeterminate.has(node.id) // isIndeterminate
+            ),
+        })
+    ));
 
     const _onToggleExpand = React.useCallback(() => {
         handleToggleExpand(node.id);

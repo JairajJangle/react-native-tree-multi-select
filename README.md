@@ -115,6 +115,8 @@ export function TreeViewUsageExample(){
 | `ExpandCollapseTouchableComponent` | `ComponentType<`[TouchableOpacityProps](https://reactnative.dev/docs/touchableopacity#props)`>` | No       | A custom expand/collapse touchable component                 |
 | `CustomNodeRowComponent`           | `React.ComponentType<`[NodeRowProps](#noderowprops)`>`       | No       | Custom row item component                                    |
 
+ℹ️ `data` prop is not stateful! You will need to update the `key` prop to force `TreeView` to re-render.
+
 ℹ️ If `CustomNodeRowComponent` is provided then below props are not applied:
 
 1. `indentationMultiplier`

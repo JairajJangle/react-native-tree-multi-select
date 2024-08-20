@@ -37,7 +37,7 @@ export default function CustomArrowScreen() {
         _checkedIds: string[],
         _indeterminateIds: string[]
     ) => {
-        // NOTE: Handle _checkedIds here
+        // NOTE: Handle _checkedIds and _indeterminateIds here
     };
     const handleExpanded = (_expandedIds: string[]) => {
         // NOTE: Handle _expandedIds here

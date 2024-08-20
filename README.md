@@ -57,8 +57,11 @@ export function TreeViewUsageExample(){
   }
   
   // Callback functions for check and expand state changes:
-  const handleSelectionChange = (checkedIds: string[]) => {
-    // NOTE: Do something with updated checkedIds here
+  const handleSelectionChange = (
+      _checkedIds: string[],
+      _indeterminateIds: string[]
+  ) => {
+      // NOTE: Handle _checkedIds and _indeterminateIds here
   };
   const handleExpanded = (expandedIds: string[]) => {
     // NOTE: Do something with updated expandedIds here
@@ -103,7 +106,7 @@ export function TreeViewUsageExample(){
 | Property                           | Type                                                         | Required | Description                                                  |
 | ---------------------------------- | ------------------------------------------------------------ | -------- | ------------------------------------------------------------ |
 | `data`                             | [TreeNode](#treenode)                                        | Yes      | An array of `TreeNode` objects                               |
-| `onCheck`                          | `(checkedIds: string[]) => void`                             | No       | Callback when a checkbox is checked                          |
+| `onCheck`                          | `(checkedIds: string[], indeterminateIds: string[]) => void` | No       | Callback when a checkbox state changes                       |
 | `onExpand`                         | `(expandedIds: string[]) => void`                            | No       | Callback when a node is expanded                             |
 | `preselectedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-selected                |
 | `preExpandedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-expanded                |

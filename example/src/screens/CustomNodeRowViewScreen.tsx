@@ -33,8 +33,11 @@ export default function CustomNodeRowViewScreen() {
         []
     );
 
-    const handleSelectionChange = (_checkedIds: string[]) => {
-        // NOTE: Handle _checkedIds here
+    const handleSelectionChange = (
+        _checkedIds: string[],
+        _indeterminateIds: string[]
+    ) => {
+        // NOTE: Handle _checkedIds and _indeterminateIds here
     };
     const handleExpanded = (_expandedIds: string[]) => {
         // NOTE: Handle _expandedIds here

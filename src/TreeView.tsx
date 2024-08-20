@@ -58,6 +58,7 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       updateSearchKeys,
 
       checked,
+      indeterminate,
 
       cleanUpTreeViewStore,
     } = useTreeViewStore(useShallow(
@@ -74,6 +75,7 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
         updateSearchKeys: state.updateSearchKeys,
 
         checked: state.checked,
+        indeterminate: state.indeterminate,
 
         cleanUpTreeViewStore: state.cleanUpTreeViewStore,
       })
@@ -135,11 +137,11 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
     }, []);
 
     React.useEffect(() => {
-      onCheck && onCheck(Array.from(checked));
-    }, [onCheck, checked]);
+      onCheck?.(Array.from(checked), Array.from(indeterminate));
+    }, [onCheck, checked, indeterminate]);
 
     React.useEffect(() => {
-      onExpand && onExpand(Array.from(expanded));
+      onExpand?.(Array.from(expanded));
     }, [onExpand, expanded]);
 
     React.useEffect(() => {

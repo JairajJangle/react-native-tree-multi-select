@@ -68,7 +68,7 @@ export interface NodeListProps extends TreeItemCustomizations {
 export interface TreeViewProps extends NodeListProps {
     data: TreeNode[];
 
-    onCheck?: (checkedIds: string[]) => void;
+    onCheck?: (checkedIds: string[], indeterminateIds: string[]) => void;
     onExpand?: (expandedIds: string[]) => void;
 
     preselectedIds?: string[];

@@ -33,7 +33,10 @@ export default function CustomArrowScreen() {
         []
     );
 
-    const handleSelectionChange = (_checkedIds: string[]) => {
+    const handleSelectionChange = (
+        _checkedIds: string[],
+        _indeterminateIds: string[]
+    ) => {
         // NOTE: Handle _checkedIds here
     };
     const handleExpanded = (_expandedIds: string[]) => {

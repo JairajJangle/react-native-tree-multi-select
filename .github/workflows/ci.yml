@@ -57,6 +57,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TURBO_CACHE_DIR: .turbo/android
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      JAVA_HOME: /usr/lib/jvm/zulu-11-amd64
     steps:
       - name: Checkout
         uses: actions/checkout@v4

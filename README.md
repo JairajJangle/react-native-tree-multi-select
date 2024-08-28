@@ -193,7 +193,7 @@ All properties of `RNPaperCheckboxAndroidProps`(from `react-native-paper`) excep
 
 #### CheckboxValueType
 
-Type: `boolean` OR ` "indeterminate"`
+Type: `boolean` OR `"indeterminate"`
 
 ---
 

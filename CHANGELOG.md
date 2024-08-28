@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.3.3...v1.4.0) (2024-08-20)
+
+
+### Features
+
+* added indeterminate state ids to onCheck callback ([204b9a0](https://github.com/JairajJangle/react-native-tree-multi-select/commit/204b9a0a26e80d2f4c434bc6afdd17452f44fb87))
+
 ## [1.3.3](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.3.2...v1.3.3) (2024-08-03)
 
 

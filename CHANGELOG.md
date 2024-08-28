@@ -1,3 +1,11 @@
+## [1.4.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.4.0...v1.4.1) (2024-08-28)
+
+
+### Bug Fixes
+
+* turbo pipeline to task renamed ([55a428f](https://github.com/JairajJangle/react-native-tree-multi-select/commit/55a428f6eb88946e4a4d84e9063da408db35ea5e))
+* upgraded deps ([0ddd803](https://github.com/JairajJangle/react-native-tree-multi-select/commit/0ddd80392dda389dfe6976ed1cf7a9987f665540))
+
 # [1.4.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.3.3...v1.4.0) (2024-08-20)
 
 

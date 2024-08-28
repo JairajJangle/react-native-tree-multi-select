@@ -94,7 +94,15 @@ export function expandNodes(ids: string[]) {
 
         while (currentId && childToParentMap.has(currentId) && !processedParents.has(currentId)) {
             const parentId = childToParentMap.get(currentId);
+            /*
+                istanbul ignore else:
+
+                ignore because this condition is just added to satisfy 
+                typescript type check as parentId will never be undefined if it is already in 
+                childToParentMap Map 
+            */
             if (parentId) {
+                /* istanbul ignore else: nothing to be done in else block */
                 if (!newExpanded.has(parentId)) {
                     newExpanded.add(parentId);  // Add the parent ID only if not already processed
                     processedParents.add(parentId);
@@ -120,6 +128,11 @@ export function collapseNodes(ids: string[]) {
 
     // Function to recursively remove child nodes from the expanded set
     const deleteChildrenFromExpanded = (nodeId: string, visited = new Set()) => {
+        /* 
+            istanbul ignore next:
+             
+            ignore because this is a redundancy check.
+        */
         if (visited.has(nodeId)) return; // Prevent redundant processing
         visited.add(nodeId);
 

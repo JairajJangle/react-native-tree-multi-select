@@ -71,6 +71,8 @@ export interface TreeViewProps extends NodeListProps {
     onCheck?: (checkedIds: string[], indeterminateIds: string[]) => void;
     onExpand?: (expandedIds: string[]) => void;
 
+    selectionPropagationBehavior?: SelectionPropagationBehavior;
+
     preselectedIds?: string[];
 
     preExpandedIds?: string[];
@@ -116,4 +118,9 @@ export interface TreeViewRef {
     unselectNodes: (ids: string[]) => void;
 
     setSearchText: (searchText: string, searchKeys?: string[]) => void;
+}
+
+export interface SelectionPropagationBehavior {
+    toChildren?: boolean;
+    toParents?: boolean;
 }

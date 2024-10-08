@@ -4,10 +4,10 @@ import { TreeNode, __FlattenedTreeNode__ } from "../types/treeView.types";
  * Flatten the tree and attach a "level" key to object to indicate it's depth. This 
  * returns the flattened tree data of expanded ids only. We do not prune the tree off the
  * children after the flattening as it would be unnecessary computation.
- * 
+ *
  * @param nodes - Input recursive tree
  * @param expandedIds - ids of currently expanded nodes
- * @param level - (optional) for internal recursive use only
+ * @param __level__ - (optional) for internal recursive use only
  * @returns Flattened tree data with expanded ids only
  */
 export function getFlattenedTreeData(

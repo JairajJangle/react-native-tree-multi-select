@@ -16,38 +16,19 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
         updateIndeterminate,
 
         nodeMap,
-        childToParentMap
+        childToParentMap,
+        selectionPropagationBehavior
     } = useTreeViewStore.getState();
+
+    const { toChildren, toParents } = selectionPropagationBehavior;
 
     // Create new sets for checked and indeterminate state so as not to mutate the original state.
     const tempChecked = new Set(checked);
     const tempIndeterminate = new Set(indeterminate);
 
     // Maps for memoization of the recursive functions areAllDescendantsChecked and areAnyDescendantsChecked.
-    const memoAllDescendantsChecked = new Map();
-    const memoAnyDescendantsChecked = new Map();
-
-    /**
-     * Recursive function to check/uncheck a node and all its children.
-     * @param {string} nodeId - The id of the node to be checked or unchecked.
-     * @param {boolean} isChecked - Whether the node should be checked or unchecked.
-     */
-    const toggleNodeAndChildren = (nodeId: string, isChecked: boolean) => {
-        // Set or unset this node in the checked set, and remove it from the indeterminate set.
-        if (isChecked) {
-            tempChecked.add(nodeId);
-            tempIndeterminate.delete(nodeId);
-        } else {
-            tempChecked.delete(nodeId);
-        }
-
-        // Get the node from the node map and recursively apply the same state to all its children.
-        const node = nodeMap.get(nodeId);
-        node?.children?.forEach((childNode) => {
-            if (isChecked) tempIndeterminate.delete(childNode.id);
-            toggleNodeAndChildren(childNode.id, isChecked);
-        });
-    };
+    const memoAllDescendantsChecked = new Map<string, boolean>();
+    const memoAnyDescendantsChecked = new Map<string, boolean>();
 
     /**
      * Recursive function to check if all descendants of a node are checked.
@@ -58,7 +39,7 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
     const areAllDescendantsChecked = (nodeId: string): boolean => {
         // If the result for this node is already in the map, return it.
         if (memoAllDescendantsChecked.has(nodeId)) {
-            return memoAllDescendantsChecked.get(nodeId);
+            return memoAllDescendantsChecked.get(nodeId)!;
         }
 
         const node = nodeMap.get(nodeId);
@@ -79,23 +60,26 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
     };
 
     /**
-     * Recursive function to check if any descendants of a node are checked.
-     * It uses memoization to avoid redundant calculations.
+     * Updated function to check if any descendants of a node are checked.
+     * It uses memoization to avoid redundant calculations and avoids unnecessarily deep recursion.
      * @param {string} nodeId - The id of the node to be checked.
      * @returns {boolean} - Whether any descendants of the node are checked.
      */
     const areAnyDescendantsChecked = (nodeId: string): boolean => {
         // If the result for this node is already in the map, return it.
         if (memoAnyDescendantsChecked.has(nodeId)) {
-            return memoAnyDescendantsChecked.get(nodeId);
+            return memoAnyDescendantsChecked.get(nodeId)!;
         }
 
         const node = nodeMap.get(nodeId);
         let anyChecked = false;
         if (node?.children) {
-            // If the node has children, recursively check all children.
+            // Check if any direct child is checked, without requiring all descendants.
             for (const childNode of node.children) {
-                anyChecked = anyChecked || areAnyDescendantsChecked(childNode.id);
+                if (tempChecked.has(childNode.id) || areAnyDescendantsChecked(childNode.id)) {
+                    anyChecked = true;
+                    break;
+                }
             }
         } else {
             // If the node has no children, its state is equal to whether it is in the checked set.
@@ -107,58 +91,82 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
         return anyChecked;
     };
 
-    /**
-     * Function to update the indeterminate and checked state of a node and its ancestors.
-     * @param {string} nodeId - The id of the node to be updated.
-     */
-    const updateNodeAndAncestorsState = (nodeId: string) => {
-        const node = nodeMap.get(nodeId);
-
-        // Update the node's state based on the state of its descendants.
-        if (areAllDescendantsChecked(nodeId)) {
-            tempChecked.add(nodeId);
-            tempIndeterminate.delete(nodeId);
-        } else if (areAnyDescendantsChecked(nodeId)) {
-            // Condition to check if all direct children and all descendants are checked.
-
-            /* 
-                istanbul ignore next
-             
-                NOTE: Below 2 lines in the condition are not covered in unit test
-                This condition will only be true if for some reason areAllDescendantsChecked(nodeId) 
-                is false, while node?.children && node.children.every(childNode => areAllDescendantsChecked(childNode.id)) 
-                is true. Given the current logic of areAllDescendantsChecked, 
-                this scenario is very unlikely to occur.
-             */
-            if (node?.children && node.children.every(childNode => areAllDescendantsChecked(childNode.id))) {
-                // If a node's all direct children and all descendants are checked,
-                // remove this node from both checked and indeterminate sets.
-                tempChecked.delete(nodeId);
-                tempIndeterminate.delete(nodeId);
-            } else {
-                tempChecked.delete(nodeId);
-                tempIndeterminate.add(nodeId);
-            }
-        } else {
-            tempChecked.delete(nodeId);
-            tempIndeterminate.delete(nodeId);
-        }
-    };
-
     // Toggle the clicked nodes and their children.
     ids.forEach((id) => {
         const isChecked = tempChecked.has(id);
-        toggleNodeAndChildren(id, forceCheck === undefined ? !isChecked : forceCheck);
-    });
+        const newCheckedState = forceCheck === undefined ? !isChecked : forceCheck;
 
-    // Update the state of all affected nodes.
-    ids.forEach((id) => {
-        let currentNodeId: string | undefined = id;
-        while (currentNodeId) {
-            updateNodeAndAncestorsState(currentNodeId);
-            currentNodeId = childToParentMap.get(currentNodeId);
+        if (newCheckedState) {
+            tempChecked.add(id);
+            tempIndeterminate.delete(id);
+            if (toChildren) {
+                recursivelyUpdateChildren(id, true);
+            }
+        } else {
+            tempChecked.delete(id);
+            tempIndeterminate.delete(id);
+            if (toChildren) {
+                recursivelyUpdateChildren(id, false);
+            }
+        }
+
+        // Skip updating parent nodes if toParents is false
+        if (toParents) {
+            updateParentNodes(id);
         }
     });
+
+    // Function to recursively update children nodes as per childrenChecked value
+    function recursivelyUpdateChildren(nodeId: string, childrenChecked: boolean) {
+        const node = nodeMap.get(nodeId);
+        if (node && node.children) {
+            node.children.forEach((childNode) => {
+                if (childrenChecked) {
+                    tempChecked.add(childNode.id);
+                    tempIndeterminate.delete(childNode.id);
+                } else {
+                    tempChecked.delete(childNode.id);
+                    tempIndeterminate.delete(childNode.id);
+                }
+                recursivelyUpdateChildren(childNode.id, childrenChecked);
+            });
+        }
+    }
+
+    // Function to update parent nodes
+    function updateParentNodes(nodeId: string) {
+        let currentNodeId: string | undefined = nodeId;
+        while (currentNodeId) {
+            const parentNodeId = childToParentMap.get(currentNodeId);
+            if (parentNodeId) {
+                if (tempChecked.has(parentNodeId)) {
+                    // If the parent node is currently checked, but not all child nodes are checked,
+                    // move the parent node to an indeterminate state
+                    if (!areAllDescendantsChecked(parentNodeId)) {
+                        tempChecked.delete(parentNodeId);
+                        tempIndeterminate.add(parentNodeId);
+                    }
+                } else if (tempIndeterminate.has(parentNodeId)) {
+                    // If the parent node is currently in an indeterminate state,
+                    // then check if all descendants are checked
+                    if (areAllDescendantsChecked(parentNodeId)) {
+                        tempIndeterminate.delete(parentNodeId);
+                        tempChecked.add(parentNodeId);
+                    } else if (!areAnyDescendantsChecked(parentNodeId)) {
+                        // If no descendants are checked, remove from indeterminate set
+                        tempIndeterminate.delete(parentNodeId);
+                    }
+                } else {
+                    // If the parent node is not checked or indeterminate,
+                    // check if any descendants are checked and update appropriately
+                    if (areAnyDescendantsChecked(parentNodeId)) {
+                        tempIndeterminate.add(parentNodeId);
+                    }
+                }
+            }
+            currentNodeId = parentNodeId;
+        }
+    }
 
     // Update the state object with the new checked and indeterminate sets.
     updateChecked(tempChecked);

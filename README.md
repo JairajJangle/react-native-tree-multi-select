@@ -110,6 +110,7 @@ export function TreeViewUsageExample(){
 | `onExpand`                         | `(expandedIds: string[]) => void`                            | No       | Callback when a node is expanded                             |
 | `preselectedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-selected                |
 | `preExpandedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-expanded                |
+| `selectionPropagationBehavior`     | [SelectionPropagationBehavior](#SelectionPropagationBehavior) | No       | Control Selection Propagation Behaviour. Choose whether you want to auto-select children or parents. |
 | `indentationMultiplier`            | `number`                                                     | No       | Indentation (`marginStart`) per level (defaults to 15)       |
 | `treeFlashListProps`               | [TreeFlatListProps](#treeflatlistprops)                      | No       | Props for the flash list                                     |
 | `checkBoxViewStyleProps`           | [BuiltInCheckBoxViewStyleProps](#builtincheckboxviewstyleprops) | No       | Props for the checkbox view                                  |
@@ -158,6 +159,15 @@ export function TreeViewUsageExample(){
 | `selectNodes`           | `(ids: string[]) => void`                           | Selects specified nodes    |
 | `unSelectNodes`           | `(ids: string[]) => void`                           | Unselects specified nodes    |
 | `setSearchText`       | `(searchText: string, searchKeys?: string[]) => void` | Set the search text and optionally the search keys. Default search key is "name"<br /><br />Recommended to call this inside a debounced function if you find any performance issue otherwise. |
+
+---
+
+#### SelectionPropagationBehavior
+
+| Property     | Type      | Required | Description                                                  |
+| ------------ | --------- | -------- | ------------------------------------------------------------ |
+| `toChildren` | `boolean` | No       | Whether to propagate selection to children nodes. Defaults to `true`. |
+| `toParents`  | `boolean` | No       | Whether to propagate selection to parent nodes. Defaults to `true`. |
 
 ---
 
@@ -221,6 +231,7 @@ Type: `boolean` OR `"indeterminate"`
  ### 🙌 Planned features
 
 - [x] Row Item full-customization
+- [x] Prop to control auto children and parents selection. Can now be done using `selectionPropagation` prop 🎉
 - [ ] Prop to set the maximum checked item limit
 - [ ] Prop to disable certain nodes from getting checked
 - [x] Ref function to programatically expand/collapse a certain node 

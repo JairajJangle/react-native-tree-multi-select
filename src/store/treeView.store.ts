@@ -1,4 +1,4 @@
-import type { TreeNode } from "src/types/treeView.types";
+import type { SelectionPropagationBehavior, TreeNode } from "src/types/treeView.types";
 
 import { create } from 'zustand';
 
@@ -39,6 +39,11 @@ export type TreeViewState = {
     innerMostChildrenIds: string[];
     updateInnerMostChildrenIds: (innerMostChildrenIds: string[]) => void;
 
+    selectionPropagationBehavior: SelectionPropagationBehavior;
+    setSelectionPropagationBehavior: (
+        selectionPropagationBehavior: SelectionPropagationBehavior
+    ) => void;
+
     // Cleanup all states in this store
     cleanUpTreeViewStore: () => void;
 };
@@ -73,6 +78,17 @@ export const useTreeViewStore = create<TreeViewState>((set) => ({
     innerMostChildrenIds: [],
     updateInnerMostChildrenIds: (innerMostChildrenIds: string[]) => set({ innerMostChildrenIds }),
 
+    selectionPropagationBehavior: { toChildren: true, toParents: true },
+    setSelectionPropagationBehavior: (selectionPropagationBehavior) => set(
+        {
+            selectionPropagationBehavior: {
+                // Default selection propagation for parent and children to true if not mentioned
+                toChildren: selectionPropagationBehavior.toChildren ?? true,
+                toParents: selectionPropagationBehavior.toParents ?? true
+            }
+        }
+    ),
+
     cleanUpTreeViewStore: () =>
         set({
             checked: new Set(),
@@ -84,5 +100,6 @@ export const useTreeViewStore = create<TreeViewState>((set) => ({
             searchText: "",
             searchKeys: [""],
             innerMostChildrenIds: [],
+            selectionPropagationBehavior: { toChildren: true, toParents: true },
         }),
 }));

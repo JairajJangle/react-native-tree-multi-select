@@ -65,7 +65,7 @@ function _NodeList(props: NodeListProps) {
         searchKeys
     ), [initialTreeViewData, searchText, searchKeys]);
 
-    // Then we flatten the treen to make it "render-compatible" in a "flat" list
+    // Then we flatten the tree to make it "render-compatible" in a "flat" list
     const flattenedFilteredNodes = React.useMemo(() => getFlattenedTreeData(
         filteredTree,
         expanded,

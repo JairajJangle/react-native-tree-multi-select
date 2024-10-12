@@ -1,3 +1,10 @@
+# [1.5.0-beta.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.5.0-beta.1...v1.5.0-beta.2) (2024-10-12)
+
+
+### Bug Fixes
+
+* trigger patch release for refactor ([c3b9a71](https://github.com/JairajJangle/react-native-tree-multi-select/commit/c3b9a71f3d3026b1a6428d65a8209ae8eb05ce30))
+
 # [1.5.0-beta.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.4.1...v1.5.0-beta.1) (2024-10-08)
 
 

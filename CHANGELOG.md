@@ -1,3 +1,11 @@
+# [1.5.0-beta.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.4.1...v1.5.0-beta.1) (2024-10-08)
+
+
+### Features
+
+* added prop and state to control parent <-> child selection propagation ([#81](https://github.com/JairajJangle/react-native-tree-multi-select/issues/81)) ([4714525](https://github.com/JairajJangle/react-native-tree-multi-select/commit/47145251fc7fdfbc1437bda336596fea92842226))
+* updated toggle checkbox helpers for controlled parent <-> child selection propagation ([#81](https://github.com/JairajJangle/react-native-tree-multi-select/issues/81)) ([9acbca2](https://github.com/JairajJangle/react-native-tree-multi-select/commit/9acbca2b1eb8300cfeaf29ffd37c2d96c93b744d))
+
 ## [1.4.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.4.0...v1.4.1) (2024-08-28)
 
 

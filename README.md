@@ -110,7 +110,7 @@ export function TreeViewUsageExample(){
 | `onExpand`                         | `(expandedIds: string[]) => void`                            | No       | Callback when a node is expanded                             |
 | `preselectedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-selected                |
 | `preExpandedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-expanded                |
-| `selectionPropagationBehavior`     | [SelectionPropagationBehavior](#SelectionPropagationBehavior) | No       | Control Selection Propagation Behaviour. Choose whether you want to auto-select children or parents. |
+| `selectionPropagation`     | [SelectionPropagation](#selectionpropagation) | No       | Control Selection Propagation Behavior. Choose whether you want to auto-select children or parents. |
 | `indentationMultiplier`            | `number`                                                     | No       | Indentation (`marginStart`) per level (defaults to 15)       |
 | `treeFlashListProps`               | [TreeFlatListProps](#treeflatlistprops)                      | No       | Props for the flash list                                     |
 | `checkBoxViewStyleProps`           | [BuiltInCheckBoxViewStyleProps](#builtincheckboxviewstyleprops) | No       | Props for the checkbox view                                  |
@@ -162,7 +162,7 @@ export function TreeViewUsageExample(){
 
 ---
 
-#### SelectionPropagationBehavior
+#### SelectionPropagation
 
 | Property     | Type      | Required | Description                                                  |
 | ------------ | --------- | -------- | ------------------------------------------------------------ |

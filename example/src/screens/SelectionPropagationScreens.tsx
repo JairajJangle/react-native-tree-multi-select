@@ -1,39 +1,39 @@
 import React from 'react';
-import { SelectionPropagationBehavior } from "react-native-tree-multi-select";
+import { SelectionPropagation } from "react-native-tree-multi-select";
 import SmallDataScreen from "./SmallDataScreen";
 
 export function OnlyToParentSmallDataScreen() {
-  const selectionPropagationBehavior: SelectionPropagationBehavior = {
+  const selectionPropagation: SelectionPropagation = {
     toChildren: false,
     toParents: true,
   };
 
   return (
     <SmallDataScreen
-      selectionPropagationBehavior={selectionPropagationBehavior} />
+      selectionPropagation={selectionPropagation} />
   );
 }
 
 export function OnlyToChildrenSmallDataScreen() {
-  const selectionPropagationBehavior: SelectionPropagationBehavior = {
+  const selectionPropagation: SelectionPropagation = {
     toChildren: true,
     toParents: false,
   };
 
   return (
     <SmallDataScreen
-      selectionPropagationBehavior={selectionPropagationBehavior} />
+      selectionPropagation={selectionPropagation} />
   );
 }
 
 export function NeitherToChildrenNorToParentSmallDataScreen() {
-  const selectionPropagationBehavior: SelectionPropagationBehavior = {
+  const selectionPropagation: SelectionPropagation = {
     toChildren: false,
     toParents: false,
   };
 
   return (
     <SmallDataScreen
-      selectionPropagationBehavior={selectionPropagationBehavior} />
+      selectionPropagation={selectionPropagation} />
   );
 }

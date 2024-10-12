@@ -75,7 +75,7 @@ export interface TreeViewProps extends NodeListProps {
 
     preExpandedIds?: string[];
 
-    selectionPropagationBehavior?: SelectionPropagationBehavior;
+    selectionPropagation?: SelectionPropagation;
 }
 
 type CheckboxProps = Omit<RNPaperCheckboxAndroidProps, "onPress" | "status">;
@@ -120,7 +120,7 @@ export interface TreeViewRef {
     setSearchText: (searchText: string, searchKeys?: string[]) => void;
 }
 
-export interface SelectionPropagationBehavior {
+export interface SelectionPropagation {
     toChildren?: boolean;
     toParents?: boolean;
 }

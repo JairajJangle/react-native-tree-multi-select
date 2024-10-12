@@ -30,7 +30,7 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       onCheck,
       onExpand,
 
-      selectionPropagationBehavior,
+      selectionPropagation,
 
       preselectedIds = [],
 
@@ -62,7 +62,7 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       checked,
       indeterminate,
 
-      setSelectionPropagationBehavior,
+      setSelectionPropagation,
 
       cleanUpTreeViewStore,
     } = useTreeViewStore(useShallow(
@@ -81,7 +81,7 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
         checked: state.checked,
         indeterminate: state.indeterminate,
 
-        setSelectionPropagationBehavior: state.setSelectionPropagationBehavior,
+        setSelectionPropagation: state.setSelectionPropagation,
 
         cleanUpTreeViewStore: state.cleanUpTreeViewStore,
       })
@@ -111,8 +111,8 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
     React.useEffect(() => {
       updateInitialTreeViewData(data);
 
-      if (selectionPropagationBehavior)
-        setSelectionPropagationBehavior(selectionPropagationBehavior);
+      if (selectionPropagation)
+        setSelectionPropagation(selectionPropagation);
 
       initializeNodeMaps(data);
 

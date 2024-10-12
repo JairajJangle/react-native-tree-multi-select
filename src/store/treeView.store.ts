@@ -1,4 +1,4 @@
-import type { SelectionPropagationBehavior, TreeNode } from "src/types/treeView.types";
+import type { SelectionPropagation, TreeNode } from "src/types/treeView.types";
 
 import { create } from 'zustand';
 
@@ -39,9 +39,9 @@ export type TreeViewState = {
     innerMostChildrenIds: string[];
     updateInnerMostChildrenIds: (innerMostChildrenIds: string[]) => void;
 
-    selectionPropagationBehavior: SelectionPropagationBehavior;
-    setSelectionPropagationBehavior: (
-        selectionPropagationBehavior: SelectionPropagationBehavior
+    selectionPropagation: SelectionPropagation;
+    setSelectionPropagation: (
+        selectionPropagation: SelectionPropagation
     ) => void;
 
     // Cleanup all states in this store
@@ -78,13 +78,13 @@ export const useTreeViewStore = create<TreeViewState>((set) => ({
     innerMostChildrenIds: [],
     updateInnerMostChildrenIds: (innerMostChildrenIds: string[]) => set({ innerMostChildrenIds }),
 
-    selectionPropagationBehavior: { toChildren: true, toParents: true },
-    setSelectionPropagationBehavior: (selectionPropagationBehavior) => set(
+    selectionPropagation: { toChildren: true, toParents: true },
+    setSelectionPropagation: (selectionPropagation) => set(
         {
-            selectionPropagationBehavior: {
+            selectionPropagation: {
                 // Default selection propagation for parent and children to true if not mentioned
-                toChildren: selectionPropagationBehavior.toChildren ?? true,
-                toParents: selectionPropagationBehavior.toParents ?? true
+                toChildren: selectionPropagation.toChildren ?? true,
+                toParents: selectionPropagation.toParents ?? true
             }
         }
     ),
@@ -100,6 +100,6 @@ export const useTreeViewStore = create<TreeViewState>((set) => ({
             searchText: "",
             searchKeys: [""],
             innerMostChildrenIds: [],
-            selectionPropagationBehavior: { toChildren: true, toParents: true },
+            selectionPropagation: { toChildren: true, toParents: true },
         }),
 }));

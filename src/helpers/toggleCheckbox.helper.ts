@@ -17,10 +17,10 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
 
         nodeMap,
         childToParentMap,
-        selectionPropagationBehavior
+        selectionPropagation
     } = useTreeViewStore.getState();
 
-    const { toChildren, toParents } = selectionPropagationBehavior;
+    const { toChildren, toParents } = selectionPropagation;
 
     // Create new sets for checked and indeterminate state so as not to mutate the original state.
     const tempChecked = new Set(checked);

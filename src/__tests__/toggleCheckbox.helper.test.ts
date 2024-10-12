@@ -122,9 +122,9 @@ describe('toggleCheckboxes', () => {
         expect(indeterminateAfter1ChildrenCheck).toEqual(new Set([]));
     });
 
-    it('correctly updates checkbox states when selectionPropagationBehavior is set to propagate to both parents and children', () => {
-        // Set selectionPropagationBehavior to propagate to both parents and children
-        useTreeViewStore.getState().setSelectionPropagationBehavior({
+    it('correctly updates checkbox states when selectionPropagation is set to propagate to both parents and children', () => {
+        // Set selectionPropagation to propagate to both parents and children
+        useTreeViewStore.getState().setSelectionPropagation({
             toChildren: true,
             toParents: true,
         });
@@ -184,9 +184,9 @@ describe('toggleCheckboxes', () => {
         }
     });
 
-    it('correctly updates checkbox states when selectionPropagationBehavior is set to propagate to children only', () => {
-        // Set selectionPropagationBehavior to propagate to children only
-        useTreeViewStore.getState().setSelectionPropagationBehavior({
+    it('correctly updates checkbox states when selectionPropagation is set to propagate to children only', () => {
+        // Set selectionPropagation to propagate to children only
+        useTreeViewStore.getState().setSelectionPropagation({
             toChildren: true,
             toParents: false,
         });
@@ -211,9 +211,9 @@ describe('toggleCheckboxes', () => {
         expect(checked.has('1.2.2')).toBeFalsy();
     });
 
-    it('correctly updates checkbox states when selectionPropagationBehavior is set to propagate to parents only', () => {
-        // Set selectionPropagationBehavior to propagate to parents only
-        useTreeViewStore.getState().setSelectionPropagationBehavior({
+    it('correctly updates checkbox states when selectionPropagation is set to propagate to parents only', () => {
+        // Set selectionPropagation to propagate to parents only
+        useTreeViewStore.getState().setSelectionPropagation({
             toChildren: false,
             toParents: true,
         });
@@ -252,9 +252,9 @@ describe('toggleCheckboxes', () => {
         expect(checked.has('2.2.2')).toBeFalsy();  // Child of '2.2'
     });
 
-    it('correctly updates checkbox states when selectionPropagationBehavior is set to not propagate to either parents or children', () => {
-        // Set selectionPropagationBehavior to not propagate to either parents or children
-        useTreeViewStore.getState().setSelectionPropagationBehavior({
+    it('correctly updates checkbox states when selectionPropagation is set to not propagate to either parents or children', () => {
+        // Set selectionPropagation to not propagate to either parents or children
+        useTreeViewStore.getState().setSelectionPropagation({
             toChildren: false,
             toParents: false,
         });

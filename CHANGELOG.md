@@ -1,3 +1,15 @@
+# [1.5.0-beta.3](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.5.0-beta.2...v1.5.0-beta.3) (2024-10-13)
+
+
+### Bug Fixes
+
+* fixed parent does not get unchecked if all children are unchecked at once in filtered tree ([cf2195b](https://github.com/JairajJangle/react-native-tree-multi-select/commit/cf2195b94faa619ecb6a60ae6359e09755342668))
+
+
+### Performance Improvements
+
+* replaced recursive logic with iterative logic to handle tree expand collapse ([b417057](https://github.com/JairajJangle/react-native-tree-multi-select/commit/b4170572068725885cbeaa91659e1c58164208b6))
+
 # [1.5.0-beta.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.5.0-beta.1...v1.5.0-beta.2) (2024-10-12)
 
 

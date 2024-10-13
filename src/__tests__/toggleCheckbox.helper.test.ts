@@ -570,11 +570,6 @@ describe('toggleCheckboxes', () => {
     });
 
     it('does not set a parent to checked if only some children are checked', () => {
-        const { checked: c0, indeterminate: i0 } = useTreeViewStore.getState();
-
-        console.info(`c0 = ${Array.from(c0)}`);
-        console.info(`i0 = ${Array.from(i0)}`);
-
         // Act: Select '1.1.1' only
         act(() => {
             toggleCheckboxes(['1.1.1'], true);
@@ -582,8 +577,6 @@ describe('toggleCheckboxes', () => {
 
         // Assert
         const { checked, indeterminate } = useTreeViewStore.getState();
-        console.info(`c1 = ${Array.from(checked)}`);
-        console.info(`i1 = ${Array.from(indeterminate)}`);
         expect(checked).toEqual(new Set(['1.1.1']));
         expect(indeterminate).toEqual(new Set(['1.1', '1']));
 
@@ -594,8 +587,6 @@ describe('toggleCheckboxes', () => {
 
         // Assert
         const { checked: checked2, indeterminate: indeterminate2 } = useTreeViewStore.getState();
-        console.info(`c2 = ${Array.from(checked2)}`);
-        console.info(`i2 = ${Array.from(indeterminate2)}`);
         expect(checked2).toEqual(new Set(['1.1.1', '1.1.2', '1.1']));
         expect(indeterminate2).toEqual(new Set(['1']));
     });

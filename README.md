@@ -254,6 +254,13 @@ If you do not see what you want in the planned feature list, raise a feature req
 
 ---
 
+### 💡 Some Expo Snack Examples
+
+1. Radio button like selection in tree view: [Snack link](https://snack.expo.dev/@futurejj/react-native-tree-multi-select-radio-button-example)
+2. Display count of number of checked nodes: [Snack link](https://snack.expo.dev/@futurejj/react-native-tree-multi-select-example)
+
+---
+
 ## Contributing
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.

@@ -111,11 +111,11 @@ function _NodeList(props: NodeListProps) {
             removeClippedSubviews={true}
             keyboardShouldPersistTaps="handled"
             drawDistance={50}
-            data={flattenedFilteredNodes}
-            renderItem={nodeRenderer}
             ListHeaderComponent={<HeaderFooterView />}
             ListFooterComponent={<HeaderFooterView />}
             {...treeFlashListProps}
+            data={flattenedFilteredNodes}
+            renderItem={nodeRenderer}
         />
     );
 };

@@ -10,7 +10,7 @@ import { tree3d2b } from '../__mocks__/generateTree.mock';
 
 describe('toggleCheckboxes', () => {
     beforeEach(() => {
-        useTreeViewStore.setState(useTreeViewStore.getState(), true);
+        useTreeViewStore.getState().cleanUpTreeViewStore();
 
         // Setup mock tree
         useTreeViewStore.getState().updateInitialTreeViewData(tree3d2b);
@@ -226,18 +226,17 @@ describe('toggleCheckboxes', () => {
         // Assert
         const { checked, indeterminate } = useTreeViewStore.getState();
 
-        // Expect all parents to be checked up to the root
+        // Expect '1.1' to be checked, '1' to be indeterminate
         expect(checked).toEqual(new Set([
-            '1.1' // The initially checked node
+            '1.1'
         ]));
 
-        // Since we are propagating only to parents, there should be no indeterminate nodes
         expect(indeterminate).toEqual(new Set([
             '1'
         ]));
 
         // Additional assertions to ensure certain nodes are not checked
-        expect(checked.has('1')).toBeFalsy();  // Parent of '1.1.1'
+        expect(checked.has('1')).toBeFalsy();  // Parent of '1.1'
         expect(checked.has('1.1.1')).toBeFalsy();  // Children of '1.1'
         expect(checked.has('1.1.2')).toBeFalsy();  // Sibling of '1.1.1'
         expect(checked.has('1.2')).toBeFalsy();    // Sibling of '1.1'
@@ -299,5 +298,363 @@ describe('toggleCheckboxes', () => {
             expect(checked.has('2.2.1')).toBeFalsy();
             expect(checked.has('2.2.2')).toBeFalsy();
         }
+    });
+
+    it('does not change state when toggling an empty IDs array', () => {
+        // Initial state: nothing is checked
+        act(() => {
+            toggleCheckboxes([], true);
+        });
+
+        const { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set());
+        expect(indeterminate).toEqual(new Set());
+    });
+
+    it('handles toggling a non-existent node ID gracefully', () => {
+        // Act
+        act(() => {
+            toggleCheckboxes(['non-existent-id'], true);
+        });
+
+        // Assert: state remains unchanged
+        const { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set());
+        expect(indeterminate).toEqual(new Set());
+    });
+
+    it('handles toggling a single leaf node correctly', () => {
+        // Act
+        act(() => {
+            toggleCheckboxes(['1.1.1'], true);
+        });
+
+        // Assert
+        const { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set(['1.1.1']));
+        expect(indeterminate).toEqual(new Set(['1.1', '1']));
+    });
+
+    it('handles toggling a single leaf node and then unselecting it', () => {
+        // Act
+        act(() => {
+            toggleCheckboxes(['1.1.1'], true);
+        });
+
+        // Assert
+        let { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set(['1.1.1']));
+        expect(indeterminate).toEqual(new Set(['1.1', '1']));
+
+        // Act: Unselect
+        act(() => {
+            toggleCheckboxes(['1.1.1'], false);
+        });
+
+        // Assert
+        ({ checked, indeterminate } = useTreeViewStore.getState());
+        expect(checked).toEqual(new Set());
+        expect(indeterminate).toEqual(new Set());
+    });
+
+    it('handles toggling multiple nodes in different branches correctly', () => {
+        // Act
+        act(() => {
+            toggleCheckboxes(['1.1.1', '2.1.2'], true);
+        });
+
+        // Assert
+        const { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set(['1.1.1', '2.1.2']));
+        expect(indeterminate).toEqual(new Set(['1.1', '1', '2.1', '2']));
+    });
+
+    it('does not allow duplicate IDs to affect the state multiple times', () => {
+        // Act
+        act(() => {
+            toggleCheckboxes(['1.1.1', '1.1.1'], true);
+        });
+
+        // Assert
+        const { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set(['1.1.1']));
+        expect(indeterminate).toEqual(new Set(['1.1', '1']));
+    });
+
+    it('handles toggling nodes when some nodes are already checked', () => {
+        // Pre-select some nodes
+        act(() => {
+            toggleCheckboxes(['1.1.1'], true);
+        });
+
+        // Act: Select another node that shares the same parent
+        act(() => {
+            toggleCheckboxes(['1.1.2'], true);
+        });
+
+        // Assert: Parent should be checked since all children are checked
+        const { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set(['1.1', '1.1.1', '1.1.2']));
+        expect(indeterminate).toEqual(new Set(['1']));
+    });
+
+    it('handles toggling a parent node after some of its children are already checked', () => {
+        // Pre-select some children
+        act(() => {
+            toggleCheckboxes(['1.1.1'], true);
+        });
+
+        // Act: Toggle parent '1.1' to checked, which should check all its children
+        act(() => {
+            toggleCheckboxes(['1.1'], true);
+        });
+
+        // Assert
+        const { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set(['1.1', '1.1.1', '1.1.2']));
+        expect(indeterminate).toEqual(new Set(['1']));
+    });
+
+    it('handles toggling all nodes in the tree', () => {
+        // Act: Select all nodes
+        act(() => {
+            toggleCheckboxes(['1', '2'], true);
+        });
+
+        // Assert: All nodes should be checked
+        const { checked, indeterminate } = useTreeViewStore.getState();
+        const allIds = [
+            '1',
+            '1.1',
+            '1.1.1',
+            '1.1.2',
+            '1.2',
+            '1.2.1',
+            '1.2.2',
+            '2',
+            '2.1',
+            '2.1.1',
+            '2.1.2',
+            '2.2',
+            '2.2.1',
+            '2.2.2'
+        ];
+        expect(checked).toEqual(new Set(allIds));
+        expect(indeterminate).toEqual(new Set([]));
+
+        // Act: Unselect all nodes
+        act(() => {
+            toggleCheckboxes(['1', '2'], false);
+        });
+
+        // Assert: All nodes should be unchecked
+        const { checked: checkedAfterUnselect, indeterminate: indeterminateAfterUnselect } = useTreeViewStore.getState();
+        expect(checkedAfterUnselect).toEqual(new Set());
+        expect(indeterminateAfterUnselect).toEqual(new Set());
+    });
+
+    it('does not affect other branches when toggling nodes in one branch', () => {
+        // Act: Select node '1.1' which should check '1.1' and its children
+        act(() => {
+            toggleCheckboxes(['1.1'], true);
+        });
+
+        // Assert
+        let { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set(['1.1', '1.1.1', '1.1.2']));
+        expect(indeterminate).toEqual(new Set(['1']));
+
+        // Act: Unselect '1.1.1' only
+        act(() => {
+            toggleCheckboxes(['1.1.1'], false);
+        });
+
+        // Assert: '1.1' should be indeterminate, '1' should remain indeterminate
+        ({ checked, indeterminate } = useTreeViewStore.getState());
+        expect(checked).toEqual(new Set(['1.1.2']));
+        expect(indeterminate).toEqual(new Set(['1.1', '1']));
+
+        // Ensure that other branch '2' remains untouched
+        expect(checked.has('2')).toBeFalsy();
+        expect(indeterminate.has('2')).toBeFalsy();
+    });
+
+    it('handles toggling nodes with multiple levels of depth', () => {
+        // Extend the tree with deeper levels if necessary
+        const extendedTree = [
+            {
+                "id": "1",
+                "name": "node1",
+                "children": [
+                    {
+                        "id": "1.1",
+                        "name": "node1.1",
+                        "children": [
+                            {
+                                "id": "1.1.1",
+                                "name": "node1.1.1",
+                                "children": [
+                                    {
+                                        "id": "1.1.1.1",
+                                        "name": "node1.1.1.1"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "1.1.2",
+                                "name": "node1.1.2"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // Reinitialize the node maps with the extended tree
+        act(() => {
+            useTreeViewStore.getState().updateInitialTreeViewData(extendedTree);
+            initializeNodeMaps(extendedTree);
+        });
+
+        // Act: Select the deepest node
+        act(() => {
+            toggleCheckboxes(['1.1.1.1'], true);
+        });
+
+        // Assert
+        const { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set(['1.1.1.1', '1.1.1']));
+        expect(indeterminate).toEqual(new Set(['1.1', '1']));
+    });
+
+    it('handles toggling the same node multiple times within the same operation', () => {
+        // Act: Toggle '1.1.1' twice in the same call
+        act(() => {
+            toggleCheckboxes(['1.1.1', '1.1.1'], true);
+        });
+
+        // Assert: '1.1.1' should be checked only once
+        const { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set(['1.1.1']));
+        expect(indeterminate).toEqual(new Set(['1.1', '1']));
+    });
+
+    it('handles toggling parent nodes when some of their children are already in indeterminate state', () => {
+        // Act: Select '1.1.1' and '1.2.1', making '1.1' and '1.2' indeterminate, and '1' indeterminate
+        act(() => {
+            toggleCheckboxes(['1.1.1', '1.2.1'], true);
+        });
+
+        // Assert
+        let { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set(['1.1.1', '1.2.1']));
+        expect(indeterminate).toEqual(new Set(['1.1', '1.2', '1']));
+
+        // Act: Toggle parent '1' to checked, which should check all its children
+        act(() => {
+            toggleCheckboxes(['1'], true);
+        });
+
+        // Assert
+        ({ checked, indeterminate } = useTreeViewStore.getState());
+        expect(checked).toEqual(new Set([
+            '1',
+            '1.1',
+            '1.1.1',
+            '1.1.2',
+            '1.2',
+            '1.2.1',
+            '1.2.2',
+        ]));
+        expect(indeterminate).toEqual(new Set([]));
+    });
+
+    it('does not set a parent to checked if only some children are checked', () => {
+        const { checked: c0, indeterminate: i0 } = useTreeViewStore.getState();
+
+        console.info(`c0 = ${Array.from(c0)}`);
+        console.info(`i0 = ${Array.from(i0)}`);
+
+        // Act: Select '1.1.1' only
+        act(() => {
+            toggleCheckboxes(['1.1.1'], true);
+        });
+
+        // Assert
+        const { checked, indeterminate } = useTreeViewStore.getState();
+        console.info(`c1 = ${Array.from(checked)}`);
+        console.info(`i1 = ${Array.from(indeterminate)}`);
+        expect(checked).toEqual(new Set(['1.1.1']));
+        expect(indeterminate).toEqual(new Set(['1.1', '1']));
+
+        // Act: Select '1.1.2'
+        act(() => {
+            toggleCheckboxes(['1.1.2'], true);
+        });
+
+        // Assert
+        const { checked: checked2, indeterminate: indeterminate2 } = useTreeViewStore.getState();
+        console.info(`c2 = ${Array.from(checked2)}`);
+        console.info(`i2 = ${Array.from(indeterminate2)}`);
+        expect(checked2).toEqual(new Set(['1.1.1', '1.1.2', '1.1']));
+        expect(indeterminate2).toEqual(new Set(['1']));
+    });
+
+    it('handles toggling nodes with no children correctly', () => {
+        // Act: Select a leaf node '1.1.2'
+        act(() => {
+            toggleCheckboxes(['1.1.2'], true);
+        });
+
+        // Assert
+        const { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set(['1.1.2']));
+        expect(indeterminate).toEqual(new Set(['1.1', '1']));
+    });
+
+    it('handles toggling multiple nodes that share the same parent correctly', () => {
+        // Act: Select both children '1.1.1' and '1.1.2'
+        act(() => {
+            toggleCheckboxes(['1.1.1', '1.1.2'], true);
+        });
+
+        // Assert
+        const { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set(['1.1.1', '1.1.2', '1.1']));
+        expect(indeterminate).toEqual(new Set(['1']));
+    });
+
+    it('handles toggling nodes in different branches without interference', () => {
+        // Act: Select '1.1.1' and '2.2.2'
+        act(() => {
+            toggleCheckboxes(['1.1.1', '2.2.2'], true);
+        });
+
+        // Assert
+        const { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set(['1.1.1', '2.2.2']));
+        expect(indeterminate).toEqual(new Set(['1.1', '1', '2.2', '2']));
+    });
+
+    it("handles toggling a node with children as an empty array correctly", () => {
+        // Act: Toggle node '3' to checked
+        act(() => {
+            toggleCheckboxes(['3'], true);
+        });
+
+        // Assert: Node '3' should be checked, no indeterminate
+        const { checked, indeterminate } = useTreeViewStore.getState();
+        expect(checked).toEqual(new Set(['3']));
+        expect(indeterminate).toEqual(new Set());
+
+        // Act: Toggle node '3' to unchecked
+        act(() => {
+            toggleCheckboxes(['3'], false);
+        });
+
+        // Assert: Node '3' should be unchecked, no indeterminate
+        const { checked: checkedAfterUncheck, indeterminate: indeterminateAfterUncheck } = useTreeViewStore.getState();
+        expect(checkedAfterUncheck).toEqual(new Set());
+        expect(indeterminateAfterUncheck).toEqual(new Set());
     });
 });

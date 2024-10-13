@@ -68,6 +68,11 @@ export const tree3d2b = [
                 ]
             }
         ]
+    },
+    {
+        "id": "3",
+        "name": "node3",
+        "children": [] // Node with empty children array
     }
 ];
 

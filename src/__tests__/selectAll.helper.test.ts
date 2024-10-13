@@ -45,6 +45,7 @@ describe('selectAll helpers functions', () => {
             "2.2",
             "2.2.1",
             "2.2.2",
+            "3"
         ]));
         expect(indeterminate).toEqual(new Set([]));
     });
@@ -109,6 +110,7 @@ describe('selectAll helpers functions', () => {
             "2.2",
             "2.2.1",
             "2.2.2",
+            "3"
         ]));
         expect(Array.from(indeterminate)).toEqual([]);
     });
@@ -223,6 +225,7 @@ describe('selectAll helpers functions', () => {
             '2.2',
             '2.2.1',
             '2.2.2',
+            '3'
         ]));
         expect(indeterminate).toEqual(new Set([
             '1',

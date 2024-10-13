@@ -429,7 +429,7 @@ PODS:
   - RNFlashList (1.7.1):
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
-  - RNGestureHandler (2.19.0):
+  - RNGestureHandler (2.20.0):
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
   - RNScreens (3.34.0):
@@ -630,7 +630,7 @@ SPEC CHECKSUMS:
   React-utils: 0a70ea97d4e2749f336b450c082905be1d389435
   ReactCommon: e593d19c9e271a6da4d0bd7f13b28cfeae5d164b
   RNFlashList: fadf593d8e195ce2fe261980ac59e9f49808b68c
-  RNGestureHandler: 7ad14a6c7b491add489246611d324f10009083ac
+  RNGestureHandler: 74c531dc20aa37fb3a8d3d8514447a0d129ddb7d
   RNScreens: 80369e822c4f123c3f076c9ea4141991c17770f9
   RNVectorIcons: 084d874504f21a5452744e400537eb96b45060b6
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17

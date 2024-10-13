@@ -4,7 +4,7 @@ import { useTreeViewStore } from "../store/treeView.store";
  * Function to toggle checkbox state for a tree structure.
  * It sets the checked and indeterminate state for all affected nodes in the tree after an action to check/uncheck is made.
  * @param {string[]} ids - The ids of nodes that need to be checked or unchecked.
- * @param {boolean} [forceCheck] - Optional. If provided, will force the check state of the nodes to be this value. 
+ * @param {boolean} [forceCheck] - Optional. If provided, will force the check state of the nodes to be this value.
  * If not provided, the check state will be toggled based on the current state.
  */
 export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
@@ -26,145 +26,168 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
     const tempChecked = new Set(checked);
     const tempIndeterminate = new Set(indeterminate);
 
-    // Maps for memoization of the recursive functions areAllDescendantsChecked and areAnyDescendantsChecked.
-    const memoAllDescendantsChecked = new Map<string, boolean>();
-    const memoAnyDescendantsChecked = new Map<string, boolean>();
+    // Keep track of nodes that have been toggled or affected.
+    const affectedNodes = new Set<string>();
 
-    /**
-     * Recursive function to check if all descendants of a node are checked.
-     * It uses memoization to avoid redundant calculations.
-     * @param {string} nodeId - The id of the node to be checked.
-     * @returns {boolean} - Whether all descendants of the node are checked.
-     */
-    const areAllDescendantsChecked = (nodeId: string): boolean => {
-        // If the result for this node is already in the map, return it.
-        if (memoAllDescendantsChecked.has(nodeId)) {
-            return memoAllDescendantsChecked.get(nodeId)!;
-        }
+    // Memoization maps for node depths.
+    const nodeDepths = new Map<string, number>();
 
-        const node = nodeMap.get(nodeId);
-        let allChecked = true;
-        if (node?.children) {
-            // If the node has children, recursively check all children.
-            for (const childNode of node.children) {
-                allChecked = allChecked && areAllDescendantsChecked(childNode.id);
-            }
-        } else {
-            // If the node has no children, its state is equal to whether it is in the checked set.
-            allChecked = tempChecked.has(nodeId);
-        }
-
-        // Store the result in the map and return it.
-        memoAllDescendantsChecked.set(nodeId, allChecked);
-        return allChecked;
-    };
-
-    /**
-     * Updated function to check if any descendants of a node are checked.
-     * It uses memoization to avoid redundant calculations and avoids unnecessarily deep recursion.
-     * @param {string} nodeId - The id of the node to be checked.
-     * @returns {boolean} - Whether any descendants of the node are checked.
-     */
-    const areAnyDescendantsChecked = (nodeId: string): boolean => {
-        // If the result for this node is already in the map, return it.
-        if (memoAnyDescendantsChecked.has(nodeId)) {
-            return memoAnyDescendantsChecked.get(nodeId)!;
-        }
-
-        const node = nodeMap.get(nodeId);
-        let anyChecked = false;
-        if (node?.children) {
-            // Check if any direct child is checked, without requiring all descendants.
-            for (const childNode of node.children) {
-                if (tempChecked.has(childNode.id) || areAnyDescendantsChecked(childNode.id)) {
-                    anyChecked = true;
-                    break;
-                }
-            }
-        } else {
-            // If the node has no children, its state is equal to whether it is in the checked set.
-            anyChecked = tempChecked.has(nodeId);
-        }
-
-        // Store the result in the map and return it.
-        memoAnyDescendantsChecked.set(nodeId, anyChecked);
-        return anyChecked;
-    };
-
-    // Toggle the clicked nodes and their children.
+    // Step 1: Toggle the clicked nodes and their children without updating parents yet.
     ids.forEach((id) => {
+        const node = nodeMap.get(id);
+        if (!node) {
+            // Node does not exist; skip processing this ID
+            return;
+        }
+
         const isChecked = tempChecked.has(id);
         const newCheckedState = forceCheck === undefined ? !isChecked : forceCheck;
 
         if (newCheckedState) {
             tempChecked.add(id);
             tempIndeterminate.delete(id);
+            affectedNodes.add(id);
             if (toChildren) {
-                recursivelyUpdateChildren(id, true);
+                updateChildrenIteratively(id, true);
             }
         } else {
             tempChecked.delete(id);
             tempIndeterminate.delete(id);
+            affectedNodes.add(id);
             if (toChildren) {
-                recursivelyUpdateChildren(id, false);
+                updateChildrenIteratively(id, false);
             }
-        }
-
-        // Skip updating parent nodes if toParents is false
-        if (toParents) {
-            updateParentNodes(id);
         }
     });
 
-    // Function to recursively update children nodes as per childrenChecked value
-    function recursivelyUpdateChildren(nodeId: string, childrenChecked: boolean) {
-        const node = nodeMap.get(nodeId);
-        if (node && node.children) {
-            node.children.forEach((childNode) => {
-                if (childrenChecked) {
-                    tempChecked.add(childNode.id);
-                    tempIndeterminate.delete(childNode.id);
+    // Step 2: Collect all affected parent nodes.
+    const nodesToUpdate = new Set<string>();
+
+    if (toParents) {
+        affectedNodes.forEach((id) => {
+            let currentNodeId: string | undefined = id;
+            while (currentNodeId) {
+                const parentNodeId = childToParentMap.get(currentNodeId);
+                if (parentNodeId) {
+                    nodesToUpdate.add(parentNodeId);
+                    currentNodeId = parentNodeId;
                 } else {
-                    tempChecked.delete(childNode.id);
-                    tempIndeterminate.delete(childNode.id);
+                    break;
                 }
-                recursivelyUpdateChildren(childNode.id, childrenChecked);
-            });
+            }
+        });
+    }
+
+    // Step 3: Update parent nodes in bottom-up order.
+    if (toParents && nodesToUpdate.size > 0) {
+        // Convert the set to an array and sort nodes by depth (deepest first).
+        const sortedNodes = Array.from(nodesToUpdate).sort((a, b) => {
+            return getNodeDepth(b) - getNodeDepth(a);
+        });
+
+        sortedNodes.forEach((nodeId) => {
+            updateNodeState(nodeId);
+        });
+    }
+
+    /**
+     * Function to iteratively update children nodes as per childrenChecked value.
+     * @param rootId - The ID of the root node to start updating from.
+     * @param childrenChecked - The desired checked state for children.
+     */
+    function updateChildrenIteratively(rootId: string, childrenChecked: boolean) {
+        const stack = [rootId];
+
+        while (stack.length > 0) {
+            const nodeId = stack.pop()!;
+            const node = nodeMap.get(nodeId);
+            if (!node) continue; // Node does not exist; skip
+
+            if (childrenChecked) {
+                tempChecked.add(nodeId);
+                tempIndeterminate.delete(nodeId);
+            } else {
+                tempChecked.delete(nodeId);
+                tempIndeterminate.delete(nodeId);
+            }
+            affectedNodes.add(nodeId);
+
+            if (node.children && node.children.length > 0) {
+                for (const childNode of node.children) {
+                    stack.push(childNode.id);
+                }
+            }
         }
     }
 
-    // Function to update parent nodes
-    function updateParentNodes(nodeId: string) {
+    /**
+     * Function to get the depth of a node for sorting purposes, with memoization.
+     * @param nodeId - The ID of the node to get the depth for.
+     * @returns The depth of the node.
+     */
+    function getNodeDepth(nodeId: string): number {
+        if (nodeDepths.has(nodeId)) {
+            return nodeDepths.get(nodeId)!;
+        }
+
+        let depth = 0;
         let currentNodeId: string | undefined = nodeId;
         while (currentNodeId) {
             const parentNodeId = childToParentMap.get(currentNodeId);
             if (parentNodeId) {
-                if (tempChecked.has(parentNodeId)) {
-                    // If the parent node is currently checked, but not all child nodes are checked,
-                    // move the parent node to an indeterminate state
-                    if (!areAllDescendantsChecked(parentNodeId)) {
-                        tempChecked.delete(parentNodeId);
-                        tempIndeterminate.add(parentNodeId);
-                    }
-                } else if (tempIndeterminate.has(parentNodeId)) {
-                    // If the parent node is currently in an indeterminate state,
-                    // then check if all descendants are checked
-                    if (areAllDescendantsChecked(parentNodeId)) {
-                        tempIndeterminate.delete(parentNodeId);
-                        tempChecked.add(parentNodeId);
-                    } else if (!areAnyDescendantsChecked(parentNodeId)) {
-                        // If no descendants are checked, remove from indeterminate set
-                        tempIndeterminate.delete(parentNodeId);
-                    }
-                } else {
-                    // If the parent node is not checked or indeterminate,
-                    // check if any descendants are checked and update appropriately
-                    if (areAnyDescendantsChecked(parentNodeId)) {
-                        tempIndeterminate.add(parentNodeId);
-                    }
-                }
+                depth++;
+                currentNodeId = parentNodeId;
+            } else {
+                break;
             }
-            currentNodeId = parentNodeId;
+        }
+
+        nodeDepths.set(nodeId, depth);
+        return depth;
+    }
+
+    /**
+     * Function to update the state of a node based on its children's states.
+     * @param nodeId - The ID of the node to update.
+     */
+    function updateNodeState(nodeId: string) {
+        const node = nodeMap.get(nodeId);
+        if (!node || !node.children || node.children.length === 0) {
+            // Leaf nodes are already updated.
+            return;
+        }
+
+        let allChildrenChecked = true;
+        let anyChildCheckedOrIndeterminate = false;
+
+        for (const child of node.children) {
+            const isChecked = tempChecked.has(child.id);
+            const isIndeterminate = tempIndeterminate.has(child.id);
+
+            if (isChecked) {
+                anyChildCheckedOrIndeterminate = true;
+            } else if (isIndeterminate) {
+                anyChildCheckedOrIndeterminate = true;
+                allChildrenChecked = false;
+            } else {
+                allChildrenChecked = false;
+            }
+
+            // If both conditions are met, we can break early.
+            if (!allChildrenChecked && anyChildCheckedOrIndeterminate) {
+                break;
+            }
+        }
+
+        if (allChildrenChecked) {
+            tempChecked.add(nodeId);
+            tempIndeterminate.delete(nodeId);
+        } else if (anyChildCheckedOrIndeterminate) {
+            tempChecked.delete(nodeId);
+            tempIndeterminate.add(nodeId);
+        } else {
+            tempChecked.delete(nodeId);
+            tempIndeterminate.delete(nodeId);
         }
     }
 

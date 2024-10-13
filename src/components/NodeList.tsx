@@ -65,7 +65,7 @@ function _NodeList(props: NodeListProps) {
         searchKeys
     ), [initialTreeViewData, searchText, searchKeys]);
 
-    // Then we flatten the treen to make it "render-compatible" in a "flat" list
+    // Then we flatten the tree to make it "render-compatible" in a "flat" list
     const flattenedFilteredNodes = React.useMemo(() => getFlattenedTreeData(
         filteredTree,
         expanded,
@@ -111,11 +111,11 @@ function _NodeList(props: NodeListProps) {
             removeClippedSubviews={true}
             keyboardShouldPersistTaps="handled"
             drawDistance={50}
-            data={flattenedFilteredNodes}
-            renderItem={nodeRenderer}
             ListHeaderComponent={<HeaderFooterView />}
             ListFooterComponent={<HeaderFooterView />}
             {...treeFlashListProps}
+            data={flattenedFilteredNodes}
+            renderItem={nodeRenderer}
         />
     );
 };

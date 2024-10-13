@@ -2,7 +2,7 @@
 
 ⚡️Super-fast Tree view with multi-selection capabilities, using checkboxes and search filtering.
 
-[![npm version](https://img.shields.io/npm/v/react-native-tree-multi-select)](https://badge.fury.io/js/react-native-tree-multi-select) [![License](https://img.shields.io/github/license/JairajJangle/react-native-tree-multi-select)](https://github.com/JairajJangle/react-native-tree-multi-select/blob/main/LICENSE) [![Workflow Status](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml/badge.svg)](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml) [![cov](https://raw.githubusercontent.com/JairajJangle/react-native-tree-multi-select/gh-pages/badges/coverage.svg)](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml) ![Android](https://img.shields.io/badge/-Android-555555?logo=android&logoColor=3DDC84) ![iOS](https://img.shields.io/badge/-iOS-555555?logo=apple&logoColor=white) ![Web](https://img.shields.io/badge/-Web-555555?logo=google-chrome&logoColor=0096FF) [![GitHub issues](https://img.shields.io/github/issues/JairajJangle/react-native-tree-multi-select)](https://github.com/JairajJangle/react-native-tree-multi-select/issues?q=is%3Aopen+is%3Aissue) ![TS](https://img.shields.io/badge/TypeScript-strict_💪-blue) [![Expo Snack](https://img.shields.io/badge/Expo%20Snack-555555?style=flat&logo=expo&logoColor=white)](https://snack.expo.dev/@futurejj/react-native-tree-multi-select-example)
+[![npm version](https://img.shields.io/npm/v/react-native-tree-multi-select)](https://badge.fury.io/js/react-native-tree-multi-select) [![License](https://img.shields.io/github/license/JairajJangle/react-native-tree-multi-select)](https://github.com/JairajJangle/react-native-tree-multi-select/blob/main/LICENSE) [![Workflow Status](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml/badge.svg)](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml) [![cov](https://raw.githubusercontent.com/JairajJangle/react-native-tree-multi-select/gh-pages/badges/coverage.svg)](https://github.com/JairajJangle/react-native-tree-multi-select/actions/workflows/ci.yml) ![Android](https://img.shields.io/badge/-Android-555555?logo=android&logoColor=3DDC84) ![iOS](https://img.shields.io/badge/-iOS-555555?logo=apple&logoColor=white) ![Web](https://img.shields.io/badge/-Web-555555?logo=google-chrome&logoColor=0096FF) [![GitHub issues](https://img.shields.io/github/issues/JairajJangle/react-native-tree-multi-select)](https://github.com/JairajJangle/react-native-tree-multi-select/issues?q=is%3Aopen+is%3Aissue) ![TS](https://img.shields.io/badge/TypeScript-strict_💪-blue) [![Known Vulnerabilities](https://snyk.io/test/github/jairajjangle/react-native-tree-multi-select/badge.svg)](https://snyk.io/test/github/jairajjangle/react-native-tree-multi-select) [![Expo Snack](https://img.shields.io/badge/Expo%20Snack-555555?style=flat&logo=expo&logoColor=white)](https://snack.expo.dev/@futurejj/react-native-tree-multi-select-example)
 
 
 
@@ -34,6 +34,18 @@ Dependencies that need to be installed for this library to work:
 3. [react-native-vector-icons](https://github.com/oblador/react-native-vector-icons)
 
 Make sure to follow the native-related installation instructions for these dependencies.
+
+## **Highlighted Features**
+
+- ⚡ **Fast**: Designed with performance in mind for smooth scrolling and quick selections.
+- 🛠️ **Highly Customizable**: Modify styles, behavior, and use your custom list component to suit your application's needs.
+- 🔍 **Filterable**: Quickly filter through tree nodes and option to select and un-select only the filtered tree nodes.
+- ✅ **Well Tested**: Comprehensive test coverage to ensure reliability and stability.
+- 📚 **Well Documented**: Detailed documentation to get you started and an example app to demo all the features.
+- 🌳 **Multi-Level Selection**: Select individual nodes or entire branches with ease.
+- 📦 **Supports Large Datasets**: Efficiently handles large trees without much performance degradation.
+- 🔒 **TypeScript Support**: Full TypeScript support for better developer experience.
+- 💻 **Cross-Platform**: Works seamlessly across iOS, Android, and web (with React Native Web).
 
 ## Usage
 
@@ -110,6 +122,7 @@ export function TreeViewUsageExample(){
 | `onExpand`                         | `(expandedIds: string[]) => void`                            | No       | Callback when a node is expanded                             |
 | `preselectedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-selected                |
 | `preExpandedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-expanded                |
+| `selectionPropagation`     | [SelectionPropagation](#selectionpropagation) | No       | Control Selection Propagation Behavior. Choose whether you want to auto-select children or parents. |
 | `indentationMultiplier`            | `number`                                                     | No       | Indentation (`marginStart`) per level (defaults to 15)       |
 | `treeFlashListProps`               | [TreeFlatListProps](#treeflatlistprops)                      | No       | Props for the flash list                                     |
 | `checkBoxViewStyleProps`           | [BuiltInCheckBoxViewStyleProps](#builtincheckboxviewstyleprops) | No       | Props for the checkbox view                                  |
@@ -158,6 +171,15 @@ export function TreeViewUsageExample(){
 | `selectNodes`           | `(ids: string[]) => void`                           | Selects specified nodes    |
 | `unSelectNodes`           | `(ids: string[]) => void`                           | Unselects specified nodes    |
 | `setSearchText`       | `(searchText: string, searchKeys?: string[]) => void` | Set the search text and optionally the search keys. Default search key is "name"<br /><br />Recommended to call this inside a debounced function if you find any performance issue otherwise. |
+
+---
+
+#### SelectionPropagation
+
+| Property     | Type      | Required | Description                                                  |
+| ------------ | --------- | -------- | ------------------------------------------------------------ |
+| `toChildren` | `boolean` | No       | Whether to propagate selection to children nodes. Defaults to `true`. |
+| `toParents`  | `boolean` | No       | Whether to propagate selection to parent nodes. Defaults to `true`. |
 
 ---
 
@@ -221,6 +243,7 @@ Type: `boolean` OR `"indeterminate"`
  ### 🙌 Planned features
 
 - [x] Row Item full-customization
+- [x] Prop to control auto children and parents selection. Can now be done using `selectionPropagation` prop 🎉
 - [ ] Prop to set the maximum checked item limit
 - [ ] Prop to disable certain nodes from getting checked
 - [x] Ref function to programatically expand/collapse a certain node 
@@ -228,6 +251,13 @@ Type: `boolean` OR `"indeterminate"`
 - [ ] Ref function to auto-scroll to a certain node's position
 
 If you do not see what you want in the planned feature list, raise a feature request. 
+
+---
+
+### 💡 Some Expo Snack Examples
+
+1. Radio button like selection in tree view: [Snack link](https://snack.expo.dev/@futurejj/react-native-tree-multi-select-radio-button-example)
+2. Display count of number of checked nodes: [Snack link](https://snack.expo.dev/@futurejj/react-native-tree-multi-select-example)
 
 ---
 
@@ -239,7 +269,7 @@ See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the 
 
 MIT
 
-## Support the project
+## 🙏 Support the project
 
 <p align="center" valign="center">
   <a href="https://liberapay.com/FutureJJ/donate">

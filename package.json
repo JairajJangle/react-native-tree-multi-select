@@ -1,12 +1,12 @@
 {
   "name": "react-native-tree-multi-select",
   "version": "1.5.0",
-  "description": "Super-fast Tree view with multi-selection capabilities, using checkboxes and search filtering.",
-  "main": "lib/commonjs/index",
-  "module": "lib/module/index",
+  "description": "A super-fast, customizable tree view component for React Native with multi-selection, checkboxes, and search filtering capabilities.",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
   "types": "lib/typescript/index.d.ts",
-  "react-native": "src/index",
-  "source": "src/index",
+  "react-native": "src/index.tsx",
+  "source": "src/index.tsx",
   "files": [
     "src",
     "lib",
@@ -66,11 +66,15 @@
     "expo",
     "web"
   ],
-  "repository": "https://github.com/JairajJangle/react-native-tree-multi-select",
-  "author": "Jairaj Jangle <jairaj.jangle@gmail.com> (https://github.com/JairajJangle)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JairajJangle/react-native-tree-multi-select.git"
+  },
+  "author": "Jairaj Jangle <reachout.jairaj.jangle@gmail.com> (https://github.com/JairajJangle)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/JairajJangle/react-native-tree-multi-select/issues"
+    "url": "https://github.com/JairajJangle/react-native-tree-multi-select/issues",
+    "email": "reachout.jairaj.jangle@gmail.com"
   },
   "homepage": "https://github.com/JairajJangle/react-native-tree-multi-select#readme",
   "publishConfig": {

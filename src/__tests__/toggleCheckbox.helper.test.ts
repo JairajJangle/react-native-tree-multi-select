@@ -1,27 +1,30 @@
 jest.mock('zustand');
 
-import { useTreeViewStore } from '../store/treeView.store';
+import { getTreeViewStore } from '../store/treeView.store';
 import {
     initializeNodeMaps,
     toggleCheckboxes
 } from '../helpers';
 import { act } from 'react-test-renderer';
 import { tree3d2b } from '../__mocks__/generateTree.mock';
+import { testStoreId } from "../constants/tests.constants";
 
 describe('toggleCheckboxes', () => {
+    const useTreeViewStore = getTreeViewStore(testStoreId);
+
     beforeEach(() => {
         useTreeViewStore.getState().cleanUpTreeViewStore();
 
         // Setup mock tree
         useTreeViewStore.getState().updateInitialTreeViewData(tree3d2b);
-        initializeNodeMaps(tree3d2b);
+        initializeNodeMaps(testStoreId, tree3d2b);
     });
 
     it('correctly updates checkbox states', () => {
         // Act
         act(() => {
             // Pre-selection also got covered in this test
-            toggleCheckboxes(['1', '2'], true);
+            toggleCheckboxes(testStoreId, ['1', '2'], true);
         });
 
         // Assert
@@ -48,7 +51,7 @@ describe('toggleCheckboxes', () => {
 
         // Act
         act(() => {
-            toggleCheckboxes(['1.2']); // Was checked, now should be unchecked
+            toggleCheckboxes(testStoreId, ['1.2']); // Was checked, now should be unchecked
         });
 
         // Assert
@@ -77,7 +80,7 @@ describe('toggleCheckboxes', () => {
 
         // Act
         act(() => {
-            toggleCheckboxes(['2']); // Was checked, now should be unchecked
+            toggleCheckboxes(testStoreId, ['2']); // Was checked, now should be unchecked
         });
 
         // Assert
@@ -98,7 +101,7 @@ describe('toggleCheckboxes', () => {
 
         // Act
         act(() => {
-            toggleCheckboxes(['1.2']); // Was unchecked, now should be checked
+            toggleCheckboxes(testStoreId, ['1.2']); // Was unchecked, now should be checked
         });
 
         // Assert
@@ -133,7 +136,7 @@ describe('toggleCheckboxes', () => {
         {
             // Act
             act(() => {
-                toggleCheckboxes(['1'], true);
+                toggleCheckboxes(testStoreId, ['1'], true);
             });
 
             // Assert
@@ -153,7 +156,7 @@ describe('toggleCheckboxes', () => {
         // Verify children un-selection on parent un-selection
         {
             act(() => {
-                toggleCheckboxes(['1'], false);
+                toggleCheckboxes(testStoreId, ['1'], false);
             });
 
             // Assert
@@ -165,7 +168,7 @@ describe('toggleCheckboxes', () => {
         // Verify children selection on parent selection with indeterminate state verification
         {
             act(() => {
-                toggleCheckboxes(['1.1'], true);
+                toggleCheckboxes(testStoreId, ['1.1'], true);
             });
 
             // Assert
@@ -193,7 +196,7 @@ describe('toggleCheckboxes', () => {
 
         // Act
         act(() => {
-            toggleCheckboxes(['1.1'], true);
+            toggleCheckboxes(testStoreId, ['1.1'], true);
         });
 
         // Assert
@@ -220,7 +223,7 @@ describe('toggleCheckboxes', () => {
 
         // Act
         act(() => {
-            toggleCheckboxes(['1.1'], true);
+            toggleCheckboxes(testStoreId, ['1.1'], true);
         });
 
         // Assert
@@ -261,7 +264,7 @@ describe('toggleCheckboxes', () => {
         {
             // Act
             act(() => {
-                toggleCheckboxes(['1.1'], true);
+                toggleCheckboxes(testStoreId, ['1.1'], true);
             });
 
             // Assert
@@ -281,7 +284,7 @@ describe('toggleCheckboxes', () => {
         {
             // Act
             act(() => {
-                toggleCheckboxes(['2.1.1'], true);
+                toggleCheckboxes(testStoreId, ['2.1.1'], true);
             });
 
             // Assert
@@ -303,7 +306,7 @@ describe('toggleCheckboxes', () => {
     it('does not change state when toggling an empty IDs array', () => {
         // Initial state: nothing is checked
         act(() => {
-            toggleCheckboxes([], true);
+            toggleCheckboxes(testStoreId, [], true);
         });
 
         const { checked, indeterminate } = useTreeViewStore.getState();
@@ -314,7 +317,7 @@ describe('toggleCheckboxes', () => {
     it('handles toggling a non-existent node ID gracefully', () => {
         // Act
         act(() => {
-            toggleCheckboxes(['non-existent-id'], true);
+            toggleCheckboxes(testStoreId, ['non-existent-id'], true);
         });
 
         // Assert: state remains unchanged
@@ -326,7 +329,7 @@ describe('toggleCheckboxes', () => {
     it('handles toggling a single leaf node correctly', () => {
         // Act
         act(() => {
-            toggleCheckboxes(['1.1.1'], true);
+            toggleCheckboxes(testStoreId, ['1.1.1'], true);
         });
 
         // Assert
@@ -338,7 +341,7 @@ describe('toggleCheckboxes', () => {
     it('handles toggling a single leaf node and then unselecting it', () => {
         // Act
         act(() => {
-            toggleCheckboxes(['1.1.1'], true);
+            toggleCheckboxes(testStoreId, ['1.1.1'], true);
         });
 
         // Assert
@@ -348,7 +351,7 @@ describe('toggleCheckboxes', () => {
 
         // Act: Unselect
         act(() => {
-            toggleCheckboxes(['1.1.1'], false);
+            toggleCheckboxes(testStoreId, ['1.1.1'], false);
         });
 
         // Assert
@@ -360,7 +363,7 @@ describe('toggleCheckboxes', () => {
     it('handles toggling multiple nodes in different branches correctly', () => {
         // Act
         act(() => {
-            toggleCheckboxes(['1.1.1', '2.1.2'], true);
+            toggleCheckboxes(testStoreId, ['1.1.1', '2.1.2'], true);
         });
 
         // Assert
@@ -372,7 +375,7 @@ describe('toggleCheckboxes', () => {
     it('does not allow duplicate IDs to affect the state multiple times', () => {
         // Act
         act(() => {
-            toggleCheckboxes(['1.1.1', '1.1.1'], true);
+            toggleCheckboxes(testStoreId, ['1.1.1', '1.1.1'], true);
         });
 
         // Assert
@@ -384,12 +387,12 @@ describe('toggleCheckboxes', () => {
     it('handles toggling nodes when some nodes are already checked', () => {
         // Pre-select some nodes
         act(() => {
-            toggleCheckboxes(['1.1.1'], true);
+            toggleCheckboxes(testStoreId, ['1.1.1'], true);
         });
 
         // Act: Select another node that shares the same parent
         act(() => {
-            toggleCheckboxes(['1.1.2'], true);
+            toggleCheckboxes(testStoreId, ['1.1.2'], true);
         });
 
         // Assert: Parent should be checked since all children are checked
@@ -401,12 +404,12 @@ describe('toggleCheckboxes', () => {
     it('handles toggling a parent node after some of its children are already checked', () => {
         // Pre-select some children
         act(() => {
-            toggleCheckboxes(['1.1.1'], true);
+            toggleCheckboxes(testStoreId, ['1.1.1'], true);
         });
 
         // Act: Toggle parent '1.1' to checked, which should check all its children
         act(() => {
-            toggleCheckboxes(['1.1'], true);
+            toggleCheckboxes(testStoreId, ['1.1'], true);
         });
 
         // Assert
@@ -418,7 +421,7 @@ describe('toggleCheckboxes', () => {
     it('handles toggling all nodes in the tree', () => {
         // Act: Select all nodes
         act(() => {
-            toggleCheckboxes(['1', '2'], true);
+            toggleCheckboxes(testStoreId, ['1', '2'], true);
         });
 
         // Assert: All nodes should be checked
@@ -444,7 +447,7 @@ describe('toggleCheckboxes', () => {
 
         // Act: Unselect all nodes
         act(() => {
-            toggleCheckboxes(['1', '2'], false);
+            toggleCheckboxes(testStoreId, ['1', '2'], false);
         });
 
         // Assert: All nodes should be unchecked
@@ -456,7 +459,7 @@ describe('toggleCheckboxes', () => {
     it('does not affect other branches when toggling nodes in one branch', () => {
         // Act: Select node '1.1' which should check '1.1' and its children
         act(() => {
-            toggleCheckboxes(['1.1'], true);
+            toggleCheckboxes(testStoreId, ['1.1'], true);
         });
 
         // Assert
@@ -466,7 +469,7 @@ describe('toggleCheckboxes', () => {
 
         // Act: Unselect '1.1.1' only
         act(() => {
-            toggleCheckboxes(['1.1.1'], false);
+            toggleCheckboxes(testStoreId, ['1.1.1'], false);
         });
 
         // Assert: '1.1' should be indeterminate, '1' should remain indeterminate
@@ -513,12 +516,12 @@ describe('toggleCheckboxes', () => {
         // Reinitialize the node maps with the extended tree
         act(() => {
             useTreeViewStore.getState().updateInitialTreeViewData(extendedTree);
-            initializeNodeMaps(extendedTree);
+            initializeNodeMaps(testStoreId, extendedTree);
         });
 
         // Act: Select the deepest node
         act(() => {
-            toggleCheckboxes(['1.1.1.1'], true);
+            toggleCheckboxes(testStoreId, ['1.1.1.1'], true);
         });
 
         // Assert
@@ -530,7 +533,7 @@ describe('toggleCheckboxes', () => {
     it('handles toggling the same node multiple times within the same operation', () => {
         // Act: Toggle '1.1.1' twice in the same call
         act(() => {
-            toggleCheckboxes(['1.1.1', '1.1.1'], true);
+            toggleCheckboxes(testStoreId, ['1.1.1', '1.1.1'], true);
         });
 
         // Assert: '1.1.1' should be checked only once
@@ -542,7 +545,7 @@ describe('toggleCheckboxes', () => {
     it('handles toggling parent nodes when some of their children are already in indeterminate state', () => {
         // Act: Select '1.1.1' and '1.2.1', making '1.1' and '1.2' indeterminate, and '1' indeterminate
         act(() => {
-            toggleCheckboxes(['1.1.1', '1.2.1'], true);
+            toggleCheckboxes(testStoreId, ['1.1.1', '1.2.1'], true);
         });
 
         // Assert
@@ -552,7 +555,7 @@ describe('toggleCheckboxes', () => {
 
         // Act: Toggle parent '1' to checked, which should check all its children
         act(() => {
-            toggleCheckboxes(['1'], true);
+            toggleCheckboxes(testStoreId, ['1'], true);
         });
 
         // Assert
@@ -572,7 +575,7 @@ describe('toggleCheckboxes', () => {
     it('does not set a parent to checked if only some children are checked', () => {
         // Act: Select '1.1.1' only
         act(() => {
-            toggleCheckboxes(['1.1.1'], true);
+            toggleCheckboxes(testStoreId, ['1.1.1'], true);
         });
 
         // Assert
@@ -582,7 +585,7 @@ describe('toggleCheckboxes', () => {
 
         // Act: Select '1.1.2'
         act(() => {
-            toggleCheckboxes(['1.1.2'], true);
+            toggleCheckboxes(testStoreId, ['1.1.2'], true);
         });
 
         // Assert
@@ -594,7 +597,7 @@ describe('toggleCheckboxes', () => {
     it('handles toggling nodes with no children correctly', () => {
         // Act: Select a leaf node '1.1.2'
         act(() => {
-            toggleCheckboxes(['1.1.2'], true);
+            toggleCheckboxes(testStoreId, ['1.1.2'], true);
         });
 
         // Assert
@@ -606,7 +609,7 @@ describe('toggleCheckboxes', () => {
     it('handles toggling multiple nodes that share the same parent correctly', () => {
         // Act: Select both children '1.1.1' and '1.1.2'
         act(() => {
-            toggleCheckboxes(['1.1.1', '1.1.2'], true);
+            toggleCheckboxes(testStoreId, ['1.1.1', '1.1.2'], true);
         });
 
         // Assert
@@ -618,7 +621,7 @@ describe('toggleCheckboxes', () => {
     it('handles toggling nodes in different branches without interference', () => {
         // Act: Select '1.1.1' and '2.2.2'
         act(() => {
-            toggleCheckboxes(['1.1.1', '2.2.2'], true);
+            toggleCheckboxes(testStoreId, ['1.1.1', '2.2.2'], true);
         });
 
         // Assert
@@ -630,7 +633,7 @@ describe('toggleCheckboxes', () => {
     it("handles toggling a node with children as an empty array correctly", () => {
         // Act: Toggle node '3' to checked
         act(() => {
-            toggleCheckboxes(['3'], true);
+            toggleCheckboxes(testStoreId, ['3'], true);
         });
 
         // Assert: Node '3' should be checked, no indeterminate
@@ -640,7 +643,7 @@ describe('toggleCheckboxes', () => {
 
         // Act: Toggle node '3' to unchecked
         act(() => {
-            toggleCheckboxes(['3'], false);
+            toggleCheckboxes(testStoreId, ['3'], false);
         });
 
         // Assert: Node '3' should be unchecked, no indeterminate

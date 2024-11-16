@@ -1,11 +1,13 @@
 jest.mock('zustand');
 
 import { act } from 'react-test-renderer';
-import { useTreeViewStore } from '../store/treeView.store';
+import { getTreeViewStore } from '../store/treeView.store';
 import { createRandomNumberSet, generateTree } from '../__mocks__/generateTree.mock';
 import { TreeNode } from '../types/treeView.types';
+import { testStoreId } from "../constants/tests.constants";
 
 describe('TreeViewStore', () => {
+    const useTreeViewStore = getTreeViewStore(testStoreId);
 
     beforeEach(() => {
         useTreeViewStore.setState(useTreeViewStore.getState(), true);

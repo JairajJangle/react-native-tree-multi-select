@@ -32,6 +32,8 @@ export default NodeList;
 
 function _NodeList(props: NodeListProps) {
     const {
+        storeId,
+
         treeFlashListProps,
         checkBoxViewStyleProps,
         indentationMultiplier,
@@ -48,7 +50,7 @@ function _NodeList(props: NodeListProps) {
         updateInnerMostChildrenIds,
         searchKeys,
         searchText
-    } = useTreeViewStore(useShallow(
+    } = useTreeViewStore(storeId)(useShallow(
         state => ({
             expanded: state.expanded,
             initialTreeViewData: state.initialTreeViewData,
@@ -84,6 +86,8 @@ function _NodeList(props: NodeListProps) {
     ) => {
         return (
             <Node
+                storeId={storeId}
+
                 node={item}
                 level={item.level || 0}
 
@@ -97,6 +101,7 @@ function _NodeList(props: NodeListProps) {
             />
         );
     }, [
+        storeId,
         CheckboxComponent,
         ExpandCollapseIconComponent,
         ExpandCollapseTouchableComponent,
@@ -142,6 +147,8 @@ function getValue(
 const Node = React.memo(_Node);
 function _Node(props: NodeProps) {
     const {
+        storeId,
+
         node,
         level,
 
@@ -157,7 +164,7 @@ function _Node(props: NodeProps) {
     const {
         isExpanded,
         value,
-    } = useTreeViewStore(useShallow(
+    } = useTreeViewStore(storeId)(useShallow(
         state => ({
             isExpanded: state.expanded.has(node.id),
             value: getValue(
@@ -168,12 +175,12 @@ function _Node(props: NodeProps) {
     ));
 
     const _onToggleExpand = React.useCallback(() => {
-        handleToggleExpand(node.id);
-    }, [node.id]);
+        handleToggleExpand(storeId, node.id);
+    }, [storeId, node.id]);
 
     const _onCheck = React.useCallback(() => {
-        toggleCheckboxes([node.id]);
-    }, [node.id]);
+        toggleCheckboxes(storeId, [node.id]);
+    }, [storeId, node.id]);
 
     if (!CustomNodeRowComponent) {
         return (

@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.5.0...v1.5.1) (2024-10-20)
+
+
+### Bug Fixes
+
+* upgraded example app deps and package details in package json ([3472516](https://github.com/JairajJangle/react-native-tree-multi-select/commit/3472516d3c94613e7b89c1babd0cd45b140b7a78))
+
 # [1.5.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.4.1...v1.5.0) (2024-10-13)
 
 

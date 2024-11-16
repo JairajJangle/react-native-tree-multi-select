@@ -1,4 +1,4 @@
-import { useTreeViewStore } from "../store/treeView.store";
+import { getTreeViewStore } from "../store/treeView.store";
 
 /**
  * Toggle the expanded state of a tree node by its ID.
@@ -8,12 +8,13 @@ import { useTreeViewStore } from "../store/treeView.store";
  *
  * @param id - The ID of the tree node to toggle.
  */
-export function handleToggleExpand(id: string) {
+export function handleToggleExpand(storeId: string, id: string) {
+    const treeViewStore = getTreeViewStore(storeId);
     const {
         expanded,
         updateExpanded,
         nodeMap
-    } = useTreeViewStore.getState();
+    } = treeViewStore.getState();
 
     // Create a new Set based on the current expanded state
     const newExpanded = new Set(expanded);
@@ -48,8 +49,9 @@ export function handleToggleExpand(id: string) {
 /**
  * Expand all nodes in the tree.
  */
-export function expandAll() {
-    const { nodeMap, updateExpanded } = useTreeViewStore.getState();
+export function expandAll(storeId: string) {
+    const treeViewStore = getTreeViewStore(storeId);
+    const { nodeMap, updateExpanded } = treeViewStore.getState();
     // Create a new Set containing the IDs of all nodes
     const newExpanded = new Set(nodeMap.keys());
     updateExpanded(newExpanded);
@@ -58,8 +60,9 @@ export function expandAll() {
 /**
  * Collapse all nodes in the tree.
  */
-export function collapseAll() {
-    const { updateExpanded } = useTreeViewStore.getState();
+export function collapseAll(storeId: string) {
+    const treeViewStore = getTreeViewStore(storeId);
+    const { updateExpanded } = treeViewStore.getState();
     // Clear the expanded state
     updateExpanded(new Set<string>());
 }
@@ -69,8 +72,9 @@ export function collapseAll() {
  * its ancestors up to the root.
  * @param ids - Ids of nodes to expand.
  */
-export function expandNodes(ids: string[]) {
-    const { expanded, updateExpanded, childToParentMap } = useTreeViewStore.getState();
+export function expandNodes(storeId: string, ids: string[]) {
+    const treeViewStore = getTreeViewStore(storeId);
+    const { expanded, updateExpanded, childToParentMap } = treeViewStore.getState();
     const newExpanded = new Set(expanded);
     const processedIds = new Set<string>();
 
@@ -91,8 +95,9 @@ export function expandNodes(ids: string[]) {
  * its descendants.
  * @param ids - Ids of nodes to collapse.
  */
-export function collapseNodes(ids: string[]) {
-    const { expanded, updateExpanded, nodeMap } = useTreeViewStore.getState();
+export function collapseNodes(storeId: string, ids: string[]) {
+    const treeViewStore = getTreeViewStore(storeId);
+    const { expanded, updateExpanded, nodeMap } = treeViewStore.getState();
     const newExpanded = new Set(expanded);
 
     // Use an iterative approach to remove all descendants from the expanded set

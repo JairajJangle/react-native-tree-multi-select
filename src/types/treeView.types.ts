@@ -59,13 +59,15 @@ export interface TreeItemCustomizations {
 export interface NodeProps extends TreeItemCustomizations {
     node: __FlattenedTreeNode__;
     level: number;
+    storeId: string;
 }
 
 export interface NodeListProps extends TreeItemCustomizations {
     treeFlashListProps?: TreeFlatListProps;
+    storeId: string;
 }
 
-export interface TreeViewProps extends NodeListProps {
+export interface TreeViewProps extends Omit<NodeListProps, "storeId"> {
     data: TreeNode[];
 
     onCheck?: (checkedIds: string[], indeterminateIds: string[]) => void;

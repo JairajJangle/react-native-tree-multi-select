@@ -1,6 +1,6 @@
 import type { TreeNode } from "../types/treeView.types";
 import {
-    useTreeViewStore
+    getTreeViewStore,
 } from "../store/treeView.store";
 
 /**
@@ -12,11 +12,12 @@ import {
  * @param initialData - An array of TreeNode objects that represent the initial tree structure.
  * @param preselectedIds - An optional array of TreeNode IDs that should be preselected.
  */
-export function initializeNodeMaps(initialData: TreeNode[]) {
+export function initializeNodeMaps(storeId: string, initialData: TreeNode[]) {
+    const treeViewStore = getTreeViewStore(storeId);
     const {
         updateNodeMap,
         updateChildToParentMap
-    } = useTreeViewStore.getState();
+    } = treeViewStore.getState();
 
     const tempNodeMap: Map<string, TreeNode> = new Map();;
     const tempChildToParentMap: Map<string, string> = new Map();;

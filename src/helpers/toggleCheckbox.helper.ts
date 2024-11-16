@@ -1,4 +1,4 @@
-import { useTreeViewStore } from "../store/treeView.store";
+import { getTreeViewStore } from "../store/treeView.store";
 
 /**
  * Function to toggle checkbox state for a tree structure.
@@ -7,7 +7,12 @@ import { useTreeViewStore } from "../store/treeView.store";
  * @param {boolean} [forceCheck] - Optional. If provided, will force the check state of the nodes to be this value.
  * If not provided, the check state will be toggled based on the current state.
  */
-export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
+export function toggleCheckboxes(
+    storeId: string,
+    ids: string[],
+    forceCheck?: boolean
+) {
+    const treeViewStore = getTreeViewStore(storeId);
     const {
         checked,
         updateChecked,
@@ -18,7 +23,7 @@ export function toggleCheckboxes(ids: string[], forceCheck?: boolean) {
         nodeMap,
         childToParentMap,
         selectionPropagation
-    } = useTreeViewStore.getState();
+    } = treeViewStore.getState();
 
     const { toChildren, toParents } = selectionPropagation;
 

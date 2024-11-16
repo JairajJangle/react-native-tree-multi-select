@@ -1,5 +1,5 @@
 import { TreeNode } from "../types/treeView.types";
-import { useTreeViewStore } from "../store/treeView.store";
+import { getTreeViewStore } from "../store/treeView.store";
 import { toggleCheckboxes } from "./toggleCheckbox.helper";
 
 /**
@@ -7,16 +7,16 @@ import { toggleCheckboxes } from "./toggleCheckbox.helper";
  * 
  * If there is no search text, then it selects all nodes; otherwise, it selects all visible nodes.
  */
-export function selectAllFiltered() {
-    const { searchText, innerMostChildrenIds } = useTreeViewStore.getState();
-
+export function selectAllFiltered(storeId: string) {
+    const treeViewStore = getTreeViewStore(storeId);
+    const { searchText, innerMostChildrenIds } = treeViewStore.getState();
 
     // If there's no search text, select all nodes
     if (!searchText) {
-        selectAll();
+        selectAll(storeId);
     } else {
         // If there's search text, only select the visible nodes
-        toggleCheckboxes(innerMostChildrenIds, true);
+        toggleCheckboxes(storeId, innerMostChildrenIds, true);
     }
 };
 
@@ -25,15 +25,16 @@ export function selectAllFiltered() {
  * 
  * If there is no search text, then it unselects all nodes; otherwise, it unselects all visible nodes.
  */
-export function unselectAllFiltered() {
-    const { searchText, innerMostChildrenIds } = useTreeViewStore.getState();
+export function unselectAllFiltered(storeId: string) {
+    const treeViewStore = getTreeViewStore(storeId);
+    const { searchText, innerMostChildrenIds } = treeViewStore.getState();
 
     // If there's no search text, unselect all nodes
     if (!searchText) {
-        unselectAll();
+        unselectAll(storeId);
     } else {
         // If there's search text, only unselect the visible nodes
-        toggleCheckboxes(innerMostChildrenIds, false);
+        toggleCheckboxes(storeId, innerMostChildrenIds, false);
     }
 };
 
@@ -42,12 +43,13 @@ export function unselectAllFiltered() {
  * 
  * This function selects all nodes by adding all node ids to the checked set and clearing the indeterminate set.
  */
-export function selectAll() {
+export function selectAll(storeId: string) {
+    const treeViewStore = getTreeViewStore(storeId);
     const {
         nodeMap,
         updateChecked,
         updateIndeterminate
-    } = useTreeViewStore.getState();
+    } = treeViewStore.getState();
 
     // Create a new set containing the ids of all nodes
     const newChecked = new Set(nodeMap.keys());
@@ -62,8 +64,9 @@ export function selectAll() {
  * 
  * This function unselects all nodes by clearing both the checked and indeterminate sets.
  */
-export function unselectAll() {
-    const { updateChecked, updateIndeterminate } = useTreeViewStore.getState();
+export function unselectAll(storeId: string) {
+    const treeViewStore = getTreeViewStore(storeId);
+    const { updateChecked, updateIndeterminate } = treeViewStore.getState();
     // Update the state to mark all nodes as unchecked
 
     updateChecked(new Set());

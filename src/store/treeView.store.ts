@@ -1,6 +1,5 @@
 import type { SelectionPropagation, TreeNode } from "src/types/treeView.types";
-
-import { create } from 'zustand';
+import { create, StoreApi, UseBoundStore } from 'zustand';
 
 export type TreeViewState = {
     // Store ids of checked tree nodes
@@ -48,58 +47,74 @@ export type TreeViewState = {
     cleanUpTreeViewStore: () => void;
 };
 
-export const useTreeViewStore = create<TreeViewState>((set) => ({
-    checked: new Set(),
-    updateChecked: (checked: Set<string>) => set({ checked }),
+// Map to store individual tree view stores by id
+const treeViewStores = new Map<string, UseBoundStore<StoreApi<TreeViewState>>>();
 
-    indeterminate: new Set(),
-    updateIndeterminate: (indeterminate: Set<string>) => set({ indeterminate }),
-
-    expanded: new Set<string>(),
-    updateExpanded: (expanded: Set<string>) => set({ expanded }),
-
-    initialTreeViewData: [],
-    updateInitialTreeViewData: (initialTreeViewData: TreeNode[]) => set({
-        initialTreeViewData
-    }),
-
-    nodeMap: new Map<string, TreeNode>(),
-    updateNodeMap: (nodeMap: Map<string, TreeNode>) => set({ nodeMap }),
-
-    childToParentMap: new Map<string, string>(),
-    updateChildToParentMap: (childToParentMap: Map<string, string>) => set({ childToParentMap }),
-
-    searchText: "",
-    updateSearchText: (searchText: string) => set({ searchText }),
-
-    searchKeys: [""],
-    updateSearchKeys: (searchKeys: string[]) => set({ searchKeys }),
-
-    innerMostChildrenIds: [],
-    updateInnerMostChildrenIds: (innerMostChildrenIds: string[]) => set({ innerMostChildrenIds }),
-
-    selectionPropagation: { toChildren: true, toParents: true },
-    setSelectionPropagation: (selectionPropagation) => set(
-        {
-            selectionPropagation: {
-                // Default selection propagation for parent and children to true if not mentioned
-                toChildren: selectionPropagation.toChildren ?? true,
-                toParents: selectionPropagation.toParents ?? true
-            }
-        }
-    ),
-
-    cleanUpTreeViewStore: () =>
-        set({
+export function getTreeViewStore(id: string): UseBoundStore<StoreApi<TreeViewState>> {
+    if (!treeViewStores.has(id)) {
+        const store = create<TreeViewState>((set) => ({
             checked: new Set(),
+            updateChecked: (checked: Set<string>) => set({ checked }),
+
             indeterminate: new Set(),
+            updateIndeterminate: (indeterminate: Set<string>) => set({ indeterminate }),
+
             expanded: new Set<string>(),
+            updateExpanded: (expanded: Set<string>) => set({ expanded }),
+
             initialTreeViewData: [],
+            updateInitialTreeViewData: (initialTreeViewData: TreeNode[]) => set({
+                initialTreeViewData
+            }),
+
             nodeMap: new Map<string, TreeNode>(),
+            updateNodeMap: (nodeMap: Map<string, TreeNode>) => set({ nodeMap }),
+
             childToParentMap: new Map<string, string>(),
+            updateChildToParentMap: (childToParentMap: Map<string, string>) => set({
+                childToParentMap
+            }),
+
             searchText: "",
+            updateSearchText: (searchText: string) => set({ searchText }),
+
             searchKeys: [""],
+            updateSearchKeys: (searchKeys: string[]) => set({ searchKeys }),
+
             innerMostChildrenIds: [],
+            updateInnerMostChildrenIds: (innerMostChildrenIds: string[]) => set({
+                innerMostChildrenIds
+            }),
+
             selectionPropagation: { toChildren: true, toParents: true },
-        }),
-}));
+            setSelectionPropagation: (selectionPropagation) => set({
+                selectionPropagation: {
+                    // Default selection propagation for parent and children to true if not specified
+                    toChildren: selectionPropagation.toChildren ?? true,
+                    toParents: selectionPropagation.toParents ?? true
+                }
+            }),
+
+            cleanUpTreeViewStore: () =>
+                set({
+                    checked: new Set(),
+                    indeterminate: new Set(),
+                    expanded: new Set<string>(),
+                    initialTreeViewData: [],
+                    nodeMap: new Map<string, TreeNode>(),
+                    childToParentMap: new Map<string, string>(),
+                    searchText: "",
+                    searchKeys: [""],
+                    innerMostChildrenIds: [],
+                    selectionPropagation: { toChildren: true, toParents: true },
+                }),
+        }));
+
+        treeViewStores.set(id, store);
+    }
+    return treeViewStores.get(id)!;
+}
+
+export function useTreeViewStore(id: string) {
+    return getTreeViewStore(id);
+}

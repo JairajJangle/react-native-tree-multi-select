@@ -1,6 +1,6 @@
 jest.mock('zustand');
 
-import { useTreeViewStore } from '../store/treeView.store';
+import { getTreeViewStore } from '../store/treeView.store';
 import { tree3d2b } from "../__mocks__/generateTree.mock";
 import {
     collapseAll,
@@ -11,18 +11,21 @@ import {
     initializeNodeMaps
 } from '../helpers';
 import { act } from 'react-test-renderer';
+import { testStoreId } from "../constants/tests.constants";
 
 describe('handleToggleExpand', () => {
+    const useTreeViewStore = getTreeViewStore(testStoreId);
+
     beforeEach(() => {
         useTreeViewStore.setState(useTreeViewStore.getState(), true);
 
         useTreeViewStore.getState().updateInitialTreeViewData(tree3d2b);
-        initializeNodeMaps(tree3d2b);
+        initializeNodeMaps(testStoreId, tree3d2b);
     });
 
     test('handleToggleExpand correctly toggles the expanded state of a tree node', () => {
         act(() => {
-            handleToggleExpand('1');
+            handleToggleExpand(testStoreId, '1');
         });
 
         // Node '1' should now be expanded
@@ -30,7 +33,7 @@ describe('handleToggleExpand', () => {
         expect(expanded.has('1')).toBeTruthy();
 
         act(() => {
-            handleToggleExpand('1.2');
+            handleToggleExpand(testStoreId, '1.2');
         });
 
         // Node '1.2' should now be expanded, Node '1'(parent) should remain expanded
@@ -39,8 +42,8 @@ describe('handleToggleExpand', () => {
         expect(expanded.has('1')).toBeTruthy();
 
         act(() => {
-            handleToggleExpand('1');
-            handleToggleExpand('2');
+            handleToggleExpand(testStoreId, '1');
+            handleToggleExpand(testStoreId, '2');
         });
 
         // Node '1' and its descendants should now be collapsed but Node '2' should remain expanded
@@ -56,17 +59,19 @@ describe('handleToggleExpand', () => {
 });
 
 describe('expandAll', () => {
+    const useTreeViewStore = getTreeViewStore(testStoreId);
+
     beforeEach(() => {
         useTreeViewStore.setState(useTreeViewStore.getState(), true);
 
         // Setup mock tree
         useTreeViewStore.getState().updateInitialTreeViewData(tree3d2b);
-        initializeNodeMaps(tree3d2b);
+        initializeNodeMaps(testStoreId, tree3d2b);
     });
 
     it('calls expandAll on initial tree(all collapsed)', () => {
         act(() => {
-            expandAll();
+            expandAll(testStoreId);
         });
 
         const { expanded, nodeMap } = useTreeViewStore.getState();
@@ -78,13 +83,13 @@ describe('expandAll', () => {
 
     it('expands all node in tree with some nodes which are already expanded', () => {
         act(() => {
-            handleToggleExpand('1');
-            handleToggleExpand('2');
-            handleToggleExpand('1.1');
-            handleToggleExpand('1.2');
-            handleToggleExpand('1.1');
+            handleToggleExpand(testStoreId, '1');
+            handleToggleExpand(testStoreId, '2');
+            handleToggleExpand(testStoreId, '1.1');
+            handleToggleExpand(testStoreId, '1.2');
+            handleToggleExpand(testStoreId, '1.1');
 
-            expandAll();
+            expandAll(testStoreId);
         });
 
         const { expanded, nodeMap } = useTreeViewStore.getState();
@@ -96,17 +101,19 @@ describe('expandAll', () => {
 });
 
 describe('collapseAll', () => {
+    const useTreeViewStore = getTreeViewStore(testStoreId);
+
     beforeEach(() => {
         useTreeViewStore.setState(useTreeViewStore.getState(), true);
 
         // Setup mock tree
         useTreeViewStore.getState().updateInitialTreeViewData(tree3d2b);
-        initializeNodeMaps(tree3d2b);
+        initializeNodeMaps(testStoreId, tree3d2b);
     });
 
     it('calls collapseAll on initial tree(all collapsed)', () => {
         act(() => {
-            collapseAll();
+            collapseAll(testStoreId);
         });
 
         const { expanded } = useTreeViewStore.getState();
@@ -115,13 +122,13 @@ describe('collapseAll', () => {
 
     it('collapses all node in tree with some nodes which are already expanded', () => {
         act(() => {
-            handleToggleExpand('1');
-            handleToggleExpand('2');
-            handleToggleExpand('1.1');
-            handleToggleExpand('1.2');
-            handleToggleExpand('1.1');
+            handleToggleExpand(testStoreId, '1');
+            handleToggleExpand(testStoreId, '2');
+            handleToggleExpand(testStoreId, '1.1');
+            handleToggleExpand(testStoreId, '1.2');
+            handleToggleExpand(testStoreId, '1.1');
 
-            collapseAll();
+            collapseAll(testStoreId);
         });
 
         const { expanded } = useTreeViewStore.getState();
@@ -131,16 +138,18 @@ describe('collapseAll', () => {
 });
 
 describe('expandNodes & collapseNodes', () => {
+    const useTreeViewStore = getTreeViewStore(testStoreId);
+
     beforeEach(() => {
         useTreeViewStore.setState(useTreeViewStore.getState(), true);
 
         useTreeViewStore.getState().updateInitialTreeViewData(tree3d2b);
-        initializeNodeMaps(tree3d2b);
+        initializeNodeMaps(testStoreId, tree3d2b);
     });
 
     it('expands and then collapses multiple nodes as needed', () => {
         act(() => {
-            expandNodes(["1", "2.1", "2.2.2"]);
+            expandNodes(testStoreId, ["1", "2.1", "2.2.2"]);
         });
 
         const { expanded: expandedAfterExpandNodes } = useTreeViewStore.getState();
@@ -164,7 +173,7 @@ describe('expandNodes & collapseNodes', () => {
 
         // Then collapse the same nodes
         act(() => {
-            collapseNodes(["1", "2.2"]);
+            collapseNodes(testStoreId, ["1", "2.2"]);
         });
 
         const { expanded: expandedAfterCollapseNodes } = useTreeViewStore.getState();

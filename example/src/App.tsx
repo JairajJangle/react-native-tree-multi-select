@@ -16,6 +16,7 @@ import {
   NeitherToChildrenNorToParentSmallDataScreen
 } from './screens/SelectionPropagationScreens';
 import packageJson from '../../package.json';
+import { TwoTreeViewsScreen } from "./screens/TwoTreeViewsScreen";
 
 const data: ShowcaseExampleScreenSectionType[] = [
   {
@@ -75,6 +76,16 @@ const data: ShowcaseExampleScreenSectionType[] = [
         name: 'Neither to children nor to parents',
         slug: 'neither-children-nor-parent',
         getScreen: () => NeitherToChildrenNorToParentSmallDataScreen,
+      },
+    ],
+  },
+  {
+    title: 'Multiple Tree Views',
+    data: [
+      {
+        name: 'Two Tree Views',
+        slug: 'two-tree-views',
+        getScreen: () => TwoTreeViewsScreen,
       },
     ],
   },

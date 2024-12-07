@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.5.1...v1.6.0) (2024-12-07)
+
+
+### Features
+
+* [#78](https://github.com/JairajJangle/react-native-tree-multi-select/issues/78) added initial support to allow use of multiple tree view components simultaneously ([2123101](https://github.com/JairajJangle/react-native-tree-multi-select/commit/2123101647f42cddabd4f60f741741e5a2c04b50))
+
 # [1.6.0-beta.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.5.1...v1.6.0-beta.1) (2024-11-16)
 
 

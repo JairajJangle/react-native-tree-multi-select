@@ -303,6 +303,56 @@ describe('toggleCheckboxes', () => {
         }
     });
 
+    it('correctly updates checkbox states when selectionPropagation not set - default behavior should be to select children and parents', () => {
+        // Set selectionPropagation to not propagate to either parents or children
+        useTreeViewStore.getState().setSelectionPropagation({});
+
+        {
+            // Act
+            act(() => {
+                toggleCheckboxes(testStoreId, ['1.1'], true);
+            });
+
+            // Assert
+            const { checked, indeterminate } = useTreeViewStore.getState();
+            expect(checked).toEqual(new Set([
+                '1.1',
+                '1.1.1',
+                '1.1.2'
+            ]));
+            expect(indeterminate).toEqual(new Set(["1"]));
+            expect(checked.has('1')).toBeFalsy();
+            expect(checked.has('1.1.1')).toBeTruthy();
+            expect(checked.has('1.1.2')).toBeTruthy();
+            expect(checked.has('1.2')).toBeFalsy();
+            expect(checked.has('1.2.1')).toBeFalsy();
+            expect(checked.has('1.2.2')).toBeFalsy();
+        }
+
+        {
+            // Act
+            act(() => {
+                toggleCheckboxes(testStoreId, ['2.1.1'], true);
+            });
+
+            // Assert
+            const { checked, indeterminate } = useTreeViewStore.getState();
+            expect(checked).toEqual(new Set([
+                '1.1', // Previously checked node, earlier in this test
+                '1.1.1',
+                '1.1.2',
+                '2.1.1',
+            ]));
+            expect(indeterminate).toEqual(new Set(['1', '2.1', '2']));
+            expect(checked.has('2')).toBeFalsy();
+            expect(checked.has('2.1')).toBeFalsy();
+            expect(checked.has('2.1.2')).toBeFalsy();
+            expect(checked.has('2.2')).toBeFalsy();
+            expect(checked.has('2.2.1')).toBeFalsy();
+            expect(checked.has('2.2.2')).toBeFalsy();
+        }
+    });
+
     it('does not change state when toggling an empty IDs array', () => {
         // Initial state: nothing is checked
         act(() => {

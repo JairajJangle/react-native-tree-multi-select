@@ -1,3 +1,10 @@
+# [1.7.0-beta.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.6.0...v1.7.0-beta.1) (2024-12-09)
+
+
+### Features
+
+* made data prop reactive ([f5f3699](https://github.com/JairajJangle/react-native-tree-multi-select/commit/f5f369996e5c67b32c87caa0edad6131d037f1a9))
+
 # [1.6.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.5.1...v1.6.0) (2024-12-07)
 
 

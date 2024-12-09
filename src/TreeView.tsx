@@ -22,6 +22,7 @@ import { useTreeViewStore } from './store/treeView.store';
 import usePreviousState from './utils/usePreviousState';
 import { useShallow } from "zustand/react/shallow";
 import uuid from "react-native-uuid";
+import useDeepCompareEffect from "./utils/useDeepCompareEffect";
 
 const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
   (props, ref) => {
@@ -111,7 +112,9 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
 
     const prevSearchText = usePreviousState(searchText);
 
-    React.useEffect(() => {
+    useDeepCompareEffect(() => {
+      cleanUpTreeViewStore();
+
       updateInitialTreeViewData(data);
 
       if (selectionPropagation)
@@ -124,8 +127,7 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
 
       // Expand pre-expanded nodes
       expandNodes(storeId, preExpandedIds);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [data]);
 
     function selectNodes(ids: string[]) {
       toggleCheckboxes(storeId, ids, true);

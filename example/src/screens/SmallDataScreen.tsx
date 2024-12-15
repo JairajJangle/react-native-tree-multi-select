@@ -8,9 +8,10 @@ import {
 
 import SearchInput from '../components/SearchInput';
 
-import { debounce } from "lodash";
+import debounce from "lodash/debounce";
 
 import {
+    SelectionPropagation,
     TreeView,
     type TreeViewRef
 } from 'react-native-tree-multi-select';
@@ -18,7 +19,13 @@ import {
 import { styles } from './screens.styles';
 import { generateTreeList } from '../utils/sampleDataGenerator';
 
-export default function SmallDataScreen() {
+interface Props {
+    selectionPropagation?: SelectionPropagation;
+}
+
+export default function SmallDataScreen(props: Props) {
+    const { selectionPropagation } = props;
+
     const sampleData = React.useRef(generateTreeList(5, 4, 3));
     const treeViewRef = React.useRef<TreeViewRef | null>(null);
 
@@ -32,8 +39,11 @@ export default function SmallDataScreen() {
         []
     );
 
-    const handleSelectionChange = (_checkedIds: string[]) => {
-        // NOTE: Handle _checkedIds here
+    const handleSelectionChange = (
+        _checkedIds: string[],
+        _indeterminateIds: string[]
+    ) => {
+        // NOTE: Handle _checkedIds and _indeterminateIds here
     };
     const handleExpanded = (_expandedIds: string[]) => {
         // NOTE: Handle _expandedIds here
@@ -89,6 +99,7 @@ export default function SmallDataScreen() {
                     data={sampleData.current}
                     onCheck={handleSelectionChange}
                     onExpand={handleExpanded}
+                    selectionPropagation={selectionPropagation}
                 />
             </View>
         </SafeAreaView>

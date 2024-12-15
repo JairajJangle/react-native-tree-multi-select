@@ -1,3 +1,106 @@
+# [1.6.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.5.1...v1.6.0) (2024-12-07)
+
+
+### Features
+
+* [#78](https://github.com/JairajJangle/react-native-tree-multi-select/issues/78) added initial support to allow use of multiple tree view components simultaneously ([2123101](https://github.com/JairajJangle/react-native-tree-multi-select/commit/2123101647f42cddabd4f60f741741e5a2c04b50))
+
+# [1.6.0-beta.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.5.1...v1.6.0-beta.1) (2024-11-16)
+
+
+### Features
+
+* [#78](https://github.com/JairajJangle/react-native-tree-multi-select/issues/78) added initial support to allow use of multiple tree view components simultaneously ([2123101](https://github.com/JairajJangle/react-native-tree-multi-select/commit/2123101647f42cddabd4f60f741741e5a2c04b50))
+
+## [1.5.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.5.0...v1.5.1) (2024-10-20)
+
+
+### Bug Fixes
+
+* upgraded example app deps and package details in package json ([3472516](https://github.com/JairajJangle/react-native-tree-multi-select/commit/3472516d3c94613e7b89c1babd0cd45b140b7a78))
+
+# [1.5.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.4.1...v1.5.0) (2024-10-13)
+
+
+### Bug Fixes
+
+* fixed parent does not get unchecked if all children are unchecked at once in filtered tree ([cf2195b](https://github.com/JairajJangle/react-native-tree-multi-select/commit/cf2195b94faa619ecb6a60ae6359e09755342668))
+* trigger patch release for refactor ([c3b9a71](https://github.com/JairajJangle/react-native-tree-multi-select/commit/c3b9a71f3d3026b1a6428d65a8209ae8eb05ce30))
+
+
+### Features
+
+* added prop and state to control parent <-> child selection propagation ([#81](https://github.com/JairajJangle/react-native-tree-multi-select/issues/81)) ([4714525](https://github.com/JairajJangle/react-native-tree-multi-select/commit/47145251fc7fdfbc1437bda336596fea92842226))
+* updated toggle checkbox helpers for controlled parent <-> child selection propagation ([#81](https://github.com/JairajJangle/react-native-tree-multi-select/issues/81)) ([9acbca2](https://github.com/JairajJangle/react-native-tree-multi-select/commit/9acbca2b1eb8300cfeaf29ffd37c2d96c93b744d))
+
+
+### Performance Improvements
+
+* replaced recursive logic with iterative logic to handle tree expand collapse ([b417057](https://github.com/JairajJangle/react-native-tree-multi-select/commit/b4170572068725885cbeaa91659e1c58164208b6))
+
+# [1.5.0-beta.3](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.5.0-beta.2...v1.5.0-beta.3) (2024-10-13)
+
+
+### Bug Fixes
+
+* fixed parent does not get unchecked if all children are unchecked at once in filtered tree ([cf2195b](https://github.com/JairajJangle/react-native-tree-multi-select/commit/cf2195b94faa619ecb6a60ae6359e09755342668))
+
+
+### Performance Improvements
+
+* replaced recursive logic with iterative logic to handle tree expand collapse ([b417057](https://github.com/JairajJangle/react-native-tree-multi-select/commit/b4170572068725885cbeaa91659e1c58164208b6))
+
+# [1.5.0-beta.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.5.0-beta.1...v1.5.0-beta.2) (2024-10-12)
+
+
+### Bug Fixes
+
+* trigger patch release for refactor ([c3b9a71](https://github.com/JairajJangle/react-native-tree-multi-select/commit/c3b9a71f3d3026b1a6428d65a8209ae8eb05ce30))
+
+# [1.5.0-beta.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.4.1...v1.5.0-beta.1) (2024-10-08)
+
+
+### Features
+
+* added prop and state to control parent <-> child selection propagation ([#81](https://github.com/JairajJangle/react-native-tree-multi-select/issues/81)) ([4714525](https://github.com/JairajJangle/react-native-tree-multi-select/commit/47145251fc7fdfbc1437bda336596fea92842226))
+* updated toggle checkbox helpers for controlled parent <-> child selection propagation ([#81](https://github.com/JairajJangle/react-native-tree-multi-select/issues/81)) ([9acbca2](https://github.com/JairajJangle/react-native-tree-multi-select/commit/9acbca2b1eb8300cfeaf29ffd37c2d96c93b744d))
+
+## [1.4.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.4.0...v1.4.1) (2024-08-28)
+
+
+### Bug Fixes
+
+* turbo pipeline to task renamed ([55a428f](https://github.com/JairajJangle/react-native-tree-multi-select/commit/55a428f6eb88946e4a4d84e9063da408db35ea5e))
+* upgraded deps ([0ddd803](https://github.com/JairajJangle/react-native-tree-multi-select/commit/0ddd80392dda389dfe6976ed1cf7a9987f665540))
+
+# [1.4.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.3.3...v1.4.0) (2024-08-20)
+
+
+### Features
+
+* added indeterminate state ids to onCheck callback ([204b9a0](https://github.com/JairajJangle/react-native-tree-multi-select/commit/204b9a0a26e80d2f4c434bc6afdd17452f44fb87))
+
+## [1.3.3](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.3.2...v1.3.3) (2024-08-03)
+
+
+### Performance Improvements
+
+* optimized state usage using useShallow and memoization ([0c8d9c6](https://github.com/JairajJangle/react-native-tree-multi-select/commit/0c8d9c66d6239bc6447fef64fee3841f8a2f8620))
+
+## [1.3.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.3.1...v1.3.2) (2024-06-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency react-native-safe-area-context to v4.10.4 ([89db0eb](https://github.com/JairajJangle/react-native-tree-multi-select/commit/89db0eb44a20d27b2d0e72d4586bdecd29bfef85))
+
+## [1.3.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.3.0...v1.3.1) (2024-05-20)
+
+
+### Bug Fixes
+
+* workflow action not upgrading package json version ([e51cbd7](https://github.com/JairajJangle/react-native-tree-multi-select/commit/e51cbd78c7790db7d33d2ea6e9b269e0ae51609f))
+
 # [1.3.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.2.8...v1.3.0) (2024-05-20)
 
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { InteractionManager } from 'react-native';
 import type {
   TreeNode,
@@ -20,6 +20,8 @@ import {
 } from './helpers';
 import { useTreeViewStore } from './store/treeView.store';
 import usePreviousState from './utils/usePreviousState';
+import { useShallow } from "zustand/react/shallow";
+import uuid from "react-native-uuid";
 
 const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
   (props, ref) => {
@@ -28,6 +30,8 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
 
       onCheck,
       onExpand,
+
+      selectionPropagation,
 
       preselectedIds = [],
 
@@ -44,6 +48,8 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       CustomNodeRowComponent,
     } = props;
 
+    const storeId = useMemo(() => uuid.v4(), []);
+
     const {
       expanded,
       updateExpanded,
@@ -57,25 +63,48 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       updateSearchKeys,
 
       checked,
+      indeterminate,
+
+      setSelectionPropagation,
 
       cleanUpTreeViewStore,
-    } = useTreeViewStore();
+    } = useTreeViewStore(storeId)(useShallow(
+      state => ({
+        expanded: state.expanded,
+        updateExpanded: state.updateExpanded,
+
+        initialTreeViewData: state.initialTreeViewData,
+        updateInitialTreeViewData: state.updateInitialTreeViewData,
+
+        searchText: state.searchText,
+        updateSearchText: state.updateSearchText,
+
+        updateSearchKeys: state.updateSearchKeys,
+
+        checked: state.checked,
+        indeterminate: state.indeterminate,
+
+        setSelectionPropagation: state.setSelectionPropagation,
+
+        cleanUpTreeViewStore: state.cleanUpTreeViewStore,
+      })
+    ));
 
     React.useImperativeHandle(ref, () => ({
-      selectAll,
-      unselectAll,
+      selectAll: () => selectAll(storeId),
+      unselectAll: () => unselectAll(storeId),
 
-      selectAllFiltered,
-      unselectAllFiltered,
+      selectAllFiltered: () => selectAllFiltered(storeId),
+      unselectAllFiltered: () => unselectAllFiltered(storeId),
 
-      expandAll,
-      collapseAll,
+      expandAll: () => expandAll(storeId),
+      collapseAll: () => collapseAll(storeId),
 
-      expandNodes,
-      collapseNodes,
+      expandNodes: (ids: string[]) => expandNodes(storeId, ids),
+      collapseNodes: (ids: string[]) => collapseNodes(storeId, ids),
 
-      selectNodes,
-      unselectNodes,
+      selectNodes: (ids: string[]) => selectNodes(ids),
+      unselectNodes: (ids: string[]) => unselectNodes(ids),
 
       setSearchText
     }));
@@ -85,22 +114,25 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
     React.useEffect(() => {
       updateInitialTreeViewData(data);
 
-      initializeNodeMaps(data);
+      if (selectionPropagation)
+        setSelectionPropagation(selectionPropagation);
+
+      initializeNodeMaps(storeId, data);
 
       // Check any pre-selected nodes
-      toggleCheckboxes(preselectedIds, true);
+      toggleCheckboxes(storeId, preselectedIds, true);
 
       // Expand pre-expanded nodes
-      expandNodes(preExpandedIds);
+      expandNodes(storeId, preExpandedIds);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     function selectNodes(ids: string[]) {
-      toggleCheckboxes(ids, true);
+      toggleCheckboxes(storeId, ids, true);
     }
 
     function unselectNodes(ids: string[]) {
-      toggleCheckboxes(ids, false);
+      toggleCheckboxes(storeId, ids, false);
     }
 
     function setSearchText(text: string, keys: string[] = ["name"]) {
@@ -117,11 +149,11 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
     }, []);
 
     React.useEffect(() => {
-      onCheck && onCheck(Array.from(checked));
-    }, [onCheck, checked]);
+      onCheck?.(Array.from(checked), Array.from(indeterminate));
+    }, [onCheck, checked, indeterminate]);
 
     React.useEffect(() => {
-      onExpand && onExpand(Array.from(expanded));
+      onExpand?.(Array.from(expanded));
     }, [onExpand, expanded]);
 
     React.useEffect(() => {
@@ -155,6 +187,8 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
 
     return (
       <NodeList
+        storeId={storeId}
+
         treeFlashListProps={treeFlashListProps}
         checkBoxViewStyleProps={checkBoxViewStyleProps}
         indentationMultiplier={indentationMultiplier}

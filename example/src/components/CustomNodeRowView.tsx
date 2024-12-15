@@ -33,7 +33,7 @@ function _CustomNodeRowView(props: NodeRowProps) {
                 ? "lightgrey"
                 : "white";
     const color =
-        checkedValue === true ? "white" : undefined;
+        checkedValue === true ? "white" : "black";
     const iconColor =
         checkedValue === true
             ? isExpanded ? "white" : "#9a9a9a"

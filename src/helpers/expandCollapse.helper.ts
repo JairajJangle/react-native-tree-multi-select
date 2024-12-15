@@ -1,5 +1,4 @@
-import { TreeNode } from "../types/treeView.types";
-import { useTreeViewStore } from "../store/treeView.store";
+import { getTreeViewStore } from "../store/treeView.store";
 
 /**
  * Toggle the expanded state of a tree node by its ID.
@@ -9,100 +8,82 @@ import { useTreeViewStore } from "../store/treeView.store";
  *
  * @param id - The ID of the tree node to toggle.
  */
-export function handleToggleExpand(id: string) {
+export function handleToggleExpand(storeId: string, id: string) {
+    const treeViewStore = getTreeViewStore(storeId);
     const {
-        initialTreeViewData,
         expanded,
-        updateExpanded
-    } = useTreeViewStore.getState();
+        updateExpanded,
+        nodeMap
+    } = treeViewStore.getState();
 
     // Create a new Set based on the current expanded state
     const newExpanded = new Set(expanded);
 
-    /**
-     * Recursively deletes a node and its descendants from the expanded set.
-     *
-     * @param node - The tree node to start deleting from.
-     */
-    function deleteChildrenFromExpanded(node: TreeNode) {
-        if (node.children) {
-            for (let child of node.children) {
-                newExpanded.delete(child.id);
-                deleteChildrenFromExpanded(child);
-            }
-        }
-    }
-
-    // Find the node to expand or collapse
-    const node = findNode(initialTreeViewData, id);
-
     if (expanded.has(id)) {
         // If the node is currently expanded, collapse it and its descendants
         newExpanded.delete(id);
-        /* 
-            istanbul ignore next:
-             
-            ignore because this condition is just added to satisfy 
-            typescript type check but the node will never be undefined if it is already in 
-            expanded Set 
-        */
-        if (node) {
-            deleteChildrenFromExpanded(node);
+
+        // Use an iterative approach to remove all descendants from the expanded set
+        const stack = [id];
+
+        while (stack.length > 0) {
+            const currentId = stack.pop()!;
+            const node = nodeMap.get(currentId);
+
+            if (node && node.children) {
+                for (const child of node.children) {
+                    newExpanded.delete(child.id);
+                    stack.push(child.id);
+                }
+            }
         }
     } else {
         // If the node is currently collapsed, expand it
         newExpanded.add(id);
     }
 
-    // Set the new expanded state
+    // Update the expanded state
     updateExpanded(newExpanded);
-};
+}
 
 /**
  * Expand all nodes in the tree.
  */
-export function expandAll() {
-    const { nodeMap, updateExpanded } = useTreeViewStore.getState();
+export function expandAll(storeId: string) {
+    const treeViewStore = getTreeViewStore(storeId);
+    const { nodeMap, updateExpanded } = treeViewStore.getState();
     // Create a new Set containing the IDs of all nodes
     const newExpanded = new Set(nodeMap.keys());
     updateExpanded(newExpanded);
-};
+}
 
 /**
  * Collapse all nodes in the tree.
  */
-export function collapseAll() {
-    const { updateExpanded } = useTreeViewStore.getState();
-    // Create an empty Set
-    const newExpanded = new Set<string>();
-    updateExpanded(newExpanded);
-};
+export function collapseAll(storeId: string) {
+    const treeViewStore = getTreeViewStore(storeId);
+    const { updateExpanded } = treeViewStore.getState();
+    // Clear the expanded state
+    updateExpanded(new Set<string>());
+}
 
 /**
  * Expand tree nodes of given ids. If the id is of a child, it also expands
- * the parent which it belongs to. 
- * @param ids Ids of nodes to expand.
+ * its ancestors up to the root.
+ * @param ids - Ids of nodes to expand.
  */
-export function expandNodes(ids: string[]) {
-    const { expanded, updateExpanded, childToParentMap } = useTreeViewStore.getState();
+export function expandNodes(storeId: string, ids: string[]) {
+    const treeViewStore = getTreeViewStore(storeId);
+    const { expanded, updateExpanded, childToParentMap } = treeViewStore.getState();
     const newExpanded = new Set(expanded);
-    const processedParents = new Set();  // To track already processed parents
+    const processedIds = new Set<string>();
 
-    ids.forEach(id => {
-        newExpanded.add(id);  // Start by adding the node ID to the set
-        let currentId = id;
-
-        while (currentId && childToParentMap.has(currentId) && !processedParents.has(currentId)) {
-            const parentId = childToParentMap.get(currentId);
-            if (parentId) {
-                if (!newExpanded.has(parentId)) {
-                    newExpanded.add(parentId);  // Add the parent ID only if not already processed
-                    processedParents.add(parentId);
-                }
-                currentId = parentId;  // Move up to the next parent
-            } else {
-                break;  // Break the loop if there's no further parent
-            }
+    ids.forEach((id) => {
+        let currentId: string | undefined = id;
+        while (currentId && !processedIds.has(currentId)) {
+            newExpanded.add(currentId);
+            processedIds.add(currentId);
+            currentId = childToParentMap.get(currentId);
         }
     });
 
@@ -111,50 +92,36 @@ export function expandNodes(ids: string[]) {
 
 /**
  * Collapse tree nodes of given ids. If the id is of a parent, it also collapses
- * the children inside it. 
- * @param ids Ids of nodes to collapse.
+ * its descendants.
+ * @param ids - Ids of nodes to collapse.
  */
-export function collapseNodes(ids: string[]) {
-    const { expanded, updateExpanded, nodeMap } = useTreeViewStore.getState();
+export function collapseNodes(storeId: string, ids: string[]) {
+    const treeViewStore = getTreeViewStore(storeId);
+    const { expanded, updateExpanded, nodeMap } = treeViewStore.getState();
     const newExpanded = new Set(expanded);
 
-    // Function to recursively remove child nodes from the expanded set
-    const deleteChildrenFromExpanded = (nodeId: string, visited = new Set()) => {
-        if (visited.has(nodeId)) return; // Prevent redundant processing
-        visited.add(nodeId);
+    // Use an iterative approach to remove all descendants from the expanded set
+    const deleteChildrenFromExpanded = (nodeId: string) => {
+        const stack = [nodeId];
 
-        const node = nodeMap.get(nodeId);
-        node?.children?.forEach(child => {
-            newExpanded.delete(child.id);
-            deleteChildrenFromExpanded(child.id, visited);
-        });
+        while (stack.length > 0) {
+            const currentId = stack.pop()!;
+            const node = nodeMap.get(currentId);
+
+            if (node && node.children) {
+                for (const child of node.children) {
+                    newExpanded.delete(child.id);
+                    stack.push(child.id);
+                }
+            }
+        }
     };
 
-    ids.forEach(id => {
-        // Remove the node ID from the set and all its children
+    ids.forEach((id) => {
+        // Remove the node ID from the set and all its descendants
         newExpanded.delete(id);
         deleteChildrenFromExpanded(id);
     });
 
     updateExpanded(newExpanded);
-}
-
-/**
- * Finds a node in the tree by its ID.
- *
- * @param nodes - The array of tree nodes to search through.
- * @returns The found tree node, or undefined if not found.
- */
-function findNode(nodes: TreeNode[], parentId: string): TreeNode | undefined {
-    for (let node of nodes) {
-        if (node.id === parentId) {
-            return node;
-        } else if (node.children) {
-            const found = findNode(node.children, parentId);
-            if (found) {
-                return found;
-            }
-        }
-    }
-    return undefined;
 }

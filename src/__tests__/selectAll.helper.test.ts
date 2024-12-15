@@ -8,24 +8,27 @@ import {
     unselectAll,
     unselectAllFiltered
 } from "../helpers";
-import { useTreeViewStore } from "../store/treeView.store";
+import { getTreeViewStore } from "../store/treeView.store";
 import { act } from 'react-test-renderer';
+import { testStoreId } from "../constants/tests.constants";
 
 jest.mock('zustand');
 
 describe('selectAll helpers functions', () => {
+    const useTreeViewStore = getTreeViewStore(testStoreId);
+
     beforeEach(() => {
         useTreeViewStore.setState(useTreeViewStore.getState(), true);
 
         // Setup mock tree
         useTreeViewStore.getState().updateInitialTreeViewData(tree3d2b);
-        initializeNodeMaps(tree3d2b);
+        initializeNodeMaps(testStoreId, tree3d2b);
     });
 
     it('selectAll works correctly', () => {
         // Act
         act(() => {
-            selectAll();
+            selectAll(testStoreId);
         });
 
         // Assert
@@ -45,6 +48,7 @@ describe('selectAll helpers functions', () => {
             "2.2",
             "2.2.1",
             "2.2.2",
+            "3"
         ]));
         expect(indeterminate).toEqual(new Set([]));
     });
@@ -52,12 +56,12 @@ describe('selectAll helpers functions', () => {
     it('unselectAll works correctly', () => {
         // Arrange
         act(() => {
-            selectAll();
+            selectAll(testStoreId);
         });
 
         // Act
         act(() => {
-            unselectAll();
+            unselectAll(testStoreId);
         });
 
         // Assert
@@ -89,7 +93,7 @@ describe('selectAll helpers functions', () => {
     it('selectAllFiltered works correctly for empty search term', () => {
         // Act
         act(() => {
-            selectAllFiltered();
+            selectAllFiltered(testStoreId);
         });
 
         // Assert
@@ -109,6 +113,7 @@ describe('selectAll helpers functions', () => {
             "2.2",
             "2.2.1",
             "2.2.2",
+            "3"
         ]));
         expect(Array.from(indeterminate)).toEqual([]);
     });
@@ -142,7 +147,7 @@ describe('selectAll helpers functions', () => {
             );
 
             // Call the select all filtered function
-            selectAllFiltered();
+            selectAllFiltered(testStoreId);
         });
 
         // Assert
@@ -164,12 +169,12 @@ describe('selectAll helpers functions', () => {
     it('unselectAllFiltered works correctly for empty search term', () => {
         // Arrange
         act(() => {
-            selectAllFiltered();
+            selectAllFiltered(testStoreId);
         });
 
         // Act
         act(() => {
-            unselectAllFiltered();
+            unselectAllFiltered(testStoreId);
         });
 
         // Assert
@@ -184,7 +189,7 @@ describe('selectAll helpers functions', () => {
         // Act
         act(() => {
             // First select all the nodes(unfiltered)
-            selectAll();
+            selectAll(testStoreId);
 
             // Update search related states in the store
             useTreeViewStore.getState().updateSearchText(searchTerm);
@@ -210,7 +215,7 @@ describe('selectAll helpers functions', () => {
             );
 
             // Call the select all filtered function
-            unselectAllFiltered();
+            unselectAllFiltered(testStoreId);
         });
 
         // Assert
@@ -223,6 +228,7 @@ describe('selectAll helpers functions', () => {
             '2.2',
             '2.2.1',
             '2.2.2',
+            '3'
         ]));
         expect(indeterminate).toEqual(new Set([
             '1',

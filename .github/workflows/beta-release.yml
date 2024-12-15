@@ -1,11 +1,11 @@
-name: CI
+name: Beta Release
 on:
   push:
     branches:
-      - main
+      - beta
   pull_request:
     branches:
-      - main
+      - beta
 
 jobs:
   lint:
@@ -96,7 +96,7 @@ jobs:
           api-level: 30
           build-tools: 30.0.3
           ndk: "23.1.7779620"
-      
+
       - name: Create local.properties
         if: env.turbo_cache_hit != 1
         run: |
@@ -177,7 +177,7 @@ jobs:
           name: ios-error-log
           path: ios_errorlog.txt
 
-  publish-npm:
+  publish-beta:
     needs: [lint, test, build-library, build-android, build-ios]
     runs-on: ubuntu-latest
     permissions:
@@ -185,7 +185,6 @@ jobs:
       issues: write # To comment on released issues
       pull-requests: write # To comment on released pull requests
       id-token: write # To enable use of OIDC for npm provenance
-    if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -204,8 +203,8 @@ jobs:
       - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
         run: npm audit signatures  # Check the signatures to verify integrity
 
-      - name: Release
-        run: npx semantic-release  # Run semantic-release to manage versioning and publishing
+      - name: Release Beta
+        run: npx semantic-release # Run semantic-release to manage versioning and publishing
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub token for authentication
 

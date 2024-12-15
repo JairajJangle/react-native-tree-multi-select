@@ -59,21 +59,25 @@ export interface TreeItemCustomizations {
 export interface NodeProps extends TreeItemCustomizations {
     node: __FlattenedTreeNode__;
     level: number;
+    storeId: string;
 }
 
 export interface NodeListProps extends TreeItemCustomizations {
     treeFlashListProps?: TreeFlatListProps;
+    storeId: string;
 }
 
-export interface TreeViewProps extends NodeListProps {
+export interface TreeViewProps extends Omit<NodeListProps, "storeId"> {
     data: TreeNode[];
 
-    onCheck?: (checkedIds: string[]) => void;
+    onCheck?: (checkedIds: string[], indeterminateIds: string[]) => void;
     onExpand?: (expandedIds: string[]) => void;
 
     preselectedIds?: string[];
 
     preExpandedIds?: string[];
+
+    selectionPropagation?: SelectionPropagation;
 }
 
 type CheckboxProps = Omit<RNPaperCheckboxAndroidProps, "onPress" | "status">;
@@ -116,4 +120,9 @@ export interface TreeViewRef {
     unselectNodes: (ids: string[]) => void;
 
     setSearchText: (searchText: string, searchKeys?: string[]) => void;
+}
+
+export interface SelectionPropagation {
+    toChildren?: boolean;
+    toParents?: boolean;
 }

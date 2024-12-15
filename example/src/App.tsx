@@ -10,6 +10,13 @@ import LargeDataScreen from './screens/LargeDataScreen';
 import CustomCheckboxScreen from './screens/CustomCheckboxScreen';
 import CustomArrowScreen from './screens/CustomArrowScreen';
 import CustomNodeRowViewScreen from './screens/CustomNodeRowViewScreen';
+import {
+  OnlyToParentSmallDataScreen,
+  OnlyToChildrenSmallDataScreen,
+  NeitherToChildrenNorToParentSmallDataScreen
+} from './screens/SelectionPropagationScreens';
+import packageJson from '../../package.json';
+import { TwoTreeViewsScreen } from "./screens/TwoTreeViewsScreen";
 
 const data: ShowcaseExampleScreenSectionType[] = [
   {
@@ -52,12 +59,42 @@ const data: ShowcaseExampleScreenSectionType[] = [
       },
     ],
   },
+  {
+    title: 'Controlled Selection Propagation',
+    data: [
+      {
+        name: 'Only to parent',
+        slug: 'only-to-parent',
+        getScreen: () => OnlyToParentSmallDataScreen,
+      },
+      {
+        name: 'Only to children',
+        slug: 'only-to-children',
+        getScreen: () => OnlyToChildrenSmallDataScreen,
+      },
+      {
+        name: 'Neither to children nor to parents',
+        slug: 'neither-children-nor-parent',
+        getScreen: () => NeitherToChildrenNorToParentSmallDataScreen,
+      },
+    ],
+  },
+  {
+    title: 'Multiple Tree Views',
+    data: [
+      {
+        name: 'Two Tree Views',
+        slug: 'two-tree-views',
+        getScreen: () => TwoTreeViewsScreen,
+      },
+    ],
+  },
 ];
 
 export default function App() {
   return (
     <ShowcaseApp
-      version="1.0.0"
+      version={packageJson.version}
       name="react-native-tree-multi-select"
       description="⚡️Super-fast tree view with multi-selection capabilities, using checkboxes and search filtering"
       author={{

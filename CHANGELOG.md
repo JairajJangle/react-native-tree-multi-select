@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.6.0...v1.6.1) (2024-12-17)
+
+
+### Performance Improvements
+
+* optimized flatten tree helper func ([012f981](https://github.com/JairajJangle/react-native-tree-multi-select/commit/012f9812edd6107a46fc24bd176862a73683435f))
+
 # [1.6.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.5.1...v1.6.0) (2024-12-07)
 
 

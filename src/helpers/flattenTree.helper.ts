@@ -13,17 +13,37 @@ import { TreeNode, __FlattenedTreeNode__ } from "../types/treeView.types";
 export function getFlattenedTreeData(
     nodes: TreeNode[],
     expandedIds: Set<string>,
-    __level__: number = 0,
 ): __FlattenedTreeNode__[] {
-    let flattened: __FlattenedTreeNode__[] = [];
-    for (let node of nodes) {
-        flattened.push({ ...node, level: __level__ });
-        if (node.children && expandedIds.has(node.id)) {
-            flattened = [
-                ...flattened,
-                ...getFlattenedTreeData(node.children, expandedIds, __level__ + 1)
-            ];
+    const flattened: __FlattenedTreeNode__[] = [];
+    const stack: { node: TreeNode; level: number; }[] = [];
+
+    // Initialize stack with the root nodes and level 0
+    for (let i = nodes.length - 1; i >= 0; i--) {
+        const node = nodes[i];
+        if (node) { // Ensure node is not undefined
+            stack.push({ node, level: 0 });
         }
     }
+
+    while (stack.length > 0) {
+        const item = stack.pop();
+        if (!item) continue; // Safety check
+
+        const { node, level } = item;
+
+        // Push current node into the flattened array
+        flattened.push({ ...node, level });
+
+        // Add children nodes to the stack if the node is expanded
+        if (node.children && expandedIds.has(node.id)) {
+            for (let i = node.children.length - 1; i >= 0; i--) {
+                const childNode = node.children[i];
+                if (childNode) { // Ensure childNode is not undefined
+                    stack.push({ node: childNode, level: level + 1 });
+                }
+            }
+        }
+    }
+
     return flattened;
-};
+}

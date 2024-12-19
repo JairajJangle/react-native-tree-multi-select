@@ -1,3 +1,15 @@
+# [1.7.0-beta.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.7.0-beta.1...v1.7.0-beta.2) (2024-12-19)
+
+
+### Bug Fixes
+
+* fixed updated data state not reflecting due to issues in deep compare effect ([fb5a745](https://github.com/JairajJangle/react-native-tree-multi-select/commit/fb5a745bf494cd3dec15e68fc05fa1a17034f75d))
+
+
+### Performance Improvements
+
+* optimized flatten tree helper func ([012f981](https://github.com/JairajJangle/react-native-tree-multi-select/commit/012f9812edd6107a46fc24bd176862a73683435f))
+
 ## [1.6.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.6.0...v1.6.1) (2024-12-17)
 
 

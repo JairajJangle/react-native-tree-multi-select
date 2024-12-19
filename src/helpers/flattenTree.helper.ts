@@ -20,14 +20,16 @@ export function getFlattenedTreeData(
     // Initialize stack with the root nodes and level 0
     for (let i = nodes.length - 1; i >= 0; i--) {
         const node = nodes[i];
-        if (node) { // Ensure node is not undefined
+        /* istanbul ignore next */
+        if (node) { // Ensure node is not undefined - redundant safety
             stack.push({ node, level: 0 });
         }
     }
 
     while (stack.length > 0) {
         const item = stack.pop();
-        if (!item) continue; // Safety check
+        /* istanbul ignore next */
+        if (!item) continue; // Redundant safety check
 
         const { node, level } = item;
 
@@ -38,7 +40,8 @@ export function getFlattenedTreeData(
         if (node.children && expandedIds.has(node.id)) {
             for (let i = node.children.length - 1; i >= 0; i--) {
                 const childNode = node.children[i];
-                if (childNode) { // Ensure childNode is not undefined
+                /* istanbul ignore next */
+                if (childNode) { // Ensure childNode is not undefined - redundant safety
                     stack.push({ node: childNode, level: level + 1 });
                 }
             }

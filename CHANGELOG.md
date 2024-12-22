@@ -1,3 +1,15 @@
+# [1.7.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.6.1...v1.7.0) (2024-12-22)
+
+
+### Bug Fixes
+
+* fixed updated data state not reflecting due to issues in deep compare effect ([fb5a745](https://github.com/JairajJangle/react-native-tree-multi-select/commit/fb5a745bf494cd3dec15e68fc05fa1a17034f75d))
+
+
+### Features
+
+* made data prop reactive ([f5f3699](https://github.com/JairajJangle/react-native-tree-multi-select/commit/f5f369996e5c67b32c87caa0edad6131d037f1a9))
+
 # [1.7.0-beta.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.7.0-beta.1...v1.7.0-beta.2) (2024-12-19)
 
 

@@ -19,8 +19,8 @@ export function initializeNodeMaps(storeId: string, initialData: TreeNode[]) {
         updateChildToParentMap
     } = treeViewStore.getState();
 
-    const tempNodeMap: Map<string, TreeNode> = new Map();;
-    const tempChildToParentMap: Map<string, string> = new Map();;
+    const tempNodeMap: Map<string, TreeNode> = new Map();
+    const tempChildToParentMap: Map<string, string> = new Map();
 
     /**
      * Recursively processes nodes, adding them to the nodeMap and childToParentMap.

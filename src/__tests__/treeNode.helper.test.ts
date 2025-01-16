@@ -47,3 +47,44 @@ describe('initNodeMap helper', () => {
         expect(childToParentMap.has('2')).toBeFalsy(); // Root node
     });
 });
+describe('initNodeMap helper [number id]', () => {
+  const useTreeViewStore = getTreeViewStore<number>(testStoreId);
+
+    beforeEach(() => {
+        useTreeViewStore.setState(useTreeViewStore.getState(), true);
+    });
+
+    test('initializeNodeMaps correctly initializes the node maps', () => {
+        const initialData: TreeNode<number>[] = [
+            {
+                id: 1,
+                name: 'Node 1',
+                children: [
+                    { id: 2, name: 'Node 1.1' },
+                    { id: 3, name: 'Node 1.2', children: [{ id: 4, name: 'Node 1.2.1' }] },
+                ],
+            },
+            { id: 5, name: 'Node 2' },
+        ];
+
+        act(() => {
+            initializeNodeMaps(testStoreId, initialData);
+        });
+
+        const { nodeMap, childToParentMap } = useTreeViewStore.getState();
+
+        // The nodeMap should contain all nodes, regardless of depth
+        expect(nodeMap.has(1)).toBeTruthy();
+        expect(nodeMap.has(2)).toBeTruthy();
+        expect(nodeMap.has(3)).toBeTruthy();
+        expect(nodeMap.has(4)).toBeTruthy();
+        expect(nodeMap.has(5)).toBeTruthy();
+
+        // The childToParentMap should contain all non-root nodes
+        expect(childToParentMap.has(1)).toBeFalsy(); // Root node
+        expect(childToParentMap.get(2)).toEqual(1);
+        expect(childToParentMap.get(3)).toEqual(1);
+        expect(childToParentMap.get(4)).toEqual(3);
+        expect(childToParentMap.has(5)).toBeFalsy(); // Root node
+    });
+});

@@ -26,11 +26,12 @@ import { CheckboxView } from "./CheckboxView";
 import { CustomExpandCollapseIcon } from "./CustomExpandCollapseIcon";
 import { defaultIndentationMultiplier } from "../constants/treeView.constants";
 import { useShallow } from 'zustand/react/shallow';
+import { typedMemo } from "../utils/typedMemo";
 
-const NodeList = React.memo(_NodeList);
+const NodeList = typedMemo(_NodeList);
 export default NodeList;
 
-function _NodeList(props: NodeListProps) {
+function _NodeList<ID>(props: NodeListProps<ID>) {
     const {
         storeId,
 
@@ -50,7 +51,7 @@ function _NodeList(props: NodeListProps) {
         updateInnerMostChildrenIds,
         searchKeys,
         searchText
-    } = useTreeViewStore(storeId)(useShallow(
+    } = useTreeViewStore<ID>(storeId)(useShallow(
         state => ({
             expanded: state.expanded,
             initialTreeViewData: state.initialTreeViewData,
@@ -61,31 +62,31 @@ function _NodeList(props: NodeListProps) {
     ));
 
     // First we filter the tree as per the search term and keys
-    const filteredTree = React.useMemo(() => getFilteredTreeData(
+    const filteredTree = React.useMemo(() => getFilteredTreeData<ID>(
         initialTreeViewData,
         searchText.trim().toLowerCase(),
         searchKeys
     ), [initialTreeViewData, searchText, searchKeys]);
 
     // Then we flatten the tree to make it "render-compatible" in a "flat" list
-    const flattenedFilteredNodes = React.useMemo(() => getFlattenedTreeData(
+    const flattenedFilteredNodes = React.useMemo(() => getFlattenedTreeData<ID>(
         filteredTree,
         expanded,
     ), [filteredTree, expanded]);
 
     // And update the innermost children id -> required to un/select filtered tree
     React.useEffect(() => {
-        const updatedInnerMostChildrenIds = getInnerMostChildrenIdsInTree(
+        const updatedInnerMostChildrenIds = getInnerMostChildrenIdsInTree<ID>(
             filteredTree
         );
         updateInnerMostChildrenIds(updatedInnerMostChildrenIds);
     }, [filteredTree, updateInnerMostChildrenIds]);
 
     const nodeRenderer = React.useCallback((
-        { item }: { item: __FlattenedTreeNode__; }
+        { item }: { item: __FlattenedTreeNode__<ID>; }
     ) => {
         return (
-            <Node
+            <Node<ID>
                 storeId={storeId}
 
                 node={item}
@@ -144,8 +145,8 @@ function getValue(
     }
 }
 
-const Node = React.memo(_Node);
-function _Node(props: NodeProps) {
+const Node = typedMemo(_Node);
+function _Node<ID>(props: NodeProps<ID>) {
     const {
         storeId,
 
@@ -164,7 +165,7 @@ function _Node(props: NodeProps) {
     const {
         isExpanded,
         value,
-    } = useTreeViewStore(storeId)(useShallow(
+    } = useTreeViewStore<ID>(storeId)(useShallow(
         state => ({
             isExpanded: state.expanded.has(node.id),
             value: getValue(

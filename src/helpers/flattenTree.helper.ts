@@ -1,7 +1,7 @@
 import { TreeNode, __FlattenedTreeNode__ } from "../types/treeView.types";
 
 /**
- * Flatten the tree and attach a "level" key to object to indicate it's depth. This 
+ * Flatten the tree and attach a "level" key to object to indicate it's depth. This
  * returns the flattened tree data of expanded ids only. We do not prune the tree off the
  * children after the flattening as it would be unnecessary computation.
  *
@@ -10,12 +10,12 @@ import { TreeNode, __FlattenedTreeNode__ } from "../types/treeView.types";
  * @param __level__ - (optional) for internal recursive use only
  * @returns Flattened tree data with expanded ids only
  */
-export function getFlattenedTreeData(
-    nodes: TreeNode[],
-    expandedIds: Set<string>,
-): __FlattenedTreeNode__[] {
-    const flattened: __FlattenedTreeNode__[] = [];
-    const stack: { node: TreeNode; level: number; }[] = [];
+export function getFlattenedTreeData<ID>(
+    nodes: TreeNode<ID>[],
+    expandedIds: Set<ID>,
+): __FlattenedTreeNode__<ID>[] {
+    const flattened: __FlattenedTreeNode__<ID>[] = [];
+    const stack: { node: TreeNode<ID>; level: number; }[] = [];
 
     // Initialize stack with the root nodes and level 0
     for (let i = nodes.length - 1; i >= 0; i--) {

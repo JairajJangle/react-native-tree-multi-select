@@ -15,14 +15,14 @@ export interface ExpandIconProps {
     isExpanded: boolean;
 }
 
-export interface TreeNode {
-    id: string;
+export interface TreeNode<ID = string> {
+    id: ID;
     name: string;
-    children?: TreeNode[];
+    children?: TreeNode<ID>[];
     [key: string]: any;
 }
 
-export interface __FlattenedTreeNode__ extends TreeNode {
+export interface __FlattenedTreeNode__<ID = string> extends TreeNode<ID> {
     level?: number;
 }
 
@@ -33,8 +33,8 @@ export type TreeFlatListProps<ItemT = any> = Omit<
     | "renderItem"
 >;
 
-export interface NodeRowProps {
-    node: TreeNode;
+export interface NodeRowProps<ID = string> {
+    node: TreeNode<ID>;
     level: number;
 
     checkedValue: CheckboxValueType;
@@ -44,7 +44,7 @@ export interface NodeRowProps {
     onExpand: () => void;
 }
 
-export interface TreeItemCustomizations {
+export interface TreeItemCustomizations<ID> {
     checkBoxViewStyleProps?: BuiltInCheckBoxViewStyleProps;
 
     indentationMultiplier?: number;
@@ -53,29 +53,29 @@ export interface TreeItemCustomizations {
     ExpandCollapseIconComponent?: React.ComponentType<ExpandIconProps>;
     ExpandCollapseTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
 
-    CustomNodeRowComponent?: React.ComponentType<NodeRowProps>;
+    CustomNodeRowComponent?: React.ComponentType<NodeRowProps<ID>>;
 }
 
-export interface NodeProps extends TreeItemCustomizations {
-    node: __FlattenedTreeNode__;
+export interface NodeProps<ID> extends TreeItemCustomizations<ID> {
+    node: __FlattenedTreeNode__<ID>;
     level: number;
     storeId: string;
 }
 
-export interface NodeListProps extends TreeItemCustomizations {
+export interface NodeListProps<ID> extends TreeItemCustomizations<ID> {
     treeFlashListProps?: TreeFlatListProps;
     storeId: string;
 }
 
-export interface TreeViewProps extends Omit<NodeListProps, "storeId"> {
-    data: TreeNode[];
+export interface TreeViewProps<ID = string> extends Omit<NodeListProps<ID>, "storeId"> {
+    data: TreeNode<ID>[];
 
-    onCheck?: (checkedIds: string[], indeterminateIds: string[]) => void;
-    onExpand?: (expandedIds: string[]) => void;
+    onCheck?: (checkedIds: ID[], indeterminateIds: ID[]) => void;
+    onExpand?: (expandedIds: ID[]) => void;
 
-    preselectedIds?: string[];
+    preselectedIds?: ID[];
 
-    preExpandedIds?: string[];
+    preExpandedIds?: ID[];
 
     selectionPropagation?: SelectionPropagation;
 }
@@ -103,7 +103,7 @@ export type BuiltInCheckBoxViewProps =
     CheckBoxViewProps
     & BuiltInCheckBoxViewStyleProps;
 
-export interface TreeViewRef {
+export interface TreeViewRef<ID = string> {
     selectAll: () => void;
     unselectAll: () => void;
 
@@ -113,11 +113,11 @@ export interface TreeViewRef {
     expandAll: () => void;
     collapseAll: () => void;
 
-    expandNodes: (ids: string[]) => void;
-    collapseNodes: (ids: string[]) => void;
+    expandNodes: (ids: ID[]) => void;
+    collapseNodes: (ids: ID[]) => void;
 
-    selectNodes: (ids: string[]) => void;
-    unselectNodes: (ids: string[]) => void;
+    selectNodes: (ids: ID[]) => void;
+    unselectNodes: (ids: ID[]) => void;
 
     setSearchText: (searchText: string, searchKeys?: string[]) => void;
 }

@@ -23,7 +23,7 @@ import usePreviousState from './utils/usePreviousState';
 import { useShallow } from "zustand/react/shallow";
 import uuid from "react-native-uuid";
 import useDeepCompareEffect from "./utils/useDeepCompareEffect";
-
+import { typedMemo } from './utils/typedMemo';
 const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
   (props, ref) => {
     const {
@@ -167,7 +167,7 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
         });
       }
       else if (prevSearchText && prevSearchText !== "") {
-        /* Collapse all nodes only if previous search query was non-empty: this is 
+        /* Collapse all nodes only if previous search query was non-empty: this is
         done to prevent node collapse on first render if preExpandedIds is provided */
         InteractionManager.runAfterInteractions(() => {
           updateExpanded(new Set());
@@ -205,4 +205,4 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
   }
 );
 
-export const TreeView = React.memo(_TreeView);
+export const TreeView = typedMemo(_TreeView);

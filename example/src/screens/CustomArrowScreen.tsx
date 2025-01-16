@@ -16,11 +16,11 @@ import {
 } from 'react-native-tree-multi-select';
 
 import { styles } from './screens.styles';
-import { generateTreeList } from '../utils/sampleDataGenerator';
+import { defaultID, generateTreeList } from '../utils/sampleDataGenerator';
 import { CustomArrow } from '../components/CustomArrow';
 
 export default function CustomArrowScreen() {
-    const sampleData = React.useRef(generateTreeList(50, 4, 5));
+    const sampleData = React.useRef(generateTreeList(50, 4, 5, defaultID, "1"));
     const treeViewRef = React.useRef<TreeViewRef | null>(null);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

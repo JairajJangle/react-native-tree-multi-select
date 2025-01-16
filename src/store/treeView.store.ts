@@ -49,6 +49,7 @@ export type TreeViewState<ID> = {
 
 // Map to store individual tree view stores by id
 const treeViewStores = new Map<string, UseBoundStore<StoreApi<TreeViewState<unknown>>>>();
+// a function that returns a strongly typed version of `treeViewStores`
 const typedStore: <ID>() => Map<string, UseBoundStore<StoreApi<TreeViewState<ID>>>> = <ID>() => treeViewStores as Map<string, UseBoundStore<StoreApi<TreeViewState<ID>>>>;
 
 export function getTreeViewStore<ID>(id: string): UseBoundStore<StoreApi<TreeViewState<ID>>> {

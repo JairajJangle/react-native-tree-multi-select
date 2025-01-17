@@ -145,12 +145,12 @@ export function TreeViewUsageExample(){
 
 #### TreeNode
 
-| Property        | Type         | Required | Description                                                  |
-| --------------- | ------------ | -------- | ------------------------------------------------------------ |
-| `id`            | `string`     | Yes      | Unique identifier for the node                               |
-| `name`          | `string`     | Yes      | The display name of the node                                 |
-| `children`      | `TreeNode[]` | No       | An array of child `TreeNode` objects                         |
-| `[key: string]` | `any`        | No       | Any additional properties for the node <br />(May be useful to perform search on) |
+| Property        | Type                     | Required | Description                                                  |
+| --------------- | ------------------------ | -------- | ------------------------------------------------------------ |
+| `id`            | `ID` (default: `string`) | Yes      | Unique identifier for the node                               |
+| `name`          | `string`                 | Yes      | The display name of the node                                 |
+| `children`      | `TreeNode<ID>[]`         | No       | An array of child `TreeNode<ID>` objects                     |
+| `[key: string]` | `any`                    | No       | Any additional properties for the node <br />(May be useful to perform search on) |
 
 ---
 

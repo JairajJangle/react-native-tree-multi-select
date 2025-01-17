@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.7.0...v1.7.1) (2025-01-17)
+
+
+### Bug Fixes
+
+* ci android setup potential fix ([fe9b562](https://github.com/JairajJangle/react-native-tree-multi-select/commit/fe9b562ecc4b25d6c09823ed366bd28a3bd3a792))
+
 # [1.7.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.6.1...v1.7.0) (2024-12-22)
 
 

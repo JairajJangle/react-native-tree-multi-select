@@ -17,6 +17,7 @@ import {
 } from './screens/SelectionPropagationScreens';
 import packageJson from '../../package.json';
 import { TwoTreeViewsScreen } from "./screens/TwoTreeViewsScreen";
+import CustomNodeID from './screens/CustomNodeIDScreen';
 
 const data: ShowcaseExampleScreenSectionType[] = [
   {
@@ -57,6 +58,11 @@ const data: ShowcaseExampleScreenSectionType[] = [
         slug: 'custom-row-item',
         getScreen: () => CustomNodeRowViewScreen,
       },
+      {
+        name: 'Custom Node ID',
+        slug: 'custom-node-id',
+        getScreen: () => CustomNodeID
+      }
     ],
   },
   {

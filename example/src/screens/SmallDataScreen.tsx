@@ -17,7 +17,7 @@ import {
 } from 'react-native-tree-multi-select';
 
 import { styles } from './screens.styles';
-import { generateTreeList } from '../utils/sampleDataGenerator';
+import { defaultID, generateTreeList } from '../utils/sampleDataGenerator';
 
 interface Props {
     selectionPropagation?: SelectionPropagation;
@@ -26,7 +26,7 @@ interface Props {
 export default function SmallDataScreen(props: Props) {
     const { selectionPropagation } = props;
 
-    const sampleData = React.useRef(generateTreeList(5, 4, 3));
+    const sampleData = React.useRef(generateTreeList(5, 4, 3, defaultID, `1`));
     const treeViewRef = React.useRef<TreeViewRef | null>(null);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

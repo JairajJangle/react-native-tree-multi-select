@@ -7,12 +7,12 @@ import { getTreeViewStore } from "../store/treeView.store";
  * @param {boolean} [forceCheck] - Optional. If provided, will force the check state of the nodes to be this value.
  * If not provided, the check state will be toggled based on the current state.
  */
-export function toggleCheckboxes(
+export function toggleCheckboxes<ID>(
     storeId: string,
-    ids: string[],
+    ids: ID[],
     forceCheck?: boolean
 ) {
-    const treeViewStore = getTreeViewStore(storeId);
+    const treeViewStore = getTreeViewStore<ID>(storeId);
     const {
         checked,
         updateChecked,
@@ -32,10 +32,10 @@ export function toggleCheckboxes(
     const tempIndeterminate = new Set(indeterminate);
 
     // Keep track of nodes that have been toggled or affected.
-    const affectedNodes = new Set<string>();
+    const affectedNodes = new Set<ID>();
 
     // Memoization maps for node depths.
-    const nodeDepths = new Map<string, number>();
+    const nodeDepths = new Map<ID, number>();
 
     // Step 1: Toggle the clicked nodes and their children without updating parents yet.
     ids.forEach((id) => {
@@ -66,11 +66,11 @@ export function toggleCheckboxes(
     });
 
     // Step 2: Collect all affected parent nodes.
-    const nodesToUpdate = new Set<string>();
+    const nodesToUpdate = new Set<ID>();
 
     if (toParents) {
         affectedNodes.forEach((id) => {
-            let currentNodeId: string | undefined = id;
+            let currentNodeId: ID | undefined = id;
             while (currentNodeId) {
                 const parentNodeId = childToParentMap.get(currentNodeId);
                 if (parentNodeId) {
@@ -100,7 +100,7 @@ export function toggleCheckboxes(
      * @param rootId - The ID of the root node to start updating from.
      * @param childrenChecked - The desired checked state for children.
      */
-    function updateChildrenIteratively(rootId: string, childrenChecked: boolean) {
+    function updateChildrenIteratively(rootId: ID, childrenChecked: boolean) {
         const stack = [rootId];
 
         while (stack.length > 0) {
@@ -130,13 +130,13 @@ export function toggleCheckboxes(
      * @param nodeId - The ID of the node to get the depth for.
      * @returns The depth of the node.
      */
-    function getNodeDepth(nodeId: string): number {
+    function getNodeDepth(nodeId: ID): number {
         if (nodeDepths.has(nodeId)) {
             return nodeDepths.get(nodeId)!;
         }
 
         let depth = 0;
-        let currentNodeId: string | undefined = nodeId;
+        let currentNodeId: ID | undefined = nodeId;
         while (currentNodeId) {
             const parentNodeId = childToParentMap.get(currentNodeId);
             if (parentNodeId) {
@@ -155,7 +155,7 @@ export function toggleCheckboxes(
      * Function to update the state of a node based on its children's states.
      * @param nodeId - The ID of the node to update.
      */
-    function updateNodeState(nodeId: string) {
+    function updateNodeState(nodeId: ID) {
         const node = nodeMap.get(nodeId);
         if (!node || !node.children || node.children.length === 0) {
             // Leaf nodes are already updated.

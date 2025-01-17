@@ -3,7 +3,7 @@ import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
 import { NodeRowProps } from "react-native-tree-multi-select";
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-export const CustomNodeRowView = React.memo(_CustomNodeRowView);
+export const CustomNodeRowView = React.memo(_CustomNodeRowView) as typeof _CustomNodeRowView;
 
 const VerticalLine = () => (
     <View style={styles.verticalLineStyle} />
@@ -23,7 +23,7 @@ const Levels = ({
     );
 };
 
-function _CustomNodeRowView(props: NodeRowProps) {
+function _CustomNodeRowView<ID = string>(props: NodeRowProps<ID>) {
     const { node, level, checkedValue, isExpanded, onCheck, onExpand } = props;
 
     const backgroundColor =

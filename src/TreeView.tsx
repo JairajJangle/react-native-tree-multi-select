@@ -23,9 +23,9 @@ import usePreviousState from './utils/usePreviousState';
 import { useShallow } from "zustand/react/shallow";
 import uuid from "react-native-uuid";
 import useDeepCompareEffect from "./utils/useDeepCompareEffect";
+import { typedMemo } from './utils/typedMemo';
 
-const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
-  (props, ref) => {
+function _innerTreeView<ID>(props: TreeViewProps<ID>, ref: React.ForwardedRef<TreeViewRef<ID>>) {
     const {
       data,
 
@@ -69,7 +69,7 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       setSelectionPropagation,
 
       cleanUpTreeViewStore,
-    } = useTreeViewStore(storeId)(useShallow(
+    } = useTreeViewStore<ID>(storeId)(useShallow(
       state => ({
         expanded: state.expanded,
         updateExpanded: state.updateExpanded,
@@ -101,11 +101,11 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       expandAll: () => expandAll(storeId),
       collapseAll: () => collapseAll(storeId),
 
-      expandNodes: (ids: string[]) => expandNodes(storeId, ids),
-      collapseNodes: (ids: string[]) => collapseNodes(storeId, ids),
+      expandNodes: (ids: ID[]) => expandNodes(storeId, ids),
+      collapseNodes: (ids: ID[]) => collapseNodes(storeId, ids),
 
-      selectNodes: (ids: string[]) => selectNodes(ids),
-      unselectNodes: (ids: string[]) => unselectNodes(ids),
+      selectNodes: (ids: ID[]) => selectNodes(ids),
+      unselectNodes: (ids: ID[]) => unselectNodes(ids),
 
       setSearchText
     }));
@@ -129,11 +129,11 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       expandNodes(storeId, preExpandedIds);
     }, [data]);
 
-    function selectNodes(ids: string[]) {
+    function selectNodes(ids: ID[]) {
       toggleCheckboxes(storeId, ids, true);
     }
 
-    function unselectNodes(ids: string[]) {
+    function unselectNodes(ids: ID[]) {
       toggleCheckboxes(storeId, ids, false);
     }
 
@@ -142,7 +142,7 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
       updateSearchKeys(keys);
     }
 
-    const getIds = React.useCallback((node: TreeNode): string[] => {
+    const getIds = React.useCallback((node: TreeNode<ID>): ID[] => {
       if (!node.children || node.children.length === 0) {
         return [node.id];
       } else {
@@ -167,7 +167,7 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
         });
       }
       else if (prevSearchText && prevSearchText !== "") {
-        /* Collapse all nodes only if previous search query was non-empty: this is 
+        /* Collapse all nodes only if previous search query was non-empty: this is
         done to prevent node collapse on first render if preExpandedIds is provided */
         InteractionManager.runAfterInteractions(() => {
           updateExpanded(new Set());
@@ -202,7 +202,9 @@ const _TreeView = React.forwardRef<TreeViewRef, TreeViewProps>(
         CustomNodeRowComponent={CustomNodeRowComponent}
       />
     );
-  }
-);
+}
+const _TreeView = React.forwardRef(_innerTreeView) as <ID>(
+  props: TreeViewProps<ID> & { ref?: React.ForwardedRef<TreeViewRef<ID>> }
+) => ReturnType<typeof _innerTreeView>;
 
-export const TreeView = React.memo(_TreeView);
+export const TreeView = typedMemo<typeof _TreeView>(_TreeView);

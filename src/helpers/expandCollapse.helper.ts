@@ -8,8 +8,8 @@ import { getTreeViewStore } from "../store/treeView.store";
  *
  * @param id - The ID of the tree node to toggle.
  */
-export function handleToggleExpand(storeId: string, id: string) {
-    const treeViewStore = getTreeViewStore(storeId);
+export function handleToggleExpand<ID>(storeId: string, id: ID) {
+    const treeViewStore = getTreeViewStore<ID>(storeId);
     const {
         expanded,
         updateExpanded,
@@ -72,14 +72,14 @@ export function collapseAll(storeId: string) {
  * its ancestors up to the root.
  * @param ids - Ids of nodes to expand.
  */
-export function expandNodes(storeId: string, ids: string[]) {
-    const treeViewStore = getTreeViewStore(storeId);
+export function expandNodes<ID>(storeId: string, ids: ID[]) {
+    const treeViewStore = getTreeViewStore<ID>(storeId);
     const { expanded, updateExpanded, childToParentMap } = treeViewStore.getState();
     const newExpanded = new Set(expanded);
-    const processedIds = new Set<string>();
+    const processedIds = new Set<ID>();
 
     ids.forEach((id) => {
-        let currentId: string | undefined = id;
+        let currentId: ID | undefined = id;
         while (currentId && !processedIds.has(currentId)) {
             newExpanded.add(currentId);
             processedIds.add(currentId);
@@ -95,13 +95,13 @@ export function expandNodes(storeId: string, ids: string[]) {
  * its descendants.
  * @param ids - Ids of nodes to collapse.
  */
-export function collapseNodes(storeId: string, ids: string[]) {
-    const treeViewStore = getTreeViewStore(storeId);
+export function collapseNodes<ID>(storeId: string, ids: ID[]) {
+    const treeViewStore = getTreeViewStore<ID>(storeId);
     const { expanded, updateExpanded, nodeMap } = treeViewStore.getState();
     const newExpanded = new Set(expanded);
 
     // Use an iterative approach to remove all descendants from the expanded set
-    const deleteChildrenFromExpanded = (nodeId: string) => {
+    const deleteChildrenFromExpanded = (nodeId: ID) => {
         const stack = [nodeId];
 
         while (stack.length > 0) {

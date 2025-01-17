@@ -1,30 +1,30 @@
 import type { SelectionPropagation, TreeNode } from "src/types/treeView.types";
 import { create, StoreApi, UseBoundStore } from 'zustand';
 
-export type TreeViewState = {
+export type TreeViewState<ID> = {
     // Store ids of checked tree nodes
-    checked: Set<string>;
-    updateChecked: (checked: Set<string>) => void;
+    checked: Set<ID>;
+    updateChecked: (checked: Set<ID>) => void;
 
     // Store ids of indeterminate state nodes
-    indeterminate: Set<string>;
-    updateIndeterminate: (indeterminate: Set<string>) => void;
+    indeterminate: Set<ID>;
+    updateIndeterminate: (indeterminate: Set<ID>) => void;
 
     // Store ids of expanded parent nodes
-    expanded: Set<string>;
-    updateExpanded: (expanded: Set<string>) => void;
+    expanded: Set<ID>;
+    updateExpanded: (expanded: Set<ID>) => void;
 
     // Store initial tree view data exactly as passed by the consumer
-    initialTreeViewData: TreeNode[];
-    updateInitialTreeViewData: (initialTreeViewData: TreeNode[]) => void;
+    initialTreeViewData: TreeNode<ID>[];
+    updateInitialTreeViewData: (initialTreeViewData: TreeNode<ID>[]) => void;
 
     // Map to store the id to the tree node map
-    nodeMap: Map<string, TreeNode>;
-    updateNodeMap: (nodeMap: Map<string, TreeNode>) => void;
+    nodeMap: Map<ID, TreeNode<ID>>;
+    updateNodeMap: (nodeMap: Map<ID, TreeNode<ID>>) => void;
 
     // Map to store child id to parent id map
-    childToParentMap: Map<string, string>;
-    updateChildToParentMap: (childToParentMap: Map<string, string>) => void;
+    childToParentMap: Map<ID, ID>;
+    updateChildToParentMap: (childToParentMap: Map<ID, ID>) => void;
 
     // Search text state
     searchText: string;
@@ -35,8 +35,8 @@ export type TreeViewState = {
     updateSearchKeys: (searchKeys: string[]) => void;
 
     // To store inner most children ids - required to un/select all filtered-only nodes
-    innerMostChildrenIds: string[];
-    updateInnerMostChildrenIds: (innerMostChildrenIds: string[]) => void;
+    innerMostChildrenIds: ID[];
+    updateInnerMostChildrenIds: (innerMostChildrenIds: ID[]) => void;
 
     selectionPropagation: SelectionPropagation;
     setSelectionPropagation: (
@@ -48,30 +48,32 @@ export type TreeViewState = {
 };
 
 // Map to store individual tree view stores by id
-const treeViewStores = new Map<string, UseBoundStore<StoreApi<TreeViewState>>>();
+const treeViewStores = new Map<string, UseBoundStore<StoreApi<TreeViewState<unknown>>>>();
+// a function that returns a strongly typed version of `treeViewStores`
+const typedStore: <ID>() => Map<string, UseBoundStore<StoreApi<TreeViewState<ID>>>> = <ID>() => treeViewStores as Map<string, UseBoundStore<StoreApi<TreeViewState<ID>>>>;
 
-export function getTreeViewStore(id: string): UseBoundStore<StoreApi<TreeViewState>> {
-    if (!treeViewStores.has(id)) {
-        const store = create<TreeViewState>((set) => ({
+export function getTreeViewStore<ID>(id: string): UseBoundStore<StoreApi<TreeViewState<ID>>> {
+    if (!typedStore<ID>().has(id)) {
+        const store = create<TreeViewState<ID>>((set) => ({
             checked: new Set(),
-            updateChecked: (checked: Set<string>) => set({ checked }),
+            updateChecked: (checked: Set<ID>) => set({ checked }),
 
             indeterminate: new Set(),
-            updateIndeterminate: (indeterminate: Set<string>) => set({ indeterminate }),
+            updateIndeterminate: (indeterminate: Set<ID>) => set({ indeterminate }),
 
-            expanded: new Set<string>(),
-            updateExpanded: (expanded: Set<string>) => set({ expanded }),
+            expanded: new Set<ID>(),
+            updateExpanded: (expanded: Set<ID>) => set({ expanded }),
 
             initialTreeViewData: [],
-            updateInitialTreeViewData: (initialTreeViewData: TreeNode[]) => set({
+            updateInitialTreeViewData: (initialTreeViewData: TreeNode<ID>[]) => set({
                 initialTreeViewData
             }),
 
-            nodeMap: new Map<string, TreeNode>(),
-            updateNodeMap: (nodeMap: Map<string, TreeNode>) => set({ nodeMap }),
+            nodeMap: new Map<ID, TreeNode<ID>>(),
+            updateNodeMap: (nodeMap: Map<ID, TreeNode<ID>>) => set({ nodeMap }),
 
-            childToParentMap: new Map<string, string>(),
-            updateChildToParentMap: (childToParentMap: Map<string, string>) => set({
+            childToParentMap: new Map<ID, ID>(),
+            updateChildToParentMap: (childToParentMap: Map<ID, ID>) => set({
                 childToParentMap
             }),
 
@@ -82,7 +84,7 @@ export function getTreeViewStore(id: string): UseBoundStore<StoreApi<TreeViewSta
             updateSearchKeys: (searchKeys: string[]) => set({ searchKeys }),
 
             innerMostChildrenIds: [],
-            updateInnerMostChildrenIds: (innerMostChildrenIds: string[]) => set({
+            updateInnerMostChildrenIds: (innerMostChildrenIds: ID[]) => set({
                 innerMostChildrenIds
             }),
 
@@ -99,10 +101,10 @@ export function getTreeViewStore(id: string): UseBoundStore<StoreApi<TreeViewSta
                 set({
                     checked: new Set(),
                     indeterminate: new Set(),
-                    expanded: new Set<string>(),
+                    expanded: new Set<ID>(),
                     initialTreeViewData: [],
-                    nodeMap: new Map<string, TreeNode>(),
-                    childToParentMap: new Map<string, string>(),
+                    nodeMap: new Map<ID, TreeNode<ID>>(),
+                    childToParentMap: new Map<ID, ID>(),
                     searchText: "",
                     searchKeys: [""],
                     innerMostChildrenIds: [],
@@ -110,11 +112,11 @@ export function getTreeViewStore(id: string): UseBoundStore<StoreApi<TreeViewSta
                 }),
         }));
 
-        treeViewStores.set(id, store);
+        typedStore<ID>().set(id, store);
     }
-    return treeViewStores.get(id)!;
+    return typedStore<ID>().get(id)!;
 }
 
-export function useTreeViewStore(id: string) {
-    return getTreeViewStore(id);
+export function useTreeViewStore<ID = string>(id: string) {
+    return getTreeViewStore<ID>(id);
 }

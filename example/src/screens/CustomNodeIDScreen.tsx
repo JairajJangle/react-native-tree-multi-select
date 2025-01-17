@@ -1,27 +1,39 @@
-import * as React from 'react';
+import { debounce } from "lodash";
+import React, { useEffect, useRef } from "react";
+import { SafeAreaView, View, Button } from "react-native";
+import { SelectionPropagation, TreeViewRef, TreeView } from "react-native-tree-multi-select";
+import SearchInput from "../components/SearchInput";
+import { generateTreeList, TreeNode } from "../utils/sampleDataGenerator";
+import { styles } from "./screens.styles";
+import { CustomNodeRowView } from "../components/CustomNodeRowView";
 
-import {
-    Button,
-    SafeAreaView,
-    View
-} from 'react-native';
+interface Props {
+    selectionPropagation?: SelectionPropagation;
+}
 
-import SearchInput from '../components/SearchInput';
+const customMapper: (parentName?: string) => (it: TreeNode<number>, idx: number) => TreeNode<number> = (parentStr?: string) => (it: TreeNode<number>, idx: number) => {
+  const name = `${parentStr ? `${parentStr}.` : ''}${idx + 1}`;
+  return {
+    ...it,
+    name,
+    children: it.children?.map(customMapper(name)) ?? []
+  } as TreeNode<number>
+}
 
-import debounce from "lodash/debounce";
+export default function CustomNodeID(props: Props) {
+    const { selectionPropagation } = props;
 
-import {
-    TreeView,
-    type TreeViewRef
-} from 'react-native-tree-multi-select';
+    const idRef = useRef<number>(1);
 
-import { styles } from './screens.styles';
-import { defaultID, generateTreeList } from '../utils/sampleDataGenerator';
-import { CustomNodeRowView } from '../components/CustomNodeRowView';
+    useEffect(() => {
+      return () => {
+        idRef.current = 1
+      };
+    }, [])
 
-export default function CustomNodeRowViewScreen() {
-    const sampleData = React.useRef(generateTreeList(50, 4, 5, defaultID, "1"));
-    const treeViewRef = React.useRef<TreeViewRef | null>(null);
+    const sampleData = React.useMemo(() => generateTreeList<number>(30, 4, 5, (_prev, _idx) => idRef.current++, 1).map(customMapper()), []);
+    console.log(sampleData);
+    const treeViewRef = React.useRef<TreeViewRef<number> | null>(null);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const debouncedSetSearchText = React.useCallback(
@@ -34,12 +46,12 @@ export default function CustomNodeRowViewScreen() {
     );
 
     const handleSelectionChange = (
-        _checkedIds: string[],
-        _indeterminateIds: string[]
+        _checkedIds: number[],
+        _indeterminateIds: number[]
     ) => {
         // NOTE: Handle _checkedIds and _indeterminateIds here
     };
-    const handleExpanded = (_expandedIds: string[]) => {
+    const handleExpanded = (_expandedIds: number[]) => {
         // NOTE: Handle _expandedIds here
     };
 
@@ -88,12 +100,12 @@ export default function CustomNodeRowViewScreen() {
 
             <View
                 style={styles.treeViewParent}>
-                <TreeView
+                <TreeView<number>
                     ref={treeViewRef}
-                    data={sampleData.current}
+                    data={sampleData}
                     onCheck={handleSelectionChange}
                     onExpand={handleExpanded}
-
+                    selectionPropagation={selectionPropagation}
                     CustomNodeRowComponent={CustomNodeRowView}
                 />
             </View>

@@ -6,21 +6,21 @@ import {
 /**
  * Initialize the maps for tracking tree nodes and their parent-child relationships.
  *
- * This function is intended to be called once, during component initialization, 
+ * This function is intended to be called once, during component initialization,
  * with the initial tree data and any preselected node IDs.
  *
  * @param initialData - An array of TreeNode objects that represent the initial tree structure.
  * @param preselectedIds - An optional array of TreeNode IDs that should be preselected.
  */
-export function initializeNodeMaps(storeId: string, initialData: TreeNode[]) {
-    const treeViewStore = getTreeViewStore(storeId);
+export function initializeNodeMaps<ID>(storeId: string, initialData: TreeNode<ID>[]) {
+    const treeViewStore = getTreeViewStore<ID>(storeId);
     const {
         updateNodeMap,
         updateChildToParentMap
     } = treeViewStore.getState();
 
-    const tempNodeMap: Map<string, TreeNode> = new Map();
-    const tempChildToParentMap: Map<string, string> = new Map();
+    const tempNodeMap: Map<ID, TreeNode<ID>> = new Map();
+    const tempChildToParentMap: Map<ID, ID> = new Map();
 
     /**
      * Recursively processes nodes, adding them to the nodeMap and childToParentMap.
@@ -29,8 +29,8 @@ export function initializeNodeMaps(storeId: string, initialData: TreeNode[]) {
      * @param parentId - The ID of the parent node, if applicable.
      */
     const processNodes = (
-        nodes: TreeNode[],
-        parentId: string | null = null
+        nodes: TreeNode<ID>[],
+        parentId: ID | null = null
     ) => {
         nodes.forEach((node) => {
             // Each node is added to the nodeMap with its ID as the key

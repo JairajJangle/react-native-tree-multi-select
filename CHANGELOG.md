@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.7.1...v1.8.0) (2025-01-17)
+
+
+### Features
+
+* force release: updated readme ([508a45f](https://github.com/JairajJangle/react-native-tree-multi-select/commit/508a45f2e623e7251a985b83736e0a66f4ff378f))
+
 ## [1.7.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.7.0...v1.7.1) (2025-01-17)
 
 

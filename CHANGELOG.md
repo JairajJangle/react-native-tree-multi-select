@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.8.0...v1.8.1) (2025-02-02)
+
+
+### Bug Fixes
+
+* upgrade react-native-paper from 5.12.5 to 5.13.1 ([36daeea](https://github.com/JairajJangle/react-native-tree-multi-select/commit/36daeeafa71b8e9238736c6be68a34a5f008d68d))
+
 # [1.8.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.7.1...v1.8.0) (2025-01-17)
 
 

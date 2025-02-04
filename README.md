@@ -115,13 +115,17 @@ export function TreeViewUsageExample(){
 
 ### Properties
 
+#### TreeViewProps`<ID = string>`
+
+*The `TreeViewProps` interface defines the properties for the tree view component.*
+
 | Property                           | Type                                                         | Required | Description                                                  |
 | ---------------------------------- | ------------------------------------------------------------ | -------- | ------------------------------------------------------------ |
-| `data`                             | [TreeNode](#treenode)                                        | Yes      | An array of `TreeNode` objects                               |
-| `onCheck`                          | `(checkedIds: string[], indeterminateIds: string[]) => void` | No       | Callback when a checkbox state changes                       |
-| `onExpand`                         | `(expandedIds: string[]) => void`                            | No       | Callback when a node is expanded                             |
-| `preselectedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-selected                |
-| `preExpandedIds`                   | `string[]`                                                   | No       | An array of `id`s that should be pre-expanded                |
+| `data`                             | [TreeNode](#treenode)`<ID = string>[]`                       | Yes      | An array of `TreeNode` objects                               |
+| `onCheck`                          | `(checkedIds: ID[], indeterminateIds: ID[]) => void` | No       | Callback when a checkbox state changes                       |
+| `onExpand`                         | `(expandedIds: ID[]) => void`                           | No       | Callback when a node is expanded                             |
+| `preselectedIds`                   | `ID[]`                                                  | No       | An array of `id`s that should be pre-selected                |
+| `preExpandedIds`                   | `ID[]`                                                  | No       | An array of `id`s that should be pre-expanded                |
 | `selectionPropagation`     | [SelectionPropagation](#selectionpropagation) | No       | Control Selection Propagation Behavior. Choose whether you want to auto-select children or parents. |
 | `indentationMultiplier`            | `number`                                                     | No       | Indentation (`marginStart`) per level (defaults to 15)       |
 | `treeFlashListProps`               | [TreeFlatListProps](#treeflatlistprops)                      | No       | Props for the flash list                                     |
@@ -129,21 +133,26 @@ export function TreeViewUsageExample(){
 | `CheckboxComponent`                | `ComponentType<`[CheckBoxViewProps](#checkboxviewprops)`>`   | No       | A custom checkbox component. Defaults to React Native Paper's Checkbox |
 | `ExpandCollapseIconComponent`      | `ComponentType<`[ExpandIconProps](#expandiconprops)`>`       | No       | A custom expand/collapse icon component                      |
 | `ExpandCollapseTouchableComponent` | `ComponentType<`[TouchableOpacityProps](https://reactnative.dev/docs/touchableopacity#props)`>` | No       | A custom expand/collapse touchable component                 |
-| `CustomNodeRowComponent`           | `React.ComponentType<`[NodeRowProps](#noderowprops)`>`       | No       | Custom row item component                                    |
+| `CustomNodeRowComponent`           | `React.ComponentType<`[NodeRowProps](#noderowprops)`<ID>>`   | No       | Custom row item component                                    |
 
-ℹ️ If `CustomNodeRowComponent` is provided then below props are not applied:
+##### Notes
 
-1. `indentationMultiplier`
-2. `checkBoxViewStyleProps`
-3. `CheckboxComponent`
-4. `ExpandCollapseIconComponent`
-5. `ExpandCollapseTouchableComponent`.
-
-⚠️ If the tree view doesn't scroll if rendered in a complex nested scroll view/s then try setting the `renderScrollComponent` value in  `treeFlashListProps` to `ScrollView` from `react-native-gesture-handler`.
+- The `ID` type parameter allows flexibility in specifying the type of node identifiers (e.g., `string`, `number`, or custom types).
+- ℹ️ If `CustomNodeRowComponent` is provided then below props are not applied:
+  1. `indentationMultiplier`
+  1. `checkBoxViewStyleProps`
+  1. `CheckboxComponent`
+  1. `BuiltInCheckBoxViewStyleProps`
+  1. `ExpandCollapseIconComponent`
+  1. `ExpandCollapseTouchableComponent`.
+  
+- ⚠️ If the tree view doesn't scroll if rendered in a complex nested scroll view/s then try setting the `renderScrollComponent` value in  `treeFlashListProps` to `ScrollView` from `react-native-gesture-handler`.
 
 ---
 
-#### TreeNode
+#### TreeNode`<ID = string>`
+
+*The `TreeNode` interface defines the properties for individual item of the tree view*
 
 | Property        | Type                     | Required | Description                                                  |
 | --------------- | ------------------------ | -------- | ------------------------------------------------------------ |
@@ -154,7 +163,9 @@ export function TreeViewUsageExample(){
 
 ---
 
-#### TreeViewRef
+#### TreeViewRef`<ID = string>`
+
+*The `TreeViewRef` interface defines the properties for the ref object of the tree view component*
 
 | Property              | Type                                                  | Description                                                  |
 | --------------------- | ----------------------------------------------------- | ------------------------------------------------------------ |
@@ -164,15 +175,17 @@ export function TreeViewUsageExample(){
 | `unselectAllFiltered` | `() => void`                                          | Unselects all **filtered** nodes                             |
 | `expandAll`           | `() => void`                                          | Expands all nodes                                            |
 | `collapseAll`         | `() => void`                                          | Collapses all nodes                                          |
-| `expandNodes`           | `(ids: string[]) => void`                           | Expands specified nodes    |
-| `collapseNodes`           | `(ids: string[]) => void`                             | Collapses specified nodes    |
-| `selectNodes`           | `(ids: string[]) => void`                           | Selects specified nodes    |
-| `unSelectNodes`           | `(ids: string[]) => void`                           | Unselects specified nodes    |
+| `expandNodes`           | `(ids: ID[]) => void`                          | Expands specified nodes    |
+| `collapseNodes`           | `(ids: ID[]) => void`                           | Collapses specified nodes    |
+| `selectNodes`           | `(ids: ID[]) => void`                         | Selects specified nodes    |
+| `unSelectNodes`           | `(ids: ID[]) => void`                         | Unselects specified nodes    |
 | `setSearchText`       | `(searchText: string, searchKeys?: string[]) => void` | Set the search text and optionally the search keys. Default search key is "name"<br /><br />Recommended to call this inside a debounced function if you find any performance issue otherwise. |
 
 ---
 
 #### SelectionPropagation
+
+*The `SelectionPropagation` interface defines the selection propagation behaviour of the tree view*
 
 | Property     | Type      | Required | Description                                                  |
 | ------------ | --------- | -------- | ------------------------------------------------------------ |
@@ -183,11 +196,13 @@ export function TreeViewUsageExample(){
 
 #### TreeFlatListProps
 
-All properties of `FlashListProps`(from `@shopify/flash-list`) except for `data` and `renderItem`
+*All properties of `FlashListProps`(from `@shopify/flash-list`) except for `data` and `renderItem`*
 
 ---
 
 #### BuiltInCheckBoxViewStyleProps
+
+*This interface allows you to customize the style of the built-in checkbox component that is rendered in the tree view by default. Overriden if `CustomNodeRowComponent` is used.*
 
 | Property                   | Type                             | Required | Description                                            |
 | -------------------------- | -------------------------------- | -------- | ------------------------------------------------------ |
@@ -225,7 +240,7 @@ Type: `boolean` OR `"indeterminate"`
 
 ---
 
-#### NodeRowProps
+#### NodeRowProps`<ID = string>`
 
 | Property       | Type                                    | Required | Description                                             |
 | -------------- | --------------------------------------- | -------- | ------------------------------------------------------- |

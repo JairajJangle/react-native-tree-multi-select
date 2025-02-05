@@ -8,6 +8,10 @@ import type { FlashListProps } from "@shopify/flash-list";
 import {
     type Props as RNPaperCheckboxAndroidProps
 } from 'react-native-paper/src/components/Checkbox/CheckboxAndroid';
+import {
+    ScrollToNodeHandlerRef,
+    ScrollToNodeParams
+} from "../handlers/ScrollToNodeHandler";
 
 export type CheckboxValueType = boolean | 'indeterminate';
 
@@ -64,10 +68,16 @@ export interface NodeProps<ID> extends TreeItemCustomizations<ID> {
 
 export interface NodeListProps<ID> extends TreeItemCustomizations<ID> {
     treeFlashListProps?: TreeFlatListProps;
+
+    scrollToNodeHandlerRef: React.RefObject<ScrollToNodeHandlerRef<ID>>;
+    initialScrollNodeID?: ID;
+
     storeId: string;
 }
 
-export interface TreeViewProps<ID = string> extends Omit<NodeListProps<ID>, "storeId"> {
+export interface TreeViewProps<ID = string> extends Omit<
+    NodeListProps<ID>, "storeId" | "scrollToNodeHandlerRef"
+> {
     data: TreeNode<ID>[];
 
     onCheck?: (checkedIds: ID[], indeterminateIds: ID[]) => void;
@@ -120,6 +130,8 @@ export interface TreeViewRef<ID = string> {
     unselectNodes: (ids: ID[]) => void;
 
     setSearchText: (searchText: string, searchKeys?: string[]) => void;
+
+    scrollToNodeID: (scrollToNodeParams: ScrollToNodeParams<ID>) => void;
 }
 
 export interface SelectionPropagation {

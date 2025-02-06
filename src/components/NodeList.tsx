@@ -27,6 +27,7 @@ import { CustomExpandCollapseIcon } from "./CustomExpandCollapseIcon";
 import { defaultIndentationMultiplier } from "../constants/treeView.constants";
 import { useShallow } from 'zustand/react/shallow';
 import { typedMemo } from "../utils/typedMemo";
+import { ScrollToNodeHandler } from "../handlers/ScrollToNodeHandler";
 
 const NodeList = typedMemo(_NodeList);
 export default NodeList;
@@ -34,6 +35,9 @@ export default NodeList;
 function _NodeList<ID>(props: NodeListProps<ID>) {
     const {
         storeId,
+
+        scrollToNodeHandlerRef,
+        initialScrollNodeID,
 
         treeFlashListProps,
         checkBoxViewStyleProps,
@@ -60,6 +64,10 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
             searchText: state.searchText,
         })
     ));
+
+    const flashListRef = React.useRef<FlashList<__FlattenedTreeNode__<ID>> | null>(null);
+
+    const [initialScrollIndex, setInitialScrollIndex] = React.useState<number>(-1);
 
     // First we filter the tree as per the search term and keys
     const filteredTree = React.useMemo(() => getFilteredTreeData<ID>(
@@ -112,17 +120,29 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
     ]);
 
     return (
-        <FlashList
-            estimatedItemSize={36}
-            removeClippedSubviews={true}
-            keyboardShouldPersistTaps="handled"
-            drawDistance={50}
-            ListHeaderComponent={<HeaderFooterView />}
-            ListFooterComponent={<HeaderFooterView />}
-            {...treeFlashListProps}
-            data={flattenedFilteredNodes}
-            renderItem={nodeRenderer}
-        />
+        <>
+            <ScrollToNodeHandler
+                ref={scrollToNodeHandlerRef}
+                storeId={storeId}
+                flashListRef={flashListRef}
+                flattenedFilteredNodes={flattenedFilteredNodes}
+                setInitialScrollIndex={setInitialScrollIndex}
+                initialScrollNodeID={initialScrollNodeID} />
+
+            <FlashList
+                ref={flashListRef}
+                estimatedItemSize={36}
+                initialScrollIndex={initialScrollIndex}
+                removeClippedSubviews={true}
+                keyboardShouldPersistTaps="handled"
+                drawDistance={50}
+                ListHeaderComponent={<HeaderFooterView />}
+                ListFooterComponent={<HeaderFooterView />}
+                {...treeFlashListProps}
+                data={flattenedFilteredNodes}
+                renderItem={nodeRenderer}
+            />
+        </>
     );
 };
 

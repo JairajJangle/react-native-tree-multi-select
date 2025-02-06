@@ -18,6 +18,7 @@ import {
 import packageJson from '../../package.json';
 import { TwoTreeViewsScreen } from "./screens/TwoTreeViewsScreen";
 import CustomNodeID from './screens/CustomNodeIDScreen';
+import ControlsDemoScreen from "./screens/ControlsDemoScreen";
 
 const data: ShowcaseExampleScreenSectionType[] = [
   {
@@ -37,6 +38,11 @@ const data: ShowcaseExampleScreenSectionType[] = [
         name: 'Large Data',
         slug: 'large-data',
         getScreen: () => LargeDataScreen,
+      },
+      {
+        name: 'Adv. Controls',
+        slug: 'controls',
+        getScreen: () => ControlsDemoScreen,
       }
     ],
   },

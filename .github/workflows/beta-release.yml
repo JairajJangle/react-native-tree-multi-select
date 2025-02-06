@@ -58,7 +58,7 @@ jobs:
     env:
       TURBO_CACHE_DIR: .turbo/android
       ANDROID_HOME: /usr/local/lib/android/sdk
-      JAVA_HOME: /usr/lib/jvm/zulu-11-amd64
+      JAVA_HOME: /usr/lib/jvm/zulu-17-amd64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -87,7 +87,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '11'
+          java-version: '17'
 
       - name: Set up Android SDK
         if: env.turbo_cache_hit != 1
@@ -96,7 +96,7 @@ jobs:
           api-level: 30
           build-tools: 30.0.3
           ndk: "23.1.7779620"
-
+      
       - name: Create local.properties
         if: env.turbo_cache_hit != 1
         run: |

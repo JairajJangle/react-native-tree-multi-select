@@ -118,9 +118,7 @@ function _innerTreeView<ID>(
 
 		setSearchText,
 
-		scrollToNodeID: (scrollToNodeParams: ScrollToNodeParams<ID>) => {
-			scrollToNodeHandlerRef.current?.scrollToNodeID(scrollToNodeParams);
-		}
+		scrollToNodeID,
 	}));
 
 	const scrollToNodeHandlerRef = React.useRef<ScrollToNodeHandlerRef<ID>>(null);
@@ -157,6 +155,10 @@ function _innerTreeView<ID>(
 	function setSearchText(text: string, keys: string[] = ["name"]) {
 		updateSearchText(text);
 		updateSearchKeys(keys);
+	}
+
+	function scrollToNodeID(params: ScrollToNodeParams<ID>) {
+		scrollToNodeHandlerRef.current?.scrollToNodeID(params);
 	}
 
 	const getIds = React.useCallback((node: TreeNode<ID>): ID[] => {

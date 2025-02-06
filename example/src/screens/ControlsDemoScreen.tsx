@@ -7,6 +7,7 @@ import {
     View,
     Text,
     TextInput,
+    Switch
 } from 'react-native';
 
 import {
@@ -28,8 +29,25 @@ export default function ControlsDemoScreen() {
 
     const [dialogTitle, setDialogTitle] = React.useState("Enter Text");
     const [placeholder, setPlaceholder] = React.useState("Type here");
+
+    const [
+        showExpandScrolledNodeOption,
+        setShowExpandScrolledNodeOption
+    ] = React.useState(false);
+    const [expandScrolledNode, setExpandScrolledNode] = React.useState(false);
+
+    const latestExpandScrolledNode = React.useRef(expandScrolledNode);
+    React.useEffect(() => {
+        latestExpandScrolledNode.current = expandScrolledNode;
+    }, [expandScrolledNode]);
+
     const [visible, setVisible] = React.useState(false);
     const input = React.useRef("");
+
+    React.useEffect(() => {
+        if (!visible)
+            setShowExpandScrolledNodeOption(false);
+    }, [visible]);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const debouncedSetInput = React.useCallback(
@@ -98,12 +116,17 @@ export default function ControlsDemoScreen() {
     function scrollToNodeIDPressed() {
         setDialogTitle("Enter Node ID to Scroll To");
         setPlaceholder("Enter Single Node ID");
+        setShowExpandScrolledNodeOption(true);
         setVisible(true);
         onSubmitFnRef.current = scrollToNodeID;
     }
     function scrollToNodeID() {
         const nodeId = input.current.trim();
-        treeViewRef.current?.scrollToNodeID({ nodeId, animated: true });
+        treeViewRef.current?.scrollToNodeID({
+            nodeId,
+            animated: true,
+            expandScrolledNode: latestExpandScrolledNode.current
+        });
 
         setVisible(false);
         onSubmitFnRef.current = () => { };
@@ -135,8 +158,19 @@ export default function ControlsDemoScreen() {
                             autoFocus={true}
                             style={styles.input}
                             placeholder={placeholder}
-                            onChangeText={debouncedSetInput}
-                        />
+                            onChangeText={debouncedSetInput} />
+
+                        {showExpandScrolledNodeOption && (
+                            <View style={styles.expandScrolledNodeOptionView}>
+                                <Text style={styles.expandScrolledNodeOptionText}>
+                                    Expand scrolled node to show its children?
+                                </Text>
+                                <Switch
+                                    value={expandScrolledNode}
+                                    onValueChange={setExpandScrolledNode} />
+                            </View>
+                        )}
+
                         <View style={styles.buttonContainer}>
                             <Button title="Cancel" onPress={onDialogCancel} />
                             <Button title="Submit" onPress={onDialogSubmit} />
@@ -163,12 +197,8 @@ export default function ControlsDemoScreen() {
                     title='Unselect Nodes'
                     onPress={unselectNodesPressed} />
             </View>
-
             <View
-                style={[
-                    styles.selectionButtonRow,
-                    styles.selectionButtonBottomSingle
-                ]}>
+                style={styles.selectionButtonRow}>
                 <Button
                     title='Scroll To Node'
                     onPress={scrollToNodeIDPressed} />

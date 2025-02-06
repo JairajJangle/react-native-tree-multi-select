@@ -71,14 +71,29 @@ export function collapseAll(storeId: string) {
  * Expand tree nodes of given ids. If the id is of a child, it also expands
  * its ancestors up to the root.
  * @param ids - Ids of nodes to expand.
+ * @param _doNotExpandToShowChildren - If true, the function will not expand the ids to prevent 
+ * from showing their children.
  */
-export function expandNodes<ID>(storeId: string, ids: ID[]) {
+export function expandNodes<ID>(
+    storeId: string,
+    ids: ID[],
+    _doNotExpandToShowChildren: boolean = false,
+) {
     const treeViewStore = getTreeViewStore<ID>(storeId);
     const { expanded, updateExpanded, childToParentMap } = treeViewStore.getState();
     const newExpanded = new Set(expanded);
     const processedIds = new Set<ID>();
 
     ids.forEach((id) => {
+        if (_doNotExpandToShowChildren) {
+            const parentId = childToParentMap.get(id);
+
+            if (parentId === undefined)
+                return;
+            else
+                id = parentId;
+        }
+
         let currentId: ID | undefined = id;
         while (currentId && !processedIds.has(currentId)) {
             newExpanded.add(currentId);

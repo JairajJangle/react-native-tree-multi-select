@@ -50,6 +50,8 @@ interface Props<ID> {
 
 export interface ScrollToNodeParams<ID> {
   nodeId: ID;
+  expandScrolledNode?: boolean;
+
   animated?: boolean;
   viewOffset?: number;
   viewPosition?: number;
@@ -77,21 +79,26 @@ function _innerScrollToNodeHandler<ID>(
     initialScrollNodeID
   } = props;
 
+  const { expanded, childToParentMap } = useTreeViewStore<ID>(storeId)(useShallow(
+    state => ({
+      expanded: state.expanded,
+      childToParentMap: state.childToParentMap
+    })
+  ));
+
   React.useImperativeHandle(ref, () => ({
     scrollToNodeID: (params: ScrollToNodeParams<ID>) => {
       queuedScrollToNodeParams.current = params;
       // Mark that expansion is initiated.
       setExpandAndScrollToNodeQueue([ExpandQueueAction.EXPANDED]);
       // Trigger expansion logic (this may update the store and subsequently re-render the list).
-      expandNodes(storeId, [queuedScrollToNodeParams.current.nodeId]);
+      expandNodes(
+        storeId,
+        [queuedScrollToNodeParams.current.nodeId],
+        !queuedScrollToNodeParams.current.expandScrolledNode
+      );
     }
   }), [storeId]);
-
-  const { expanded } = useTreeViewStore<ID>(storeId)(useShallow(
-    state => ({
-      expanded: state.expanded,
-    })
-  ));
 
   // Ref to store the scroll parameters for the queued action.
   const queuedScrollToNodeParams = React.useRef<ScrollToNodeParams<ID> | null>(null);
@@ -124,14 +131,29 @@ function _innerScrollToNodeHandler<ID>(
     if (queuedScrollToNodeParams.current === null)
       return;
 
-    if (!expanded.has(queuedScrollToNodeParams.current.nodeId))
-      return;
-
     if (!isEqual(
       expandAndScrollToNodeQueue,
       [ExpandQueueAction.EXPANDED, ExpandQueueAction.RENDERED]
     )) {
       return;
+    }
+
+    // If node is set to not expand
+    if (!queuedScrollToNodeParams.current.expandScrolledNode) {
+      let parentId: ID | undefined;
+      // Get the parent's id of the node to scroll to
+      if (childToParentMap.has(queuedScrollToNodeParams.current.nodeId)) {
+        parentId = childToParentMap.get(queuedScrollToNodeParams.current.nodeId) as ID;
+      }
+
+      // Ensure if the parent is expanded before proceeding to scroll to the node
+      if (parentId && !expanded.has(parentId))
+        return;
+    }
+    // If node is set to expand
+    else {
+      if (!expanded.has(queuedScrollToNodeParams.current.nodeId))
+        return;
     }
 
     const {
@@ -166,7 +188,7 @@ function _innerScrollToNodeHandler<ID>(
     }
 
     scrollToItem();
-  }, [expanded, flashListRef, expandAndScrollToNodeQueue]);
+  }, [childToParentMap, expanded, flashListRef, expandAndScrollToNodeQueue]);
 
   ////////////////////////////// Handle Initial Scroll /////////////////////////////
   /* On first render, if an initial scroll target is provided, determine its index.

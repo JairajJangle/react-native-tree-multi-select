@@ -127,6 +127,7 @@ export function TreeViewUsageExample(){
 | `preselectedIds`                   | `ID[]`                                                  | No       | An array of `id`s that should be pre-selected                |
 | `preExpandedIds`                   | `ID[]`                                                  | No       | An array of `id`s that should be pre-expanded                |
 | `selectionPropagation`     | [SelectionPropagation](#selectionpropagation) | No       | Control Selection Propagation Behavior. Choose whether you want to auto-select children or parents. |
+| `initialScrollNodeID` | `ID` | No       | Set node ID to scroll to intiially on tree view render. |
 | `indentationMultiplier`            | `number`                                                     | No       | Indentation (`marginStart`) per level (defaults to 15)       |
 | `treeFlashListProps`               | [TreeFlatListProps](#treeflatlistprops)                      | No       | Props for the flash list                                     |
 | `checkBoxViewStyleProps`           | [BuiltInCheckBoxViewStyleProps](#builtincheckboxviewstyleprops) | No       | Props for the checkbox view                                  |
@@ -180,6 +181,18 @@ export function TreeViewUsageExample(){
 | `selectNodes`           | `(ids: ID[]) => void`                         | Selects specified nodes    |
 | `unSelectNodes`           | `(ids: ID[]) => void`                         | Unselects specified nodes    |
 | `setSearchText`       | `(searchText: string, searchKeys?: string[]) => void` | Set the search text and optionally the search keys. Default search key is "name"<br /><br />Recommended to call this inside a debounced function if you find any performance issue otherwise. |
+| `scrollToNodeID` | `(params: `[ScrollToNodeParams](#scrolltonodeparams)`<ID>) => void;` | Scrolls the tree view to the node of the specified ID. |
+| `getChildToParentMap` | `() => Map<ID, ID>` | Get the child to parent tree view map. |
+
+#### ScrollToNodeParams
+| Property             | Type      | Required | Description                                                  |
+| -------------------- | --------- | -------- | ------------------------------------------------------------ |
+| `nodeId`             | `ID`      | Yes      | Node ID to expand and scroll to.                             |
+| `expandScrolledNode` | `boolean` | No       | Whether to expand scrolled node to reveal its children. Defaults to `false`. |
+| `animated`           | `boolean` | No       | Control if scrolling should be animated.                     |
+| `viewOffset`         | `number`  | No       | A fixed number of pixels to offset the scrolled node position. |
+| `viewPosition`       | `number`  | No       | A value of `0` places the scrolled node item at the top, `1` at the bottom, and `0.5` centered in the middle. |
+
 
 ---
 

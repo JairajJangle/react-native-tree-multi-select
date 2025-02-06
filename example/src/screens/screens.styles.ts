@@ -60,4 +60,20 @@ export const styles = StyleSheet.create({
         justifyContent: "space-between",
         width: "100%",
     },
+
+    expandScrolledNodeOptionView: {
+        flexDirection: "row",
+        alignItems: "center",
+
+        marginHorizontal: 20,
+        paddingVertical: 10,
+        marginVertical: 10,
+
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: "#ccc"
+    },
+    expandScrolledNodeOptionText: {
+        marginEnd: 20
+    }
 });

@@ -130,7 +130,12 @@ export default function ControlsDemoScreen() {
 
         setVisible(false);
         onSubmitFnRef.current = () => { };
-    };
+    }
+
+    function printChildToParentMap() {
+        const childToParentMap = treeViewRef.current?.getChildToParentMap();
+        console.log("Child to parent map:", childToParentMap);
+    }
 
     function onDialogCancel() {
         setVisible(false);
@@ -202,8 +207,11 @@ export default function ControlsDemoScreen() {
                 <Button
                     title='Scroll To Node'
                     onPress={scrollToNodeIDPressed} />
-            </View>
 
+                <Button
+                    title='Print Child to Parent Map'
+                    onPress={printChildToParentMap} />
+            </View>
             <View
                 style={styles.treeViewParent}>
                 <TreeView

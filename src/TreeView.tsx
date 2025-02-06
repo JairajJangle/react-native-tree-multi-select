@@ -18,7 +18,7 @@ import {
 	expandNodes,
 	collapseNodes
 } from './helpers';
-import { useTreeViewStore } from './store/treeView.store';
+import { getTreeViewStore, useTreeViewStore } from './store/treeView.store';
 import usePreviousState from './utils/usePreviousState';
 import { useShallow } from "zustand/react/shallow";
 import uuid from "react-native-uuid";
@@ -119,6 +119,8 @@ function _innerTreeView<ID>(
 		setSearchText,
 
 		scrollToNodeID,
+
+		getChildToParentMap
 	}));
 
 	const scrollToNodeHandlerRef = React.useRef<ScrollToNodeHandlerRef<ID>>(null);
@@ -159,6 +161,11 @@ function _innerTreeView<ID>(
 
 	function scrollToNodeID(params: ScrollToNodeParams<ID>) {
 		scrollToNodeHandlerRef.current?.scrollToNodeID(params);
+	}
+
+	function getChildToParentMap() {
+		const treeViewStore = getTreeViewStore<ID>(storeId);
+		return treeViewStore.getState().childToParentMap;
 	}
 
 	const getIds = React.useCallback((node: TreeNode<ID>): ID[] => {

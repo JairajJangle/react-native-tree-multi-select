@@ -132,6 +132,8 @@ export interface TreeViewRef<ID = string> {
     setSearchText: (searchText: string, searchKeys?: string[]) => void;
 
     scrollToNodeID: (scrollToNodeParams: ScrollToNodeParams<ID>) => void;
+
+    getChildToParentMap: () => Map<ID, ID>;
 }
 
 export interface SelectionPropagation {

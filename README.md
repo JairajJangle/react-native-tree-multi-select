@@ -246,7 +246,7 @@ Type: `boolean` OR `"indeterminate"`
 - [ ] Prop to disable certain nodes from getting checked
 - [x] Ref function to programatically expand/collapse a certain node 
 - [x] Ref function to programatically un/check a certain node
-- [ ] Ref function to auto-scroll to a certain node's position
+- [x] Ref function to auto-scroll to a certain node's position - available in > 1.9.0
 
 If you do not see what you want in the planned feature list, raise a feature request. 
 

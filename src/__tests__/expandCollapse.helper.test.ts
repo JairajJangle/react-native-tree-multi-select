@@ -195,4 +195,29 @@ describe('expandNodes & collapseNodes', () => {
         expect(expandedAfterCollapseNodes.has("2.2.1")).toBeFalsy();
         expect(expandedAfterCollapseNodes.has("2.2.2")).toBeFalsy();
     });
+
+    it('expands to show nodes till parents without expanding to show children', () => {
+        act(() => {
+            expandNodes(testStoreId, ["1", "2.1", "2.2.2"], true);
+        });
+
+        const { expanded: expandedAfterExpandNodes } = useTreeViewStore.getState();
+        // Both nodes and their parents should be expanded
+        expect(expandedAfterExpandNodes.has("1")).toBeFalsy();
+        expect(expandedAfterExpandNodes.has("1.1")).toBeFalsy();
+        expect(expandedAfterExpandNodes.has("1.1.1")).toBeFalsy();
+        expect(expandedAfterExpandNodes.has("1.1.2")).toBeFalsy();
+        expect(expandedAfterExpandNodes.has("1.2")).toBeFalsy();
+        expect(expandedAfterExpandNodes.has("1.2.1")).toBeFalsy();
+        expect(expandedAfterExpandNodes.has("1.2.2")).toBeFalsy();
+
+        expect(expandedAfterExpandNodes.has("2")).toBeTruthy();
+        expect(expandedAfterExpandNodes.has("2.1")).toBeFalsy();
+        expect(expandedAfterExpandNodes.has("2.1.1")).toBeFalsy();
+        expect(expandedAfterExpandNodes.has("2.1.2")).toBeFalsy();
+
+        expect(expandedAfterExpandNodes.has("2.2")).toBeTruthy();
+        expect(expandedAfterExpandNodes.has("2.2.1")).toBeFalsy();
+        expect(expandedAfterExpandNodes.has("2.2.2")).toBeFalsy();
+    });
 });

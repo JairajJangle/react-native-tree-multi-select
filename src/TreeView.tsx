@@ -1,210 +1,240 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { InteractionManager } from 'react-native';
 import type {
-  TreeNode,
-  TreeViewProps,
-  TreeViewRef
+	TreeNode,
+	TreeViewProps,
+	TreeViewRef
 } from './types/treeView.types';
 import NodeList from './components/NodeList';
 import {
-  selectAll,
-  selectAllFiltered,
-  unselectAll,
-  unselectAllFiltered,
-  initializeNodeMaps,
-  expandAll,
-  collapseAll,
-  toggleCheckboxes,
-  expandNodes,
-  collapseNodes
+	selectAll,
+	selectAllFiltered,
+	unselectAll,
+	unselectAllFiltered,
+	initializeNodeMaps,
+	expandAll,
+	collapseAll,
+	toggleCheckboxes,
+	expandNodes,
+	collapseNodes
 } from './helpers';
-import { useTreeViewStore } from './store/treeView.store';
+import { getTreeViewStore, useTreeViewStore } from './store/treeView.store';
 import usePreviousState from './utils/usePreviousState';
 import { useShallow } from "zustand/react/shallow";
 import uuid from "react-native-uuid";
 import useDeepCompareEffect from "./utils/useDeepCompareEffect";
 import { typedMemo } from './utils/typedMemo';
+import {
+	ScrollToNodeHandlerRef,
+	ScrollToNodeParams
+} from "./handlers/ScrollToNodeHandler";
 
-function _innerTreeView<ID>(props: TreeViewProps<ID>, ref: React.ForwardedRef<TreeViewRef<ID>>) {
-    const {
-      data,
+function _innerTreeView<ID>(
+	props: TreeViewProps<ID>,
+	ref: React.ForwardedRef<TreeViewRef<ID>>
+) {
+	const {
+		data,
 
-      onCheck,
-      onExpand,
+		onCheck,
+		onExpand,
 
-      selectionPropagation,
+		selectionPropagation,
 
-      preselectedIds = [],
+		preselectedIds = [],
 
-      preExpandedIds = [],
+		preExpandedIds = [],
 
-      treeFlashListProps,
-      checkBoxViewStyleProps,
-      indentationMultiplier,
+		initialScrollNodeID,
 
-      CheckboxComponent,
-      ExpandCollapseIconComponent,
-      ExpandCollapseTouchableComponent,
+		treeFlashListProps,
+		checkBoxViewStyleProps,
+		indentationMultiplier,
 
-      CustomNodeRowComponent,
-    } = props;
+		CheckboxComponent,
+		ExpandCollapseIconComponent,
+		ExpandCollapseTouchableComponent,
 
-    const storeId = useMemo(() => uuid.v4(), []);
+		CustomNodeRowComponent,
+	} = props;
 
-    const {
-      expanded,
-      updateExpanded,
+	const storeId = React.useMemo(() => uuid.v4(), []);
 
-      initialTreeViewData,
-      updateInitialTreeViewData,
+	const {
+		expanded,
+		updateExpanded,
 
-      searchText,
-      updateSearchText,
+		initialTreeViewData,
+		updateInitialTreeViewData,
 
-      updateSearchKeys,
+		searchText,
+		updateSearchText,
 
-      checked,
-      indeterminate,
+		updateSearchKeys,
 
-      setSelectionPropagation,
+		checked,
+		indeterminate,
 
-      cleanUpTreeViewStore,
-    } = useTreeViewStore<ID>(storeId)(useShallow(
-      state => ({
-        expanded: state.expanded,
-        updateExpanded: state.updateExpanded,
+		setSelectionPropagation,
 
-        initialTreeViewData: state.initialTreeViewData,
-        updateInitialTreeViewData: state.updateInitialTreeViewData,
+		cleanUpTreeViewStore,
+	} = useTreeViewStore<ID>(storeId)(useShallow(
+		state => ({
+			expanded: state.expanded,
+			updateExpanded: state.updateExpanded,
 
-        searchText: state.searchText,
-        updateSearchText: state.updateSearchText,
+			initialTreeViewData: state.initialTreeViewData,
+			updateInitialTreeViewData: state.updateInitialTreeViewData,
 
-        updateSearchKeys: state.updateSearchKeys,
+			searchText: state.searchText,
+			updateSearchText: state.updateSearchText,
 
-        checked: state.checked,
-        indeterminate: state.indeterminate,
+			updateSearchKeys: state.updateSearchKeys,
 
-        setSelectionPropagation: state.setSelectionPropagation,
+			checked: state.checked,
+			indeterminate: state.indeterminate,
 
-        cleanUpTreeViewStore: state.cleanUpTreeViewStore,
-      })
-    ));
+			setSelectionPropagation: state.setSelectionPropagation,
 
-    React.useImperativeHandle(ref, () => ({
-      selectAll: () => selectAll(storeId),
-      unselectAll: () => unselectAll(storeId),
+			cleanUpTreeViewStore: state.cleanUpTreeViewStore,
+		})
+	));
 
-      selectAllFiltered: () => selectAllFiltered(storeId),
-      unselectAllFiltered: () => unselectAllFiltered(storeId),
+	React.useImperativeHandle(ref, () => ({
+		selectAll: () => selectAll(storeId),
+		unselectAll: () => unselectAll(storeId),
 
-      expandAll: () => expandAll(storeId),
-      collapseAll: () => collapseAll(storeId),
+		selectAllFiltered: () => selectAllFiltered(storeId),
+		unselectAllFiltered: () => unselectAllFiltered(storeId),
 
-      expandNodes: (ids: ID[]) => expandNodes(storeId, ids),
-      collapseNodes: (ids: ID[]) => collapseNodes(storeId, ids),
+		expandAll: () => expandAll(storeId),
+		collapseAll: () => collapseAll(storeId),
 
-      selectNodes: (ids: ID[]) => selectNodes(ids),
-      unselectNodes: (ids: ID[]) => unselectNodes(ids),
+		expandNodes: (ids: ID[]) => expandNodes(storeId, ids),
+		collapseNodes: (ids: ID[]) => collapseNodes(storeId, ids),
 
-      setSearchText
-    }));
+		selectNodes: (ids: ID[]) => selectNodes(ids),
+		unselectNodes: (ids: ID[]) => unselectNodes(ids),
 
-    const prevSearchText = usePreviousState(searchText);
+		setSearchText,
 
-    useDeepCompareEffect(() => {
-      cleanUpTreeViewStore();
+		scrollToNodeID,
 
-      updateInitialTreeViewData(data);
+		getChildToParentMap
+	}));
 
-      if (selectionPropagation)
-        setSelectionPropagation(selectionPropagation);
+	const scrollToNodeHandlerRef = React.useRef<ScrollToNodeHandlerRef<ID>>(null);
+	const prevSearchText = usePreviousState(searchText);
 
-      initializeNodeMaps(storeId, data);
+	useDeepCompareEffect(() => {
+		cleanUpTreeViewStore();
 
-      // Check any pre-selected nodes
-      toggleCheckboxes(storeId, preselectedIds, true);
+		updateInitialTreeViewData(data);
 
-      // Expand pre-expanded nodes
-      expandNodes(storeId, preExpandedIds);
-    }, [data]);
+		if (selectionPropagation)
+			setSelectionPropagation(selectionPropagation);
 
-    function selectNodes(ids: ID[]) {
-      toggleCheckboxes(storeId, ids, true);
-    }
+		initializeNodeMaps(storeId, data);
 
-    function unselectNodes(ids: ID[]) {
-      toggleCheckboxes(storeId, ids, false);
-    }
+		// Check any pre-selected nodes
+		toggleCheckboxes(storeId, preselectedIds, true);
 
-    function setSearchText(text: string, keys: string[] = ["name"]) {
-      updateSearchText(text);
-      updateSearchKeys(keys);
-    }
+		// Expand pre-expanded nodes
+		expandNodes(storeId, [
+			...preExpandedIds,
+			...(initialScrollNodeID ? [initialScrollNodeID] : [])
+		]);
+	}, [data]);
 
-    const getIds = React.useCallback((node: TreeNode<ID>): ID[] => {
-      if (!node.children || node.children.length === 0) {
-        return [node.id];
-      } else {
-        return [node.id, ...node.children.flatMap((item) => getIds(item))];
-      }
-    }, []);
+	function selectNodes(ids: ID[]) {
+		toggleCheckboxes(storeId, ids, true);
+	}
 
-    React.useEffect(() => {
-      onCheck?.(Array.from(checked), Array.from(indeterminate));
-    }, [onCheck, checked, indeterminate]);
+	function unselectNodes(ids: ID[]) {
+		toggleCheckboxes(storeId, ids, false);
+	}
 
-    React.useEffect(() => {
-      onExpand?.(Array.from(expanded));
-    }, [onExpand, expanded]);
+	function setSearchText(text: string, keys: string[] = ["name"]) {
+		updateSearchText(text);
+		updateSearchKeys(keys);
+	}
 
-    React.useEffect(() => {
-      if (searchText) {
-        InteractionManager.runAfterInteractions(() => {
-          updateExpanded(new Set(initialTreeViewData.flatMap(
-            (item) => getIds(item)
-          )));
-        });
-      }
-      else if (prevSearchText && prevSearchText !== "") {
-        /* Collapse all nodes only if previous search query was non-empty: this is
-        done to prevent node collapse on first render if preExpandedIds is provided */
-        InteractionManager.runAfterInteractions(() => {
-          updateExpanded(new Set());
-        });
-      }
-    }, [
-      getIds,
-      initialTreeViewData,
-      prevSearchText,
-      searchText,
-      updateExpanded
-    ]);
+	function scrollToNodeID(params: ScrollToNodeParams<ID>) {
+		scrollToNodeHandlerRef.current?.scrollToNodeID(params);
+	}
 
-    React.useEffect(() => {
-      return () => {
-        cleanUpTreeViewStore();
-      };
-    }, [cleanUpTreeViewStore]);
+	function getChildToParentMap() {
+		const treeViewStore = getTreeViewStore<ID>(storeId);
+		return treeViewStore.getState().childToParentMap;
+	}
 
-    return (
-      <NodeList
-        storeId={storeId}
+	const getIds = React.useCallback((node: TreeNode<ID>): ID[] => {
+		if (!node.children || node.children.length === 0) {
+			return [node.id];
+		} else {
+			return [node.id, ...node.children.flatMap((item) => getIds(item))];
+		}
+	}, []);
 
-        treeFlashListProps={treeFlashListProps}
-        checkBoxViewStyleProps={checkBoxViewStyleProps}
-        indentationMultiplier={indentationMultiplier}
+	React.useEffect(() => {
+		onCheck?.(Array.from(checked), Array.from(indeterminate));
+	}, [onCheck, checked, indeterminate]);
 
-        CheckboxComponent={CheckboxComponent}
-        ExpandCollapseIconComponent={ExpandCollapseIconComponent}
-        ExpandCollapseTouchableComponent={ExpandCollapseTouchableComponent}
+	React.useEffect(() => {
+		onExpand?.(Array.from(expanded));
+	}, [onExpand, expanded]);
 
-        CustomNodeRowComponent={CustomNodeRowComponent}
-      />
-    );
+	React.useEffect(() => {
+		if (searchText) {
+			InteractionManager.runAfterInteractions(() => {
+				updateExpanded(new Set(initialTreeViewData.flatMap(
+					(item) => getIds(item)
+				)));
+			});
+		}
+		else if (prevSearchText && prevSearchText !== "") {
+			/* Collapse all nodes only if previous search query was non-empty: this is
+			done to prevent node collapse on first render if preExpandedIds is provided */
+			InteractionManager.runAfterInteractions(() => {
+				updateExpanded(new Set());
+			});
+		}
+	}, [
+		getIds,
+		initialTreeViewData,
+		prevSearchText,
+		searchText,
+		updateExpanded
+	]);
+
+	React.useEffect(() => {
+		return () => {
+			cleanUpTreeViewStore();
+		};
+	}, [cleanUpTreeViewStore]);
+
+	return (
+		<NodeList
+			storeId={storeId}
+
+			scrollToNodeHandlerRef={scrollToNodeHandlerRef}
+			initialScrollNodeID={initialScrollNodeID}
+
+			treeFlashListProps={treeFlashListProps}
+			checkBoxViewStyleProps={checkBoxViewStyleProps}
+			indentationMultiplier={indentationMultiplier}
+
+			CheckboxComponent={CheckboxComponent}
+			ExpandCollapseIconComponent={ExpandCollapseIconComponent}
+			ExpandCollapseTouchableComponent={ExpandCollapseTouchableComponent}
+
+			CustomNodeRowComponent={CustomNodeRowComponent}
+		/>
+	);
 }
+
 const _TreeView = React.forwardRef(_innerTreeView) as <ID>(
-  props: TreeViewProps<ID> & { ref?: React.ForwardedRef<TreeViewRef<ID>> }
+	props: TreeViewProps<ID> & { ref?: React.ForwardedRef<TreeViewRef<ID>>; }
 ) => ReturnType<typeof _innerTreeView>;
 
 export const TreeView = typedMemo<typeof _TreeView>(_TreeView);

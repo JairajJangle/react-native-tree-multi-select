@@ -1,3 +1,13 @@
+# [1.9.0-beta.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.8.1...v1.9.0-beta.1) (2025-02-06)
+
+
+### Features
+
+* added ref method to get child to parent map used in the tree view ([e496a70](https://github.com/JairajJangle/react-native-tree-multi-select/commit/e496a703ee26663626c30d0a82dcd452344de42d))
+* added scroll to node id feature ([1f87730](https://github.com/JairajJangle/react-native-tree-multi-select/commit/1f877305ab891e2ec6f007b45cb9cd2782a89121))
+* added scroll to node id feature ([38d7236](https://github.com/JairajJangle/react-native-tree-multi-select/commit/38d723680d829f6cc57717537a8fb31e2aa1687b))
+* updated example app with new scroll to node id feature ([db8dcdd](https://github.com/JairajJangle/react-native-tree-multi-select/commit/db8dcdd98f2a33ce225f200933afee7953ff00c5))
+
 ## [1.8.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.8.0...v1.8.1) (2025-02-02)
 
 

@@ -14,7 +14,7 @@
     "@react-navigation/native": "^6.1.7",
     "@react-navigation/native-stack": "^6.9.15",
     "@react-navigation/stack": "^6.3.17",
-    "@shopify/flash-list": "^1.4.3",
+    "@shopify/flash-list": "^1.7.3",
     "lodash": "^4.17.21",
     "react": "18.2.0",
     "react-native": "0.72.17",

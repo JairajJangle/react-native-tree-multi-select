@@ -82,13 +82,13 @@
     "provenance": true
   },
   "devDependencies": {
-    "@commitlint/config-conventional": "^19.4.1",
-    "@evilmartians/lefthook": "^1.7.14",
+    "@commitlint/config-conventional": "^19.7.1",
+    "@evilmartians/lefthook": "^1.10.10",
     "@react-native-community/eslint-config": "^3.2.0",
-    "@release-it/conventional-changelog": "^8.0.1",
+    "@release-it/conventional-changelog": "^8.0.2",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^10.1.7",
+    "@semantic-release/github": "^11.0.1",
     "@semantic-release/npm": "^12.0.1",
     "@shopify/flash-list": "1.x.x",
     "@testing-library/jest-native": "^5.4.3",
@@ -211,7 +211,7 @@
   "dependencies": {
     "lodash": "^4.17.21",
     "react-native-uuid": "^2.0.3",
-    "zustand": "^4.5.5"
+    "zustand": "^4.5.6"
   },
   "funding": [
     {

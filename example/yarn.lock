@@ -1616,7 +1616,7 @@
     color "^4.2.3"
     warn-once "^0.1.0"
 
-"@shopify/flash-list@^1.4.3":
+"@shopify/flash-list@^1.7.3":
   version "1.7.3"
   resolved "https://registry.yarnpkg.com/@shopify/flash-list/-/flash-list-1.7.3.tgz#49bc0bed1347622f9b8129be0f98539676446d12"
   integrity sha512-RLhNptm02aqpqZvjj9pJPcU+EVYxOAJhPRCmDOaUbUP86+636w+plsbjpBPSYGvPZhPj56RtZ9FBlvolPeEmYA==

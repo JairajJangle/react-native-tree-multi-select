@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.9.0...v1.9.1) (2025-02-15)
+
+
+### Bug Fixes
+
+* upgraded some deps ([352d629](https://github.com/JairajJangle/react-native-tree-multi-select/commit/352d629a54a42af5e8a30a3e6d59206bb5ba1878))
+
 # [1.9.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.8.1...v1.9.0) (2025-02-14)
 
 

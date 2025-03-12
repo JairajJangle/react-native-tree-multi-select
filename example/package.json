@@ -30,7 +30,7 @@
     "@babel/runtime": "^7.20.0",
     "@react-native/eslint-config": "^0.74.0",
     "@react-native/metro-config": "^0.74.0",
-    "@types/lodash": "^4.14.195",
+    "@types/lodash": "^4.17.16",
     "@types/metro-config": "^0.76.3",
     "babel-plugin-module-resolver": "^5.0.0",
     "metro-react-native-babel-preset": "^0.76.9",

@@ -38,7 +38,7 @@ import { useTreeViewStore } from "../store/treeView.store";
 import { useShallow } from "zustand/react/shallow";
 import { __FlattenedTreeNode__ } from "../types/treeView.types";
 import { typedMemo } from "../utils/typedMemo";
-import { isEqual } from "lodash";
+import { fastIsEqual } from "fast-is-equal";
 
 interface Props<ID> {
   storeId: string;
@@ -131,7 +131,7 @@ function _innerScrollToNodeHandler<ID>(
     if (queuedScrollToNodeParams.current === null)
       return;
 
-    if (!isEqual(
+    if (!fastIsEqual(
       expandAndScrollToNodeQueue,
       [ExpandQueueAction.EXPANDED, ExpandQueueAction.RENDERED]
     )) {

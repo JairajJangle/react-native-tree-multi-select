@@ -5,7 +5,8 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "react-native-tree-multi-select": ["./src/index"]
+      "react-native-tree-multi-select": ["./src/index"],
+      "react": [ "./node_modules/@types/react" ]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

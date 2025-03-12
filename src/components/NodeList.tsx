@@ -25,7 +25,7 @@ import {
 import { CheckboxView } from "./CheckboxView";
 import { CustomExpandCollapseIcon } from "./CustomExpandCollapseIcon";
 import { defaultIndentationMultiplier } from "../constants/treeView.constants";
-import { useShallow } from 'zustand/react/shallow';
+import { useShallow } from "zustand/react/shallow";
 import { typedMemo } from "../utils/typedMemo";
 import { ScrollToNodeHandler } from "../handlers/ScrollToNodeHandler";
 
@@ -157,7 +157,7 @@ function getValue(
     isIndeterminate: boolean
 ): CheckboxValueType {
     if (isIndeterminate) {
-        return 'indeterminate';
+        return "indeterminate";
     } else if (isChecked) {
         return true;
     } else {
@@ -249,8 +249,8 @@ const styles = StyleSheet.create({
     },
     nodeCheckboxAndArrowRow: {
         flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
+        flexDirection: "row",
+        alignItems: "center",
         minWidth: "100%"
     }
 });

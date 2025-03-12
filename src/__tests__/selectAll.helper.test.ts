@@ -1,3 +1,5 @@
+jest.mock('zustand');
+
 import { tree3d2b } from "../__mocks__/generateTree.mock";
 import {
     getFilteredTreeData,
@@ -11,8 +13,6 @@ import {
 import { getTreeViewStore } from "../store/treeView.store";
 import { act } from 'react-test-renderer';
 import { testStoreId } from "../constants/tests.constants";
-
-jest.mock('zustand');
 
 describe('selectAll helpers functions', () => {
     const useTreeViewStore = getTreeViewStore(testStoreId);

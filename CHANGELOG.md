@@ -1,3 +1,15 @@
+## [1.9.3](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.9.2...v1.9.3) (2025-03-12)
+
+
+### Bug Fixes
+
+* added missing changes for lodash removal ([d42cafc](https://github.com/JairajJangle/react-native-tree-multi-select/commit/d42cafcaa18164af12f945f6ed37e07e8766a0ae))
+
+
+### Performance Improvements
+
+* replaced lodash isEqual with fast-is-equal potentially reducing package size ([a166c31](https://github.com/JairajJangle/react-native-tree-multi-select/commit/a166c31f9c152a8088764b687b4a843e8f7d74ef))
+
 ## [1.9.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.9.1...v1.9.2) (2025-03-12)
 
 

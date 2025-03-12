@@ -1,5 +1,5 @@
 import type { SelectionPropagation, TreeNode } from "src/types/treeView.types";
-import { create, StoreApi, UseBoundStore } from 'zustand';
+import { create, StoreApi, UseBoundStore } from "zustand";
 
 export type TreeViewState<ID> = {
     // Store ids of checked tree nodes

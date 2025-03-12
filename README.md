@@ -15,7 +15,7 @@
 
 ## Installation
 
-Using yarn 
+Using yarn:
 
 ```sh
 yarn add react-native-tree-multi-select

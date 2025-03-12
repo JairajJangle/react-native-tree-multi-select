@@ -121,7 +121,7 @@ export function TreeViewUsageExample(){
 
 | Property                           | Type                                                         | Required | Description                                                  |
 | ---------------------------------- | ------------------------------------------------------------ | -------- | ------------------------------------------------------------ |
-| `data`                             | [TreeNode](#treenode)`<ID = string>[]`                       | Yes      | An array of `TreeNode` objects                               |
+| `data`                             | [TreeNode](#treenodeid--string)`<ID = string>[]`     | Yes      | An array of `TreeNode` objects                               |
 | `onCheck`                          | `(checkedIds: ID[], indeterminateIds: ID[]) => void` | No       | Callback when a checkbox state changes                       |
 | `onExpand`                         | `(expandedIds: ID[]) => void`                           | No       | Callback when a node is expanded                             |
 | `preselectedIds`                   | `ID[]`                                                  | No       | An array of `id`s that should be pre-selected                |
@@ -134,7 +134,7 @@ export function TreeViewUsageExample(){
 | `CheckboxComponent`                | `ComponentType<`[CheckBoxViewProps](#checkboxviewprops)`>`   | No       | A custom checkbox component. Defaults to React Native Paper's Checkbox |
 | `ExpandCollapseIconComponent`      | `ComponentType<`[ExpandIconProps](#expandiconprops)`>`       | No       | A custom expand/collapse icon component                      |
 | `ExpandCollapseTouchableComponent` | `ComponentType<`[TouchableOpacityProps](https://reactnative.dev/docs/touchableopacity#props)`>` | No       | A custom expand/collapse touchable component                 |
-| `CustomNodeRowComponent`           | `React.ComponentType<`[NodeRowProps](#noderowprops)`<ID>>`   | No       | Custom row item component                                    |
+| `CustomNodeRowComponent`           | `React.ComponentType<`[NodeRowProps](#noderowpropsid--string)`<ID>>` | No       | Custom row item component                                    |
 
 ##### Notes
 
@@ -257,7 +257,7 @@ Type: `boolean` OR `"indeterminate"`
 
 | Property       | Type                                    | Required | Description                                             |
 | -------------- | --------------------------------------- | -------- | ------------------------------------------------------- |
-| `node`         | [TreeNode](#treenode)                   | Yes      | The node to be rendered                                 |
+| `node`         | [TreeNode](#treenodeid--string)         | Yes      | The node to be rendered                                 |
 | `level`        | `number`                                | Yes      | The depth of the node in the tree                       |
 | `checkedValue` | [CheckboxValueType](#checkboxvaluetype) | Yes      | The current value of the checkbox                       |
 | `isExpanded`   | `boolean`                               | Yes      | Whether the node is expanded or not                     |

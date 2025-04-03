@@ -1,4 +1,4 @@
-jest.mock('zustand');
+jest.mock("zustand");
 
 import { tree3d2b } from "../__mocks__/generateTree.mock";
 import {
@@ -11,10 +11,10 @@ import {
     unselectAllFiltered
 } from "../helpers";
 import { getTreeViewStore } from "../store/treeView.store";
-import { act } from 'react-test-renderer';
+import { act } from "react-test-renderer";
 import { testStoreId } from "../constants/tests.constants";
 
-describe('selectAll helpers functions', () => {
+describe("selectAll helpers functions", () => {
     const useTreeViewStore = getTreeViewStore(testStoreId);
 
     beforeEach(() => {
@@ -25,7 +25,7 @@ describe('selectAll helpers functions', () => {
         initializeNodeMaps(testStoreId, tree3d2b);
     });
 
-    it('selectAll works correctly', () => {
+    it("selectAll works correctly", () => {
         // Act
         act(() => {
             selectAll(testStoreId);
@@ -34,15 +34,15 @@ describe('selectAll helpers functions', () => {
         // Assert
         const { checked, indeterminate } = useTreeViewStore.getState();
         expect(checked).toEqual(new Set([
-            '1',
-            '1.1',
-            '1.1.1',
+            "1",
+            "1.1",
+            "1.1.1",
             "1.1.2",
-            '1.2',
+            "1.2",
             "1.2.1",
             "1.2.2",
-            '2',
-            '2.1',
+            "2",
+            "2.1",
             "2.1.1",
             "2.1.2",
             "2.2",
@@ -53,7 +53,7 @@ describe('selectAll helpers functions', () => {
         expect(indeterminate).toEqual(new Set([]));
     });
 
-    it('unselectAll works correctly', () => {
+    it("unselectAll works correctly", () => {
         // Arrange
         act(() => {
             selectAll(testStoreId);
@@ -70,7 +70,7 @@ describe('selectAll helpers functions', () => {
         expect(indeterminate).toEqual(new Set([]));
     });
 
-    it('getInnerMostChildrenIdsInTree works correctly', () => {
+    it("getInnerMostChildrenIdsInTree works correctly", () => {
         const initialData = useTreeViewStore.getState().initialTreeViewData;;
 
         // Act
@@ -78,7 +78,7 @@ describe('selectAll helpers functions', () => {
 
         // Assert
         expect(innerMostChildrenIds.sort()).toEqual([
-            '1.1.1',
+            "1.1.1",
             "1.1.2",
             "1.2.1",
             "1.2.2",
@@ -90,7 +90,7 @@ describe('selectAll helpers functions', () => {
     });
 
     ////////////////////////////////////////////////////////////////////////////////
-    it('selectAllFiltered works correctly for empty search term', () => {
+    it("selectAllFiltered works correctly for empty search term", () => {
         // Act
         act(() => {
             selectAllFiltered(testStoreId);
@@ -99,15 +99,15 @@ describe('selectAll helpers functions', () => {
         // Assert
         const { checked, indeterminate } = useTreeViewStore.getState();
         expect(checked).toEqual(new Set([
-            '1',
-            '1.1',
-            '1.1.1',
+            "1",
+            "1.1",
+            "1.1.1",
             "1.1.2",
-            '1.2',
+            "1.2",
             "1.2.1",
             "1.2.2",
-            '2',
-            '2.1',
+            "2",
+            "2.1",
             "2.1.1",
             "2.1.2",
             "2.2",
@@ -118,7 +118,7 @@ describe('selectAll helpers functions', () => {
         expect(Array.from(indeterminate)).toEqual([]);
     });
 
-    it('selectAllFiltered works correctly for non-empty search term with found nodes', () => {
+    it("selectAllFiltered works correctly for non-empty search term with found nodes", () => {
         const searchTerm = "1.1";
 
         // Act
@@ -153,20 +153,20 @@ describe('selectAll helpers functions', () => {
         // Assert
         const { checked, indeterminate } = useTreeViewStore.getState();
         expect(checked).toEqual(new Set([
-            '1.1', // As both of it's children are checked
-            '1.1.1',
-            '1.1.2',
-            '2.1.1'
+            "1.1", // As both of it's children are checked
+            "1.1.1",
+            "1.1.2",
+            "2.1.1"
         ]));
         expect(indeterminate).toEqual(new Set([
-            '1', // As 1.2 is unchecked
-            '2', // only one if it's children is checked
-            '2.1'
+            "1", // As 1.2 is unchecked
+            "2", // only one if it's children is checked
+            "2.1"
         ]));
     });
     ////////////////////////////////////////////////////////////////////////////////
 
-    it('unselectAllFiltered works correctly for empty search term', () => {
+    it("unselectAllFiltered works correctly for empty search term", () => {
         // Arrange
         act(() => {
             selectAllFiltered(testStoreId);
@@ -183,7 +183,7 @@ describe('selectAll helpers functions', () => {
         expect(indeterminate).toEqual(new Set([]));
     });
 
-    it('unselectAllFiltered works correctly for non-empty search term with found nodes', () => {
+    it("unselectAllFiltered works correctly for non-empty search term with found nodes", () => {
         const searchTerm = "1.1";
 
         // Act
@@ -221,19 +221,19 @@ describe('selectAll helpers functions', () => {
         // Assert
         const { checked, indeterminate } = useTreeViewStore.getState();
         expect(checked).toEqual(new Set([
-            '1.2',
-            '1.2.1',
-            '1.2.2',
-            '2.1.2',
-            '2.2',
-            '2.2.1',
-            '2.2.2',
-            '3'
+            "1.2",
+            "1.2.1",
+            "1.2.2",
+            "2.1.2",
+            "2.2",
+            "2.2.1",
+            "2.2.2",
+            "3"
         ]));
         expect(indeterminate).toEqual(new Set([
-            '1',
-            '2',
-            '2.1'
+            "1",
+            "2",
+            "2.1"
         ]));
     });
 });

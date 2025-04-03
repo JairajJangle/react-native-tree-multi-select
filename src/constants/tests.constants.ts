@@ -1,1 +1,1 @@
-export const testStoreId = 'test-store-id';
+export const testStoreId = "test-store-id";

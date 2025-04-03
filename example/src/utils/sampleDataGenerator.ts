@@ -63,4 +63,4 @@ export const defaultID = (
     _prev: string,
     idx: number,
     parentID?: string
-) => `${parentID ? parentID + '.' : ''}${idx}`;
+) => `${parentID ? parentID + "." : ""}${idx}`;

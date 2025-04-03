@@ -1,23 +1,23 @@
-import * as React from 'react';
+import * as React from "react";
 
 import {
     Button,
     SafeAreaView,
     View
-} from 'react-native';
+} from "react-native";
 
-import SearchInput from '../components/SearchInput';
+import SearchInput from "../components/SearchInput";
 
 import debounce from "lodash/debounce";
 
 import {
     TreeView,
     type TreeViewRef
-} from 'react-native-tree-multi-select';
+} from "react-native-tree-multi-select";
 
-import { styles } from './screens.styles';
-import { defaultID, generateTreeList } from '../utils/sampleDataGenerator';
-import { CustomNodeRowView } from '../components/CustomNodeRowView';
+import { styles } from "./screens.styles";
+import { defaultID, generateTreeList } from "../utils/sampleDataGenerator";
+import { CustomNodeRowView } from "../components/CustomNodeRowView";
 
 export default function CustomNodeRowViewScreen() {
     const sampleData = React.useRef(generateTreeList(50, 4, 5, defaultID, "1"));

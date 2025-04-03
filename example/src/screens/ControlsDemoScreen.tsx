@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 
 import {
     Button,
@@ -8,18 +8,18 @@ import {
     Text,
     TextInput,
     Switch
-} from 'react-native';
+} from "react-native";
 
 import {
     TreeView,
     type TreeViewRef
-} from 'react-native-tree-multi-select';
+} from "react-native-tree-multi-select";
 
-import { styles } from './screens.styles';
+import { styles } from "./screens.styles";
 import {
     defaultID,
     generateTreeList
-} from '../utils/sampleDataGenerator';
+} from "../utils/sampleDataGenerator";
 import debounce from "lodash/debounce";
 
 export default function ControlsDemoScreen() {
@@ -64,7 +64,7 @@ export default function ControlsDemoScreen() {
         onSubmitFnRef.current = expandNodes;
     }
     function expandNodes() {
-        const nodeIds = input.current.split(',').map(id => id.trim());
+        const nodeIds = input.current.split(",").map(id => id.trim());
         treeViewRef.current?.expandNodes(nodeIds);
 
         setVisible(false);
@@ -78,7 +78,7 @@ export default function ControlsDemoScreen() {
         onSubmitFnRef.current = collapseNodes;
     }
     function collapseNodes() {
-        const nodeIds = input.current.split(',').map(id => id.trim());
+        const nodeIds = input.current.split(",").map(id => id.trim());
         treeViewRef.current?.collapseNodes(nodeIds);
 
         setVisible(false);
@@ -92,7 +92,7 @@ export default function ControlsDemoScreen() {
         onSubmitFnRef.current = selectNodes;
     }
     function selectNodes() {
-        const nodeIds = input.current.split(',').map(id => id.trim());
+        const nodeIds = input.current.split(",").map(id => id.trim());
         treeViewRef.current?.selectNodes(nodeIds);
 
         setVisible(false);
@@ -106,7 +106,7 @@ export default function ControlsDemoScreen() {
         onSubmitFnRef.current = unselectNodes;
     }
     function unselectNodes() {
-        const nodeIds = input.current.split(',').map(id => id.trim());
+        const nodeIds = input.current.split(",").map(id => id.trim());
         treeViewRef.current?.unselectNodes(nodeIds);
 
         setVisible(false);

@@ -177,7 +177,11 @@
       "prettier"
     ],
     "rules": {
-      "prettier/prettier": "off"
+      "prettier/prettier": "off",
+      "quotes": [
+        "error",
+        "double"
+      ]
     }
   },
   "eslintIgnore": [
@@ -187,7 +191,7 @@
   ],
   "prettier": {
     "quoteProps": "consistent",
-    "singleQuote": true,
+    "singleQuote": false,
     "tabWidth": 2,
     "trailingComma": "es5",
     "useTabs": false

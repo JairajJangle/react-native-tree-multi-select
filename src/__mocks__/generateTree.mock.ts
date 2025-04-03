@@ -79,7 +79,7 @@ export const tree3d2b = [
 export function generateTree(
     depth: number,
     breadth: number,
-    prefix: string = ''
+    prefix: string = ""
 ): TreeNode[] {
     let nodes: TreeNode[] = [];
 

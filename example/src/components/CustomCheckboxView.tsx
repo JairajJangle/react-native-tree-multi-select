@@ -59,7 +59,7 @@ function _CustomCheckboxView(props: CheckBoxViewProps) {
      */
     function onValueChangeModifier() {
         // If the previous state was 'indeterminate', set checked to true
-        if (value === 'indeterminate') onValueChange(true);
+        if (value === "indeterminate") onValueChange(true);
         else onValueChange(!value);
     }
 
@@ -95,9 +95,9 @@ function _CustomCheckboxView(props: CheckBoxViewProps) {
 
 export const styles = StyleSheet.create({
     mainView: {
-        alignSelf: 'center',
-        alignItems: 'center',
-        flexDirection: 'row',
+        alignSelf: "center",
+        alignItems: "center",
+        flexDirection: "row",
 
         marginEnd: 10
     },
@@ -114,6 +114,6 @@ export const styles = StyleSheet.create({
     },
     checkboxTextStyle: {
         color: "black",
-        marginTop: Platform.OS === 'android' ? 2 : undefined,
+        marginTop: Platform.OS === "android" ? 2 : undefined,
     },
 });

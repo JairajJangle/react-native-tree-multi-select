@@ -12,7 +12,7 @@ interface Props {
 }
 
 const customMapper: (parentName?: string) => (it: TreeNode<number>, idx: number) => TreeNode<number> = (parentStr?: string) => (it: TreeNode<number>, idx: number) => {
-  const name = `${parentStr ? `${parentStr}.` : ''}${idx + 1}`;
+  const name = `${parentStr ? `${parentStr}.` : ""}${idx + 1}`;
   return {
     ...it,
     name,

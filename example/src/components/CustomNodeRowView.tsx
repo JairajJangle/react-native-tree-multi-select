@@ -1,7 +1,7 @@
 import React from "react";
 import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
 import { NodeRowProps } from "react-native-tree-multi-select";
-import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon from "react-native-vector-icons/FontAwesome";
 
 export const CustomNodeRowView = React.memo(_CustomNodeRowView) as typeof _CustomNodeRowView;
 
@@ -64,8 +64,8 @@ function _CustomNodeRowView<ID = string>(props: NodeRowProps<ID>) {
                             <Icon
                                 name={
                                     isExpanded
-                                        ? 'angle-double-up'
-                                        : 'angle-double-down'
+                                        ? "angle-double-up"
+                                        : "angle-double-down"
                                 }
                                 size={25}
                                 color={iconColor}
@@ -82,12 +82,12 @@ function _CustomNodeRowView<ID = string>(props: NodeRowProps<ID>) {
 const styles = StyleSheet.create({
     verticalLineStyle: {
         borderLeftWidth: 1,
-        height: '110%',
+        height: "110%",
         marginStart: 25,
         borderColor: "grey",
     },
     levelsStyle: {
-        flexDirection: 'row',
+        flexDirection: "row",
         marginEnd: 10
     },
     rowView: {
@@ -95,8 +95,8 @@ const styles = StyleSheet.create({
         paddingEnd: 10,
         marginVertical: 0.5,
         flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
+        flexDirection: "row",
+        alignItems: "center",
         justifyContent: "space-between",
         borderColor: "lightgrey",
         borderTopWidth: 1,

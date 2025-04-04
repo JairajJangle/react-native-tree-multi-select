@@ -1,11 +1,11 @@
-import React from 'react';
-import { InteractionManager } from 'react-native';
+import React from "react";
+import { InteractionManager } from "react-native";
 import type {
 	TreeNode,
 	TreeViewProps,
 	TreeViewRef
-} from './types/treeView.types';
-import NodeList from './components/NodeList';
+} from "./types/treeView.types";
+import NodeList from "./components/NodeList";
 import {
 	selectAll,
 	selectAllFiltered,
@@ -17,13 +17,13 @@ import {
 	toggleCheckboxes,
 	expandNodes,
 	collapseNodes
-} from './helpers';
-import { getTreeViewStore, useTreeViewStore } from './store/treeView.store';
-import usePreviousState from './utils/usePreviousState';
+} from "./helpers";
+import { getTreeViewStore, useTreeViewStore } from "./store/treeView.store";
+import usePreviousState from "./utils/usePreviousState";
 import { useShallow } from "zustand/react/shallow";
 import uuid from "react-native-uuid";
 import useDeepCompareEffect from "./utils/useDeepCompareEffect";
-import { typedMemo } from './utils/typedMemo';
+import { typedMemo } from "./utils/typedMemo";
 import {
 	ScrollToNodeHandlerRef,
 	ScrollToNodeParams

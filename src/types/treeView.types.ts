@@ -7,13 +7,13 @@ import type {
 import type { FlashListProps } from "@shopify/flash-list";
 import {
     type Props as RNPaperCheckboxAndroidProps
-} from 'react-native-paper/src/components/Checkbox/CheckboxAndroid';
+} from "react-native-paper/src/components/Checkbox/CheckboxAndroid";
 import {
     ScrollToNodeHandlerRef,
     ScrollToNodeParams
 } from "../handlers/ScrollToNodeHandler";
 
-export type CheckboxValueType = boolean | 'indeterminate';
+export type CheckboxValueType = boolean | "indeterminate";
 
 export interface ExpandIconProps {
     isExpanded: boolean;

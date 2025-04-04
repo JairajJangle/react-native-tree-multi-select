@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import { SelectionPropagation } from "react-native-tree-multi-select";
 import SmallDataScreen from "./SmallDataScreen";
 

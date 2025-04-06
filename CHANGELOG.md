@@ -1,3 +1,10 @@
+## [1.9.4](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.9.3...v1.9.4) (2025-04-04)
+
+
+### Bug Fixes
+
+* removed postinstall script and moved patch-package to bootstrap script ([d400ea8](https://github.com/JairajJangle/react-native-tree-multi-select/commit/d400ea853c75d43a9e300620630f143a7da13e85))
+
 ## [1.9.3](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.9.2...v1.9.3) (2025-03-12)
 
 

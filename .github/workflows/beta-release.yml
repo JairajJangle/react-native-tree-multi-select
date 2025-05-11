@@ -72,7 +72,7 @@ jobs:
         run: |
           yarn example expo export --platform web
 
-  publish-npm:
+  publish-beta:
     needs: [lint, test, build-library, build-web]
     runs-on: ubuntu-latest
     permissions:

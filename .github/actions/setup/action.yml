@@ -9,20 +9,70 @@ runs:
       with:
         node-version-file: .nvmrc
 
-    - name: Cache dependencies
+    # Create a minimal .yarnrc.yml without any plugin references
+    - name: Create minimal Yarn config
+      run: |
+        cat > .yarnrc.yml << EOF
+        nodeLinker: node-modules
+        nmHoistingLimits: workspaces
+        EOF
+      shell: bash
+
+    # Setup Corepack for proper Yarn version management
+    - name: Setup Corepack and Yarn
+      run: |
+        corepack enable
+        corepack prepare yarn@3.6.1 --activate
+      shell: bash
+
+    # Create required directory and install plugins
+    - name: Setup plugins
+      run: |
+        mkdir -p .yarn/plugins
+        yarn plugin import @yarnpkg/plugin-interactive-tools
+        yarn plugin import @yarnpkg/plugin-workspace-tools
+      shell: bash
+
+    # Now update .yarnrc.yml to include the plugins
+    - name: Update Yarn config with plugins
+      run: |
+        cat > .yarnrc.yml << EOF
+        nodeLinker: node-modules
+        nmHoistingLimits: workspaces
+        
+        plugins:
+          - path: .yarn/plugins/@yarnpkg/plugin-interactive-tools.cjs
+            spec: "@yarnpkg/plugin-interactive-tools"
+          - path: .yarn/plugins/@yarnpkg/plugin-workspace-tools.cjs
+            spec: "@yarnpkg/plugin-workspace-tools"
+        EOF
+      shell: bash
+
+    - name: Restore cache
+      uses: actions/cache/restore@v4
       id: yarn-cache
-      uses: actions/cache@v4
       with:
         path: |
           **/node_modules
-        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}-${{ hashFiles('**/package.json') }}
+          .yarn/cache
+          .yarn/unplugged
+          .yarn/install-state.gz
+        key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-${{ hashFiles('**/package.json', '!node_modules/**') }}
         restore-keys: |
-          ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
           ${{ runner.os }}-yarn-
 
     - name: Install dependencies
-      if: steps.yarn-cache.outputs.cache-hit != 'true'
-      run: |
-        yarn install --cwd example --frozen-lockfile
-        yarn install --frozen-lockfile
+      run: yarn install
       shell: bash
+
+    - name: Save cache
+      uses: actions/cache/save@v4
+      if: steps.yarn-cache.outputs.cache-hit != 'true'
+      with:
+        path: |
+          **/node_modules
+          .yarn/cache
+          .yarn/unplugged
+          .yarn/install-state.gz
+        key: ${{ steps.yarn-cache.outputs.cache-primary-key || format('{0}-yarn-{1}-{2}', runner.os, hashFiles('yarn.lock'), hashFiles('**/package.json', '!node_modules/**')) }}

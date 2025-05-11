@@ -15,7 +15,7 @@
 
 ## Installation
 
-Using yarn 
+Using yarn:
 
 ```sh
 yarn add react-native-tree-multi-select
@@ -30,10 +30,11 @@ npm install react-native-tree-multi-select
 Dependencies that need to be installed for this library to work:
 
 1. [@shopify/flash-list](https://github.com/Shopify/flash-list)
-2. [react-native-paper](https://github.com/callstack/react-native-paper)
-3. [react-native-vector-icons](https://github.com/oblador/react-native-vector-icons)
+3. **Icon Library** (One of the following):
+   - **For Expo Apps (including Expo Go)**: No additional setup is needed. This library automatically uses `@expo/vector-icons`, which is included in the Expo SDK.
+   - **For Non-Expo React Native Apps**: Install [react-native-vector-icons](https://github.com/oblador/react-native-vector-icons) (`>=7.1.0`) to enable icon support.
 
-Make sure to follow the native-related installation instructions for these dependencies.
+Make sure to follow the native-related installation instructions for these dependencies if you are using bare workflow.
 
 ## **Highlighted Features**
 
@@ -121,7 +122,7 @@ export function TreeViewUsageExample(){
 
 | Property                           | Type                                                         | Required | Description                                                  |
 | ---------------------------------- | ------------------------------------------------------------ | -------- | ------------------------------------------------------------ |
-| `data`                             | [TreeNode](#treenode)`<ID = string>[]`                       | Yes      | An array of `TreeNode` objects                               |
+| `data`                             | [TreeNode](#treenodeid--string)`<ID = string>[]`     | Yes      | An array of `TreeNode` objects                               |
 | `onCheck`                          | `(checkedIds: ID[], indeterminateIds: ID[]) => void` | No       | Callback when a checkbox state changes                       |
 | `onExpand`                         | `(expandedIds: ID[]) => void`                           | No       | Callback when a node is expanded                             |
 | `preselectedIds`                   | `ID[]`                                                  | No       | An array of `id`s that should be pre-selected                |
@@ -131,10 +132,10 @@ export function TreeViewUsageExample(){
 | `indentationMultiplier`            | `number`                                                     | No       | Indentation (`marginStart`) per level (defaults to 15)       |
 | `treeFlashListProps`               | [TreeFlatListProps](#treeflatlistprops)                      | No       | Props for the flash list                                     |
 | `checkBoxViewStyleProps`           | [BuiltInCheckBoxViewStyleProps](#builtincheckboxviewstyleprops) | No       | Props for the checkbox view                                  |
-| `CheckboxComponent`                | `ComponentType<`[CheckBoxViewProps](#checkboxviewprops)`>`   | No       | A custom checkbox component. Defaults to React Native Paper's Checkbox |
+| `CheckboxComponent`                | `ComponentType<`[CheckBoxViewProps](#checkboxviewprops)`>`   | No       | A custom checkbox component. |
 | `ExpandCollapseIconComponent`      | `ComponentType<`[ExpandIconProps](#expandiconprops)`>`       | No       | A custom expand/collapse icon component                      |
 | `ExpandCollapseTouchableComponent` | `ComponentType<`[TouchableOpacityProps](https://reactnative.dev/docs/touchableopacity#props)`>` | No       | A custom expand/collapse touchable component                 |
-| `CustomNodeRowComponent`           | `React.ComponentType<`[NodeRowProps](#noderowprops)`<ID>>`   | No       | Custom row item component                                    |
+| `CustomNodeRowComponent`           | `React.ComponentType<`[NodeRowProps](#noderowpropsid--string)`<ID>>` | No       | Custom row item component                                    |
 
 ##### Notes
 
@@ -227,7 +228,7 @@ export function TreeViewUsageExample(){
 
 #### CheckboxProps
 
-All properties of `RNPaperCheckboxAndroidProps`(from `react-native-paper`) except for `onPress` and `status`
+All properties of `CheckboxProps`(from `@futurejj/react-native-checkbox`) except for `onPress` and `status`
 
 ---
 
@@ -257,7 +258,7 @@ Type: `boolean` OR `"indeterminate"`
 
 | Property       | Type                                    | Required | Description                                             |
 | -------------- | --------------------------------------- | -------- | ------------------------------------------------------- |
-| `node`         | [TreeNode](#treenode)                   | Yes      | The node to be rendered                                 |
+| `node`         | [TreeNode](#treenodeid--string)         | Yes      | The node to be rendered                                 |
 | `level`        | `number`                                | Yes      | The depth of the node in the tree                       |
 | `checkedValue` | [CheckboxValueType](#checkboxvaluetype) | Yes      | The current value of the checkbox                       |
 | `isExpanded`   | `boolean`                               | Yes      | Whether the node is expanded or not                     |
@@ -274,7 +275,7 @@ Type: `boolean` OR `"indeterminate"`
 - [ ] Prop to disable certain nodes from getting checked
 - [x] Ref function to programatically expand/collapse a certain node 
 - [x] Ref function to programatically un/check a certain node
-- [ ] Ref function to auto-scroll to a certain node's position
+- [x] Ref function to auto-scroll to a certain node's position - available in 1.9.0+
 
 If you do not see what you want in the planned feature list, raise a feature request. 
 

@@ -1,3 +1,46 @@
+## [1.9.4](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.9.3...v1.9.4) (2025-04-04)
+
+
+### Bug Fixes
+
+* removed postinstall script and moved patch-package to bootstrap script ([d400ea8](https://github.com/JairajJangle/react-native-tree-multi-select/commit/d400ea853c75d43a9e300620630f143a7da13e85))
+
+## [1.9.3](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.9.2...v1.9.3) (2025-03-12)
+
+
+### Bug Fixes
+
+* added missing changes for lodash removal ([d42cafc](https://github.com/JairajJangle/react-native-tree-multi-select/commit/d42cafcaa18164af12f945f6ed37e07e8766a0ae))
+
+
+### Performance Improvements
+
+* replaced lodash isEqual with fast-is-equal potentially reducing package size ([a166c31](https://github.com/JairajJangle/react-native-tree-multi-select/commit/a166c31f9c152a8088764b687b4a843e8f7d74ef))
+
+## [1.9.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.9.1...v1.9.2) (2025-03-12)
+
+
+### Bug Fixes
+
+* upgraded zustand to v5 and upgraded other deps ([b308de6](https://github.com/JairajJangle/react-native-tree-multi-select/commit/b308de6d8e3597731f9233bb50a7c389f8d4e151))
+
+## [1.9.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.9.0...v1.9.1) (2025-02-15)
+
+
+### Bug Fixes
+
+* upgraded some deps ([352d629](https://github.com/JairajJangle/react-native-tree-multi-select/commit/352d629a54a42af5e8a30a3e6d59206bb5ba1878))
+
+# [1.9.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.8.1...v1.9.0) (2025-02-14)
+
+
+### Features
+
+* added ref method to get child to parent map used in the tree view ([e496a70](https://github.com/JairajJangle/react-native-tree-multi-select/commit/e496a703ee26663626c30d0a82dcd452344de42d))
+* added scroll to node id feature ([1f87730](https://github.com/JairajJangle/react-native-tree-multi-select/commit/1f877305ab891e2ec6f007b45cb9cd2782a89121))
+* added scroll to node id feature ([38d7236](https://github.com/JairajJangle/react-native-tree-multi-select/commit/38d723680d829f6cc57717537a8fb31e2aa1687b))
+* updated example app with new scroll to node id feature ([db8dcdd](https://github.com/JairajJangle/react-native-tree-multi-select/commit/db8dcdd98f2a33ce225f200933afee7953ff00c5))
+
 # [1.9.0-beta.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.8.1...v1.9.0-beta.1) (2025-02-06)
 
 

@@ -47,6 +47,9 @@ example/ios/Pods
 # Ruby
 example/vendor/
 
+# Example dist
+example/dist/
+
 # node.js
 #
 node_modules/
@@ -59,6 +62,11 @@ buck-out/
 \.buckd/
 android/app/libs
 android/keystores/debug.keystore
+
+
+# Yarn
+.yarn/
+.pnp.*
 
 # Expo
 .expo/

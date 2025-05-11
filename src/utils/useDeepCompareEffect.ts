@@ -1,5 +1,5 @@
 import React from "react";
-import isEqual from "lodash/isEqual";
+import { fastIsEqual } from "fast-is-equal";
 
 /**
  * Deep compare effect hook.
@@ -22,7 +22,10 @@ export default function useDeepCompareEffect(
   const dependenciesRef = React.useRef<React.DependencyList>(memoizedDependencies);
 
   // Check for dependency changes
-  const dependenciesChanged = !isEqual(dependenciesRef.current, memoizedDependencies);
+  const dependenciesChanged = !fastIsEqual(
+    dependenciesRef.current,
+    memoizedDependencies
+  );
   if (dependenciesChanged) {
     dependenciesRef.current = memoizedDependencies;
   }

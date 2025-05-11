@@ -1,7 +1,7 @@
-import { act } from '@testing-library/react-native';
-import { StateCreator } from 'zustand';
+import { act } from "@testing-library/react-native";
+import { type StateCreator } from "zustand";
 
-const { create: actualCreate } = jest.requireActual('zustand');
+const { create: actualCreate } = jest.requireActual("zustand");
 
 // a variable to hold reset functions for all stores declared in the app
 const storeResetFns = new Set<() => void>();

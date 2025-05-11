@@ -1,7 +1,7 @@
 {
   "name": "react-native-tree-multi-select-example",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "App.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",

@@ -7,7 +7,20 @@ module.exports = {
     }
   ],
   plugins: [
-    "@semantic-release/commit-analyzer", // Analyzes commits for version bumping
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        preset: "angular",
+        releaseRules: [
+          { type: "chore", scope: "deps", release: "patch" },
+          { type: "chore", breaking: true, release: "major" },
+          { type: "chore", scope: "breaking", release: "major" },
+        ],
+        parserOpts: {
+          noteKeywords: ["BREAKING CHANGE", "BREAKING CHANGES"],
+        },
+      },
+    ],
     "@semantic-release/release-notes-generator", // Generates release notes
     "@semantic-release/changelog", // Generates the changelog
     [

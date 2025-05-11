@@ -60,6 +60,11 @@ buck-out/
 android/app/libs
 android/keystores/debug.keystore
 
+
+# Yarn
+.yarn/
+.pnp.*
+
 # Expo
 .expo/
 

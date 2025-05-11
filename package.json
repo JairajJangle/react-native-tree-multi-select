@@ -106,7 +106,7 @@
     "prettier": "^3.3.3",
     "react": "18.2.0",
     "react-native": "^0.72.15",
-    "react-native-builder-bob": "^0.30.0",
+    "react-native-builder-bob": "^0.40.10",
     "react-test-renderer": "18.3.0",
     "release-it": "^18.1.2",
     "semantic-release": "^24.1.0",

@@ -1,19 +1,18 @@
 {
-  "exclude": ["node_modules", "node_modules/react-native-paper"],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"],
   "compilerOptions": {
-    "baseUrl": "./",
-    "paths": {
-      "react-native-tree-multi-select": ["./src/index"],
-      "react": ["./node_modules/@types/react"]
-    },
+    "rootDir": "./",
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "jsx": "react",
-    "lib": ["esnext", "dom"],
-    "module": "esnext",
+    "jsx": "react-jsx",
+    "lib": ["ESNext", "DOM"],
+    "module": "ESNext",
     "moduleResolution": "node",
+    "noEmit": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noImplicitUseStrict": false,
@@ -24,7 +23,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "esnext",
+    "target": "ESNext",
     "verbatimModuleSyntax": false
   }
 }

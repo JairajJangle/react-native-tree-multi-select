@@ -24,7 +24,7 @@ import { useShallow } from "zustand/react/shallow";
 import uuid from "react-native-uuid";
 import useDeepCompareEffect from "./utils/useDeepCompareEffect";
 import { typedMemo } from "./utils/typedMemo";
-import {
+import type {
 	ScrollToNodeHandlerRef,
 	ScrollToNodeParams
 } from "./handlers/ScrollToNodeHandler";

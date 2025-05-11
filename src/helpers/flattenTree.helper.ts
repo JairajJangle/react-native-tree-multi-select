@@ -1,4 +1,7 @@
-import { TreeNode, __FlattenedTreeNode__ } from "../types/treeView.types";
+import {
+    type TreeNode,
+    type __FlattenedTreeNode__
+} from "../types/treeView.types";
 
 /**
  * Flatten the tree and attach a "level" key to object to indicate it's depth. This

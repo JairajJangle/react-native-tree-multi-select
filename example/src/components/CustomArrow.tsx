@@ -1,10 +1,10 @@
-import React from "react";
+import { memo } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import Icon from "@expo/vector-icons/MaterialCommunityIcons";
 
-import { ExpandIconProps } from "src/types/treeView.types";
+import { type ExpandIconProps } from "react-native-tree-multi-select";
 
-export const CustomArrow = React.memo(_CustomArrow);
+export const CustomArrow = memo(_CustomArrow);
 
 function _CustomArrow(props: ExpandIconProps) {
     const { isExpanded } = props;

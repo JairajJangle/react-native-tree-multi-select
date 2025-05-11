@@ -1,9 +1,13 @@
 import { debounce } from "lodash";
-import React, { useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { SafeAreaView, View, Button } from "react-native";
-import { SelectionPropagation, TreeViewRef, TreeView } from "react-native-tree-multi-select";
+import {
+    type SelectionPropagation,
+    type TreeViewRef,
+    TreeView
+} from "react-native-tree-multi-select";
 import SearchInput from "../components/SearchInput";
-import { generateTreeList, TreeNode } from "../utils/sampleDataGenerator";
+import { generateTreeList, type TreeNode } from "../utils/sampleDataGenerator";
 import { styles } from "./screens.styles";
 import { CustomNodeRowView } from "../components/CustomNodeRowView";
 
@@ -11,14 +15,20 @@ interface Props {
     selectionPropagation?: SelectionPropagation;
 }
 
-const customMapper: (parentName?: string) => (it: TreeNode<number>, idx: number) => TreeNode<number> = (parentStr?: string) => (it: TreeNode<number>, idx: number) => {
-  const name = `${parentStr ? `${parentStr}.` : ""}${idx + 1}`;
-  return {
-    ...it,
-    name,
-    children: it.children?.map(customMapper(name)) ?? []
-  } as TreeNode<number>
-}
+const customMapper: (parentName?: string) => (
+    it: TreeNode<number>,
+    idx: number
+) => TreeNode<number> = (parentStr?: string) => (
+    it: TreeNode<number>,
+    idx: number
+) => {
+    const name = `${parentStr ? `${parentStr}.` : ""}${idx + 1}`;
+    return {
+        ...it,
+        name,
+        children: it.children?.map(customMapper(name)) ?? []
+    } as TreeNode<number>;
+};
 
 export default function CustomNodeID(props: Props) {
     const { selectionPropagation } = props;
@@ -26,17 +36,21 @@ export default function CustomNodeID(props: Props) {
     const idRef = useRef<number>(1);
 
     useEffect(() => {
-      return () => {
-        idRef.current = 1
-      };
-    }, [])
+        return () => {
+            idRef.current = 1;
+        };
+    }, []);
 
-    const sampleData = React.useMemo(() => generateTreeList<number>(30, 4, 5, (_prev, _idx) => idRef.current++, 1).map(customMapper()), []);
+    const sampleData = useMemo(() => generateTreeList<number>(
+        30, 4, 5,
+        (_prev, _idx) => idRef.current++, 1).map(customMapper()),
+        []
+    );
     console.log(sampleData);
-    const treeViewRef = React.useRef<TreeViewRef<number> | null>(null);
+    const treeViewRef = useRef<TreeViewRef<number> | null>(null);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const debouncedSetSearchText = React.useCallback(
+    const debouncedSetSearchText = useCallback(
         debounce((text) => treeViewRef.current?.setSearchText(text), 375, {
             leading: true,
             trailing: true,

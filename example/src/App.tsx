@@ -1,9 +1,7 @@
-import * as React from "react";
-
 import SmallDataScreen from "./screens/SmallDataScreen";
 import { ShowcaseApp } from "@gorhom/showcase-template";
 import {
-  ShowcaseExampleScreenSectionType
+  type ShowcaseExampleScreenSectionType
 } from "@gorhom/showcase-template/lib/typescript/types";
 import MediumDataScreen from "./screens/MediumDataScreen";
 import LargeDataScreen from "./screens/LargeDataScreen";

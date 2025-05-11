@@ -6,6 +6,12 @@ on:
   pull_request:
     branches:
       - beta
+  merge_group:
+    types:
+      - checks_requested
+
+env:
+  NODE_OPTIONS: --experimental-vm-modules
 
 jobs:
   lint:

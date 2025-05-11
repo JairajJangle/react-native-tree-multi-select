@@ -1,3 +1,13 @@
+# [2.0.0-beta.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.9.4...v2.0.0-beta.1) (2025-05-11)
+
+
+* feat!: removed react-native-paper dep BREAKING CHANGE: due to typecheck issues ([0038841](https://github.com/JairajJangle/react-native-tree-multi-select/commit/003884122df9a452627514a9a3f0a6a67c855921))
+
+
+### BREAKING CHANGES
+
+* due to typecheck issues
+
 ## [1.9.4](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.9.3...v1.9.4) (2025-04-04)
 
 

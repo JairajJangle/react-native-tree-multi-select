@@ -1,7 +1,7 @@
 {
   "name": "react-native-tree-multi-select-example",
   "version": "1.0.0",
-  "main": "App.js",
+  "main": "index.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -17,6 +17,7 @@
     "@shopify/flash-list": "^1.8.0",
     "expo": "~53.0.9",
     "expo-status-bar": "~2.2.3",
+    "lodash": "^4.17.21",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.2",

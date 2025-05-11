@@ -47,6 +47,9 @@ example/ios/Pods
 # Ruby
 example/vendor/
 
+# Example dist
+example/dist/
+
 # node.js
 #
 node_modules/

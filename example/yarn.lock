@@ -5300,14 +5300,14 @@ react-native-gesture-handler@2.17.1:
     invariant "^2.2.4"
     prop-types "^15.7.2"
 
-react-native-paper@^5.13.1:
-  version "5.13.1"
-  resolved "https://registry.yarnpkg.com/react-native-paper/-/react-native-paper-5.13.1.tgz#50217012b2d008397296c9bfb755d603a373f48b"
-  integrity sha512-8frKVKJ5JBd8WL1G3tpcYzOgK40kxkD/U+yLHGKNeLnD6v1Qc9W6DxWTHWN7lsX/DPYnhgvw1aKkYaPTmDj5pg==
+react-native-paper@^5.13.3:
+  version "5.14.1"
+  resolved "https://registry.yarnpkg.com/react-native-paper/-/react-native-paper-5.14.1.tgz#280883a41abe0531279cff72330fee60c97b7a97"
+  integrity sha512-3TAO7PtC0tqfnLLX1rGC6hhzO4v7yk2jy7RuKptzPaJSaMIJeEe+9VxxFQRmF/le5tS8N9DUOTeUxy3YBOls/Q==
   dependencies:
     "@callstack/react-theme-provider" "^3.0.9"
     color "^3.1.2"
-    use-latest-callback "^0.1.5"
+    use-latest-callback "^0.2.3"
 
 react-native-safe-area-context@^4.7.1:
   version "4.14.1"
@@ -6225,12 +6225,7 @@ update-browserslist-db@^1.1.1:
     escalade "^3.2.0"
     picocolors "^1.1.1"
 
-use-latest-callback@^0.1.5:
-  version "0.1.11"
-  resolved "https://registry.yarnpkg.com/use-latest-callback/-/use-latest-callback-0.1.11.tgz#e073fcbba792cc95ac661d96bc13b6041956cfe1"
-  integrity sha512-8nhb73STSD/z3GTHklvNjL8F9wMOo0bj0AFnulpIYuFTm6aQlT3ZcNbXF2YurKImIY8+kpSFSDHZZyQmurGrhw==
-
-use-latest-callback@^0.2.1:
+use-latest-callback@^0.2.1, use-latest-callback@^0.2.3:
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/use-latest-callback/-/use-latest-callback-0.2.3.tgz#2d644d3063040b9bc2d4c55bb525a13ae3de9e16"
   integrity sha512-7vI3fBuyRcP91pazVboc4qu+6ZqM8izPWX9k7cRnT8hbD5svslcknsh3S9BUhaK11OmgTV4oWZZVSeQAiV53SQ==

@@ -15,6 +15,7 @@
     "@react-navigation/native-stack": "^6.9.15",
     "@react-navigation/stack": "^6.3.17",
     "@shopify/flash-list": "^1.8.0",
+    "babel-plugin-react-compiler": "beta",
     "expo": "~53.0.9",
     "expo-status-bar": "~2.2.3",
     "lodash": "^4.17.21",

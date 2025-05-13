@@ -80,6 +80,7 @@
   "devDependencies": {
     "@commitlint/config-conventional": "^19.7.1",
     "@evilmartians/lefthook": "^1.10.10",
+    "@expo/vector-icons": "14.1.0",
     "@react-native-community/eslint-config": "^3.2.0",
     "@react-native/babel-preset": "0.78.2",
     "@release-it/conventional-changelog": "^10.0.0",
@@ -115,7 +116,7 @@
   },
   "peerDependencies": {
     "@shopify/flash-list": "1.x.x",
-    "react": "*",
+    "react": ">=18.0.0",
     "react-native": "*",
     "react-native-vector-icons": "*"
   },
@@ -213,7 +214,6 @@
   "dependencies": {
     "@futurejj/react-native-checkbox": "^1.0.0",
     "fast-is-equal": "^1.0.2",
-    "react-native-uuid": "^2.0.3",
     "zustand": "^5.0.3"
   },
   "workspaces": [

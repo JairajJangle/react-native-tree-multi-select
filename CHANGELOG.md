@@ -1,3 +1,13 @@
+# [2.0.0-beta.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.0-beta.1...v2.0.0-beta.2) (2025-05-13)
+
+
+* fix!: removed react-native-uuid in favor of useId from React 18+ BREAKING CHANGE: Dropped support for React < 18 ([b1ccd5d](https://github.com/JairajJangle/react-native-tree-multi-select/commit/b1ccd5d38848a8f49455db9d95a4de1838f64adb))
+
+
+### BREAKING CHANGES
+
+* Dropped support for React < 18
+
 # [2.0.0-beta.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.9.4...v2.0.0-beta.1) (2025-05-11)
 
 

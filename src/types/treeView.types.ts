@@ -9,7 +9,9 @@ import type {
     ScrollToNodeHandlerRef,
     ScrollToNodeParams
 } from "../handlers/ScrollToNodeHandler";
-import type { CheckboxProps as _CheckboxProps } from "@futurejj/react-native-checkbox";
+import type {
+    CheckboxProps as _CheckboxProps
+} from "@futurejj/react-native-checkbox";
 
 export type CheckboxValueType = boolean | "indeterminate";
 

@@ -31,7 +31,6 @@ If applicable, add screenshots/screen records to help explain your problem.
 - Version of Node.js: [e.g. 14.15.0]
 - Version of NPM: [e.g. 7.0.0]
 - Version of @shopify/flash-list: [e.g. 2.0.0]
-- Version of react-native-paper: [e.g. 4.9.2]
 - Version of react-native-vector-icons: [e.g. 8.1.0]
 
 **Additional Context**

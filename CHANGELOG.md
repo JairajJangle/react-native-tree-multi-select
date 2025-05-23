@@ -1,3 +1,10 @@
+# [2.0.0-beta.3](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.0-beta.2...v2.0.0-beta.3) (2025-05-23)
+
+
+### Bug Fixes
+
+* use latest performant fast-is-equal package version for useDeepCompareEffect hook ([50adcc3](https://github.com/JairajJangle/react-native-tree-multi-select/commit/50adcc30eb01790dfb785ac75ab3941cc786a4ac))
+
 # [2.0.0-beta.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.0-beta.1...v2.0.0-beta.2) (2025-05-13)
 
 

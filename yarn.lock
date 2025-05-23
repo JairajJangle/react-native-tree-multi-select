@@ -2318,7 +2318,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@futurejj/react-native-checkbox@npm:^1.0.0":
+"@futurejj/react-native-checkbox@npm:^1.0.2":
   version: 1.0.2
   resolution: "@futurejj/react-native-checkbox@npm:1.0.2"
   peerDependencies:
@@ -2332,18 +2332,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gorhom/showcase-template@npm:^3.0.2":
-  version: 3.0.2
-  resolution: "@gorhom/showcase-template@npm:3.0.2"
+"@gorhom/showcase-template@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "@gorhom/showcase-template@npm:4.0.0"
   peerDependencies:
-    "@react-navigation/native": ~6.0.0
-    "@react-navigation/stack": ~6.0.0
+    "@react-navigation/native": ~7.1.9
+    "@react-navigation/stack": ~7.3.2
     react: "*"
     react-native: "*"
-    react-native-gesture-handler: ~2.12.0
-    react-native-reanimated: ~3.3.0
-    react-native-safe-area-context: ~4.7.0
-  checksum: d11eecaa128c30fd9b608674f96733ecde8b417465d5a7905dd45f3f2dd006ec8f08f664a04556764eedeafcc2d74f3c2f3dfa1b137f528da3d36c3203f95f12
+    react-native-gesture-handler: ~2.25.0
+    react-native-reanimated: ~3.17.5
+    react-native-safe-area-context: ~5.4.0
+  checksum: bda1a50c1ce97d475026c2b470ff0af1abdb346ccb8d4775d3c55a0d6b31fbf6d42ed5b9ead1d634e72a0610c336204c12eb21dd56f611d9ddad01bd6f4a1413
   languageName: node
   linkType: hard
 
@@ -8229,10 +8229,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-is-equal@npm:^1.0.2":
-  version: 1.0.4
-  resolution: "fast-is-equal@npm:1.0.4"
-  checksum: 8d0b35a95ec0b0d34134dc75c1176c686bd0b64e85998a97f5d2569b2364b02da9b8dbe5fdba1cdb78fe7082e763a42d099fbbc6d7afc9306236996a64e8b070
+"fast-is-equal@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "fast-is-equal@npm:1.2.0"
+  checksum: 49a69b50e2fe7e3e4adcb1c6072f847293284a2bfd9fc04a858b52d23250e4042afb314d6312ce19329493a3056235ff933271932ed2c3974f227c5217f3a799
   languageName: node
   linkType: hard
 
@@ -14844,7 +14844,7 @@ __metadata:
   dependencies:
     "@babel/core": ^7.20.0
     "@expo/metro-runtime": ~5.0.4
-    "@gorhom/showcase-template": ^3.0.2
+    "@gorhom/showcase-template": ^4.0.0
     "@react-navigation/native": ^6.1.7
     "@react-navigation/native-stack": ^6.9.15
     "@react-navigation/stack": ^6.3.17
@@ -14873,7 +14873,7 @@ __metadata:
     "@commitlint/config-conventional": ^19.7.1
     "@evilmartians/lefthook": ^1.10.10
     "@expo/vector-icons": 14.1.0
-    "@futurejj/react-native-checkbox": ^1.0.0
+    "@futurejj/react-native-checkbox": ^1.0.2
     "@react-native-community/eslint-config": ^3.2.0
     "@react-native/babel-preset": 0.78.2
     "@release-it/conventional-changelog": ^10.0.0
@@ -14895,7 +14895,7 @@ __metadata:
     eslint: ^8.4.1
     eslint-config-prettier: ^8.5.0
     eslint-plugin-prettier: ^4.0.0
-    fast-is-equal: ^1.0.2
+    fast-is-equal: ^1.2.0
     jest: ^29.7.0
     patch-package: ^8.0.0
     prettier: ^3.3.3

@@ -1,6 +1,6 @@
 {
   "name": "react-native-tree-multi-select",
-  "version": "2.0.0-beta.3",
+  "version": "2.0.0-beta.4",
   "description": "A super-fast, customizable tree view component for React Native with multi-selection, checkboxes, and search filtering capabilities.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",

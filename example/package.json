@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~5.0.4",
-    "@gorhom/showcase-template": "^4.0.0",
+    "@gorhom/showcase-template": "^4.0.1",
     "@react-navigation/native": "^6.1.7",
     "@react-navigation/native-stack": "^6.9.15",
     "@react-navigation/stack": "^6.3.17",

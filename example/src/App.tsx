@@ -17,6 +17,7 @@ import packageJson from "../../package.json";
 import { TwoTreeViewsScreen } from "./screens/TwoTreeViewsScreen";
 import CustomNodeID from "./screens/CustomNodeIDScreen";
 import ControlsDemoScreen from "./screens/ControlsDemoScreen";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const data: ShowcaseExampleScreenSectionType[] = [
   {
@@ -103,15 +104,17 @@ const data: ShowcaseExampleScreenSectionType[] = [
 
 export default function App() {
   return (
-    <ShowcaseApp
-      version={packageJson.version}
-      name="react-native-tree-multi-select"
-      description="⚡️Super-fast tree view with multi-selection capabilities, using checkboxes and search filtering"
-      author={{
-        username: "@JairajJangle",
-        url: "https://github.com/JairajJangle",
-      }}
-      data={data}
-    />
+    <GestureHandlerRootView>
+      <ShowcaseApp
+        version={packageJson.version}
+        name="react-native-tree-multi-select"
+        description="⚡️Super-fast tree view with multi-selection capabilities, using checkboxes and search filtering"
+        author={{
+          username: "@JairajJangle",
+          url: "https://github.com/JairajJangle",
+        }}
+        data={data}
+      />
+    </GestureHandlerRootView>
   );
 }

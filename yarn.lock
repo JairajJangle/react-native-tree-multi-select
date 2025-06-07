@@ -8229,10 +8229,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-is-equal@npm:^1.2.2":
-  version: 1.2.2
-  resolution: "fast-is-equal@npm:1.2.2"
-  checksum: c737fad8317d2ead521a5ea99dfbc670c354fc6203e308ccfb30abda1e15a92a26153d0300ff550d5bf2570cadd1ac174e3c908758d92f664355b90dd78f9565
+"fast-is-equal@npm:^1.2.3":
+  version: 1.2.3
+  resolution: "fast-is-equal@npm:1.2.3"
+  checksum: 3793df405e7a8ad8c65a032b12d671b9eb8395e2a1ca727d9498727cf0c0cb7f12ae18efca595d36a00004b2a1e3be0161d6185299d5cde69e0767029f4dde68
   languageName: node
   linkType: hard
 
@@ -14895,7 +14895,7 @@ __metadata:
     eslint: ^8.4.1
     eslint-config-prettier: ^8.5.0
     eslint-plugin-prettier: ^4.0.0
-    fast-is-equal: ^1.2.2
+    fast-is-equal: ^1.2.3
     jest: ^29.7.0
     patch-package: ^8.0.0
     prettier: ^3.3.3

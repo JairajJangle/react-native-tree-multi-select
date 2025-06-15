@@ -14,7 +14,7 @@
     "@react-navigation/native": "^6.1.7",
     "@react-navigation/native-stack": "^6.9.15",
     "@react-navigation/stack": "^6.3.17",
-    "@shopify/flash-list": "^1.8.0",
+    "@shopify/flash-list": "^1.8.2",
     "babel-plugin-react-compiler": "beta",
     "expo": "~53.0.11",
     "expo-status-bar": "~2.2.3",
@@ -22,16 +22,16 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.3",
-    "react-native-gesture-handler": "^2.25.0",
-    "react-native-reanimated": "~3.17.4",
-    "react-native-safe-area-context": "^5.4.0",
+    "react-native-gesture-handler": "^2.26.0",
+    "react-native-reanimated": "~3.17.5",
+    "react-native-safe-area-context": "^5.4.1",
     "react-native-screens": "~4.11.1",
     "react-native-web": "~0.20.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@types/lodash": "^4.17.16",
-    "react-native-builder-bob": "^0.40.10"
+    "react-native-builder-bob": "^0.40.12"
   },
   "private": true
 }

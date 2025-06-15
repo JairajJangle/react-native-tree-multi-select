@@ -1,5 +1,4 @@
-import React, { useId } from "react";
-import { InteractionManager } from "react-native";
+import React, { startTransition, useId } from "react";
 import type {
 	TreeNode,
 	TreeViewProps,
@@ -185,7 +184,7 @@ function _innerTreeView<ID>(
 
 	React.useEffect(() => {
 		if (searchText) {
-			InteractionManager.runAfterInteractions(() => {
+			startTransition(() => {
 				updateExpanded(new Set(initialTreeViewData.flatMap(
 					(item) => getIds(item)
 				)));
@@ -194,7 +193,7 @@ function _innerTreeView<ID>(
 		else if (prevSearchText && prevSearchText !== "") {
 			/* Collapse all nodes only if previous search query was non-empty: this is
 			done to prevent node collapse on first render if preExpandedIds is provided */
-			InteractionManager.runAfterInteractions(() => {
+			startTransition(() => {
 				updateExpanded(new Set());
 			});
 		}

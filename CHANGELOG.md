@@ -1,3 +1,10 @@
+# [2.0.0-beta.5](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.0-beta.4...v2.0.0-beta.5) (2025-06-15)
+
+
+### Bug Fixes
+
+* replaced interaction manager with start transition and minor deps upgrade ([531b050](https://github.com/JairajJangle/react-native-tree-multi-select/commit/531b05073c5e0123708057ad0ba30af2a3994ee6))
+
 # [2.0.0-beta.4](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.0-beta.3...v2.0.0-beta.4) (2025-05-29)
 
 

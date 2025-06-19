@@ -1,6 +1,6 @@
-import React, { useCallback } from "react";
+import { memo, useCallback } from "react";
 import {
-    ColorValue,
+    type ColorValue,
     Platform,
     StyleSheet,
     Text,
@@ -9,7 +9,7 @@ import {
 } from "react-native";
 
 import {
-    CheckBoxViewProps,
+    type CheckBoxViewProps,
 } from "react-native-tree-multi-select";
 
 function arePropsEqual(
@@ -22,7 +22,7 @@ function arePropsEqual(
     );
 }
 
-export const CustomCheckboxView = React.memo(_CustomCheckboxView, arePropsEqual);
+export const CustomCheckboxView = memo(_CustomCheckboxView, arePropsEqual);
 
 function _CustomCheckboxView(props: CheckBoxViewProps) {
     const {

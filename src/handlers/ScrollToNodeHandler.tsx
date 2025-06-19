@@ -36,7 +36,7 @@ import React from "react";
 import { expandNodes } from "../helpers/expandCollapse.helper";
 import { useTreeViewStore } from "../store/treeView.store";
 import { useShallow } from "zustand/react/shallow";
-import { __FlattenedTreeNode__ } from "../types/treeView.types";
+import { type __FlattenedTreeNode__ } from "../types/treeView.types";
 import { typedMemo } from "../utils/typedMemo";
 import { fastIsEqual } from "fast-is-equal";
 

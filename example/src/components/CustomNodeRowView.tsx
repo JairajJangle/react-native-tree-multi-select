@@ -1,9 +1,9 @@
-import React from "react";
+import { memo } from "react";
 import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
-import { NodeRowProps } from "react-native-tree-multi-select";
+import { type NodeRowProps } from "react-native-tree-multi-select";
 import Icon from "react-native-vector-icons/FontAwesome";
 
-export const CustomNodeRowView = React.memo(_CustomNodeRowView) as typeof _CustomNodeRowView;
+export const CustomNodeRowView = memo(_CustomNodeRowView) as typeof _CustomNodeRowView;
 
 const VerticalLine = () => (
     <View style={styles.verticalLineStyle} />

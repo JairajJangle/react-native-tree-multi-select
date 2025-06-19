@@ -1,4 +1,4 @@
-import { TreeNode } from "../types/treeView.types";
+import { type TreeNode } from "../types/treeView.types";
 import { getTreeViewStore } from "../store/treeView.store";
 import { toggleCheckboxes } from "./toggleCheckbox.helper";
 

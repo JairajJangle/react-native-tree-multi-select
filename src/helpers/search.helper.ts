@@ -1,4 +1,4 @@
-import { TreeNode } from "../types/treeView.types";
+import { type TreeNode } from "../types/treeView.types";
 
 /**
  * Get filtered tree data based on the search term and the search keys

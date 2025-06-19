@@ -1,5 +1,4 @@
-import * as React from "react";
-
+import { useRef, useCallback } from "react";
 import {
     Button,
     SafeAreaView,
@@ -11,7 +10,7 @@ import SearchInput from "../components/SearchInput";
 import debounce from "lodash/debounce";
 
 import {
-    SelectionPropagation,
+    type SelectionPropagation,
     TreeView,
     type TreeViewRef
 } from "react-native-tree-multi-select";
@@ -26,11 +25,11 @@ interface Props {
 export default function SmallDataScreen(props: Props) {
     const { selectionPropagation } = props;
 
-    const sampleData = React.useRef(generateTreeList(5, 4, 3, defaultID, "1"));
-    const treeViewRef = React.useRef<TreeViewRef | null>(null);
+    const sampleData = useRef(generateTreeList(5, 4, 3, defaultID, "1"));
+    const treeViewRef = useRef<TreeViewRef | null>(null);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const debouncedSetSearchText = React.useCallback(
+    const debouncedSetSearchText = useCallback(
         debounce((text) => treeViewRef.current?.setSearchText(text), 375, {
             leading: true,
             trailing: true,

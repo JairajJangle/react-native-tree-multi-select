@@ -125,7 +125,7 @@
       "optional": true
     }
   },
-  "packageManager": "yarn@3.6.1",
+  "packageManager": "yarn@4.9.2",
   "jest": {
     "preset": "react-native",
     "setupFilesAfterEnv": [
@@ -213,7 +213,7 @@
     ]
   },
   "dependencies": {
-    "@futurejj/react-native-checkbox": "^1.0.3",
+    "@futurejj/react-native-checkbox": "^1.0.4",
     "fast-is-equal": "^1.2.3",
     "zustand": "^5.0.5"
   },

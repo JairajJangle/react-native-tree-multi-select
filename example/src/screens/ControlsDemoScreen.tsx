@@ -1,5 +1,3 @@
-import * as React from "react";
-
 import {
     Button,
     Modal,
@@ -21,36 +19,37 @@ import {
     generateTreeList
 } from "../utils/sampleDataGenerator";
 import debounce from "lodash/debounce";
+import { useRef, useState, useEffect, useCallback } from "react";
 
 export default function ControlsDemoScreen() {
-    const sampleData = React.useRef(generateTreeList(200, 5, 6, defaultID, "1"));
-    const treeViewRef = React.useRef<TreeViewRef | null>(null);
-    const onSubmitFnRef = React.useRef<() => void>(() => { });
+    const sampleData = useRef(generateTreeList(200, 5, 6, defaultID, "1"));
+    const treeViewRef = useRef<TreeViewRef | null>(null);
+    const onSubmitFnRef = useRef<() => void>(() => { });
 
-    const [dialogTitle, setDialogTitle] = React.useState("Enter Text");
-    const [placeholder, setPlaceholder] = React.useState("Type here");
+    const [dialogTitle, setDialogTitle] = useState("Enter Text");
+    const [placeholder, setPlaceholder] = useState("Type here");
 
     const [
         showExpandScrolledNodeOption,
         setShowExpandScrolledNodeOption
-    ] = React.useState(false);
-    const [expandScrolledNode, setExpandScrolledNode] = React.useState(false);
+    ] = useState(false);
+    const [expandScrolledNode, setExpandScrolledNode] = useState(false);
 
-    const latestExpandScrolledNode = React.useRef(expandScrolledNode);
-    React.useEffect(() => {
+    const latestExpandScrolledNode = useRef(expandScrolledNode);
+    useEffect(() => {
         latestExpandScrolledNode.current = expandScrolledNode;
     }, [expandScrolledNode]);
 
-    const [visible, setVisible] = React.useState(false);
-    const input = React.useRef("");
+    const [visible, setVisible] = useState(false);
+    const input = useRef("");
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!visible)
             setShowExpandScrolledNodeOption(false);
     }, [visible]);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const debouncedSetInput = React.useCallback(
+    const debouncedSetInput = useCallback(
         debounce((text) => {
             input.current = text;
         }, 100, { trailing: true, leading: false }),

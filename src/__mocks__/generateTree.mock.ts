@@ -1,4 +1,4 @@
-import { TreeNode, __FlattenedTreeNode__ } from "../types/treeView.types";
+import { type TreeNode, type __FlattenedTreeNode__ } from "../types/treeView.types";
 
 export const tree3d2b = [
     {

@@ -1,5 +1,4 @@
-import React from "react";
-import { InteractionManager } from "react-native";
+import React, { startTransition, useId } from "react";
 import type {
 	TreeNode,
 	TreeViewProps,
@@ -21,10 +20,9 @@ import {
 import { getTreeViewStore, useTreeViewStore } from "./store/treeView.store";
 import usePreviousState from "./utils/usePreviousState";
 import { useShallow } from "zustand/react/shallow";
-import uuid from "react-native-uuid";
 import useDeepCompareEffect from "./utils/useDeepCompareEffect";
 import { typedMemo } from "./utils/typedMemo";
-import {
+import type {
 	ScrollToNodeHandlerRef,
 	ScrollToNodeParams
 } from "./handlers/ScrollToNodeHandler";
@@ -58,7 +56,7 @@ function _innerTreeView<ID>(
 		CustomNodeRowComponent,
 	} = props;
 
-	const storeId = React.useMemo(() => uuid.v4(), []);
+	const storeId = useId();
 
 	const {
 		expanded,
@@ -186,7 +184,7 @@ function _innerTreeView<ID>(
 
 	React.useEffect(() => {
 		if (searchText) {
-			InteractionManager.runAfterInteractions(() => {
+			startTransition(() => {
 				updateExpanded(new Set(initialTreeViewData.flatMap(
 					(item) => getIds(item)
 				)));
@@ -195,7 +193,7 @@ function _innerTreeView<ID>(
 		else if (prevSearchText && prevSearchText !== "") {
 			/* Collapse all nodes only if previous search query was non-empty: this is
 			done to prevent node collapse on first render if preExpandedIds is provided */
-			InteractionManager.runAfterInteractions(() => {
+			startTransition(() => {
 				updateExpanded(new Set());
 			});
 		}

@@ -5,13 +5,13 @@ import type {
     ViewStyle
 } from "react-native";
 import type { FlashListProps } from "@shopify/flash-list";
-import {
-    type Props as RNPaperCheckboxAndroidProps
-} from "react-native-paper/src/components/Checkbox/CheckboxAndroid";
-import {
+import type {
     ScrollToNodeHandlerRef,
     ScrollToNodeParams
 } from "../handlers/ScrollToNodeHandler";
+import type {
+    CheckboxProps as _CheckboxProps
+} from "@futurejj/react-native-checkbox";
 
 export type CheckboxValueType = boolean | "indeterminate";
 
@@ -90,12 +90,13 @@ export interface TreeViewProps<ID = string> extends Omit<
     selectionPropagation?: SelectionPropagation;
 }
 
-type CheckboxProps = Omit<RNPaperCheckboxAndroidProps, "onPress" | "status">;
+type CheckboxProps = Omit<_CheckboxProps, "onPress" | "status">;
 
 export interface CheckBoxViewProps {
     value: CheckboxValueType;
     onValueChange: (value: boolean) => void;
     text: string;
+    testID?: string;
 }
 
 export interface BuiltInCheckBoxViewStyleProps {

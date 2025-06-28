@@ -9,21 +9,60 @@ runs:
       with:
         node-version-file: .nvmrc
 
-    - name: Cache dependencies
+    # Create a minimal .yarnrc.yml without any plugin references
+    - name: Create minimal Yarn config
+      run: |
+        cat > .yarnrc.yml << EOF
+        nodeLinker: node-modules
+        nmHoistingLimits: workspaces
+        EOF
+      shell: bash
+
+    # Setup Corepack for proper Yarn version management
+    - name: Setup Corepack and Yarn
+      run: |
+        corepack enable
+        corepack prepare yarn@4.9.2 --activate
+        yarn --version
+      shell: bash
+
+    - name: Configure Yarn and Generate .yarnrc.yml
+      run: |
+        yarn set version 4.9.2
+        yarn config set nodeLinker node-modules
+        yarn config set nmHoistingLimits workspaces
+      shell: bash
+
+    - name: Verify .yarnrc.yml
+      run: |
+        cat .yarnrc.yml
+      shell: bash
+
+    - name: Restore Yarn Cache
+      uses: actions/cache/restore@v4
       id: yarn-cache
-      uses: actions/cache@v4
       with:
         path: |
           **/node_modules
-        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}-${{ hashFiles('**/package.json') }}
+          .yarn/cache
+          .yarn/unplugged
+          .yarn/install-state.gz
+        key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-${{ hashFiles('**/package.json', '!node_modules/**') }}
         restore-keys: |
-          ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
           ${{ runner.os }}-yarn-
 
     - name: Install dependencies
-      if: steps.yarn-cache.outputs.cache-hit != 'true'
-      run: |
-        yarn install --cwd example --frozen-lockfile
-        yarn install --frozen-lockfile
-        yarn patch-package
+      run: yarn install
       shell: bash
+
+    - name: Save Yarn Cache
+      uses: actions/cache/save@v4
+      if: steps.yarn-cache.outputs.cache-hit != 'true'
+      with:
+        path: |
+          **/node_modules
+          .yarn/cache
+          .yarn/unplugged
+          .yarn/install-state.gz
+        key: ${{ steps.yarn-cache.outputs.cache-primary-key }}

@@ -7,11 +7,11 @@ import {
     View
 } from "react-native";
 
-import { Checkbox } from "react-native-paper";
 import type {
     BuiltInCheckBoxViewProps,
     CheckboxValueType
 } from "../types/treeView.types";
+import { Checkbox } from "@futurejj/react-native-checkbox";
 
 function arePropsEqual(
     prevProps: BuiltInCheckBoxViewProps,
@@ -43,7 +43,7 @@ function _CheckboxView(props: BuiltInCheckBoxViewProps) {
         },
     } = props;
 
-    const customCheckboxValueTypeToRNPaperType = React.useCallback((
+    const customCheckboxValToCheckboxValType = React.useCallback((
         customCheckboxValueType: CheckboxValueType
     ) => {
         return customCheckboxValueType === "indeterminate"
@@ -70,14 +70,16 @@ function _CheckboxView(props: BuiltInCheckBoxViewProps) {
             style={outermostParentViewStyle}>
             <View
                 style={checkboxParentViewStyle}>
-                <Checkbox.Android
+                <Checkbox
+                    testID={`checkbox_${props.testID}`}
                     {...checkboxProps}
-                    status={customCheckboxValueTypeToRNPaperType(value)}
+                    status={customCheckboxValToCheckboxValType(value)}
                     onPress={onValueChangeModifier} />
             </View>
 
             {text ? (
                 <TouchableOpacity
+                    testID={`touchable_text_${props.testID}`}
                     style={textTouchableStyle}
                     onPress={onValueChangeModifier}>
                     <Text

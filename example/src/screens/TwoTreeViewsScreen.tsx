@@ -1,4 +1,3 @@
-import React from "react";
 import SmallDataScreen from "./SmallDataScreen";
 import { View, StyleSheet } from "react-native";
 

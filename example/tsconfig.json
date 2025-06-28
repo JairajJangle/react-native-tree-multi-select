@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "react-native-tree-multi-select": ["../src/index"]
+    }
+  },
+  "include": ["src/**/*", "src/types/**/*"],
+}

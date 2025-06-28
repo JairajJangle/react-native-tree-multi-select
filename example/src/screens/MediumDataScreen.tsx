@@ -1,5 +1,3 @@
-import * as React from "react";
-
 import {
     Button,
     SafeAreaView,
@@ -17,13 +15,14 @@ import {
 
 import { styles } from "./screens.styles";
 import { defaultID, generateTreeList } from "../utils/sampleDataGenerator";
+import { useCallback, useRef } from "react";
 
 export default function MediumDataScreen() {
-    const sampleData = React.useRef(generateTreeList(20, 4, 5, defaultID, "1"));
-    const treeViewRef = React.useRef<TreeViewRef | null>(null);
+    const sampleData = useRef(generateTreeList(20, 4, 5, defaultID, "1"));
+    const treeViewRef = useRef<TreeViewRef | null>(null);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const debouncedSetSearchText = React.useCallback(
+    const debouncedSetSearchText = useCallback(
         debounce((text) => treeViewRef.current?.setSearchText(text), 375, {
             leading: true,
             trailing: true,

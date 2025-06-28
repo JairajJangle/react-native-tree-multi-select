@@ -1,5 +1,5 @@
 import { act } from "@testing-library/react-native";
-import { StateCreator } from "zustand";
+import { type StateCreator } from "zustand";
 
 const { create: actualCreate } = jest.requireActual("zustand");
 

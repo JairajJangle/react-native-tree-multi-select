@@ -1,6 +1,6 @@
 import { getFlattenedTreeData } from "../helpers";
 import { generateExpectedFlatTree, tree3d2b } from "../__mocks__/generateTree.mock";
-import { TreeNode } from "../types/treeView.types";
+import { type TreeNode } from "../types/treeView.types";
 
 describe("getFlattenedTreeData", () => {
     let nodes: TreeNode[];

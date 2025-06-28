@@ -1,18 +1,18 @@
-import React, { useRef } from "react";
+import { memo, useRef } from "react";
 import { TextInput, StyleSheet, View, TouchableOpacity } from "react-native";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import Icon from "@expo/vector-icons/MaterialCommunityIcons";
 
 interface Props {
   onChange: (value: string) => void;
 }
 
-const SearchInput = React.memo(_SearchInput);
+const SearchInput = memo(_SearchInput);
 export default SearchInput;
 
 function _SearchInput(props: Props) {
   const { onChange } = props;
 
-  const textInputRef = useRef<any>();
+  const textInputRef = useRef<any>(null);
 
   const handleChange = (value: string) => {
     onChange(value);

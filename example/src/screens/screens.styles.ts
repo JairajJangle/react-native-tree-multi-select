@@ -5,6 +5,7 @@ export const styles = StyleSheet.create({
         flex: 1,
         alignSelf: "flex-start",
         backgroundColor: "white",
+        width: "100%"
     },
     selectionButtonRow: {
         borderTopWidth: 0.5,

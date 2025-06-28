@@ -1,5 +1,4 @@
-import * as React from "react";
-
+import { useCallback, useRef } from "react";
 import {
     Button,
     SafeAreaView,
@@ -20,11 +19,11 @@ import { defaultID, generateTreeList } from "../utils/sampleDataGenerator";
 import { CustomCheckboxView } from "../components/CustomCheckboxView";
 
 export default function CustomCheckboxScreen() {
-    const sampleData = React.useRef(generateTreeList(50, 4, 5, defaultID, "1"));
-    const treeViewRef = React.useRef<TreeViewRef | null>(null);
+    const sampleData = useRef(generateTreeList(50, 4, 5, defaultID, "1"));
+    const treeViewRef = useRef<TreeViewRef | null>(null);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const debouncedSetSearchText = React.useCallback(
+    const debouncedSetSearchText = useCallback(
         debounce((text) => treeViewRef.current?.setSearchText(text), 375, {
             leading: true,
             trailing: true,

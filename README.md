@@ -30,10 +30,11 @@ npm install react-native-tree-multi-select
 Dependencies that need to be installed for this library to work:
 
 1. [@shopify/flash-list](https://github.com/Shopify/flash-list)
-2. [react-native-paper](https://github.com/callstack/react-native-paper)
-3. [react-native-vector-icons](https://github.com/oblador/react-native-vector-icons)
+3. **Icon Library** (One of the following):
+   - **For Expo Apps (including Expo Go)**: No additional setup is needed. This library automatically uses `@expo/vector-icons`, which is included in the Expo SDK.
+   - **For Non-Expo React Native Apps**: Install [react-native-vector-icons](https://github.com/oblador/react-native-vector-icons) (`>=7.1.0`) to enable icon support.
 
-Make sure to follow the native-related installation instructions for these dependencies.
+Make sure to follow the native-related installation instructions for these dependencies if you are using bare workflow.
 
 ## **Highlighted Features**
 
@@ -131,7 +132,7 @@ export function TreeViewUsageExample(){
 | `indentationMultiplier`            | `number`                                                     | No       | Indentation (`marginStart`) per level (defaults to 15)       |
 | `treeFlashListProps`               | [TreeFlatListProps](#treeflatlistprops)                      | No       | Props for the flash list                                     |
 | `checkBoxViewStyleProps`           | [BuiltInCheckBoxViewStyleProps](#builtincheckboxviewstyleprops) | No       | Props for the checkbox view                                  |
-| `CheckboxComponent`                | `ComponentType<`[CheckBoxViewProps](#checkboxviewprops)`>`   | No       | A custom checkbox component. Defaults to React Native Paper's Checkbox |
+| `CheckboxComponent`                | `ComponentType<`[CheckBoxViewProps](#checkboxviewprops)`>`   | No       | A custom checkbox component. |
 | `ExpandCollapseIconComponent`      | `ComponentType<`[ExpandIconProps](#expandiconprops)`>`       | No       | A custom expand/collapse icon component                      |
 | `ExpandCollapseTouchableComponent` | `ComponentType<`[TouchableOpacityProps](https://reactnative.dev/docs/touchableopacity#props)`>` | No       | A custom expand/collapse touchable component                 |
 | `CustomNodeRowComponent`           | `React.ComponentType<`[NodeRowProps](#noderowpropsid--string)`<ID>>` | No       | Custom row item component                                    |
@@ -227,7 +228,7 @@ export function TreeViewUsageExample(){
 
 #### CheckboxProps
 
-All properties of `RNPaperCheckboxAndroidProps`(from `react-native-paper`) except for `onPress` and `status`
+All properties of `CheckboxProps`(from `@futurejj/react-native-checkbox`) except for `onPress` and `status`
 
 ---
 

@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.0...v2.0.1) (2025-06-28)
+
+
+### Bug Fixes
+
+* added missing testID prop to built-in checkbox and expandable arrow components ([c169a80](https://github.com/JairajJangle/react-native-tree-multi-select/commit/c169a8043e259baa52d3de6972737ee5407cc869))
+
 # [2.0.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.9.4...v2.0.0) (2025-06-19)
 
 

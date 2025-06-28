@@ -71,6 +71,7 @@ function _CheckboxView(props: BuiltInCheckBoxViewProps) {
             <View
                 style={checkboxParentViewStyle}>
                 <Checkbox
+                    testID={`checkbox_${props.testID}`}
                     {...checkboxProps}
                     status={customCheckboxValToCheckboxValType(value)}
                     onPress={onValueChangeModifier} />
@@ -78,6 +79,7 @@ function _CheckboxView(props: BuiltInCheckBoxViewProps) {
 
             {text ? (
                 <TouchableOpacity
+                    testID={`touchable_text_${props.testID}`}
                     style={textTouchableStyle}
                     onPress={onValueChangeModifier}>
                     <Text

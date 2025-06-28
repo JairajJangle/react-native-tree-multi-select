@@ -22,33 +22,23 @@ runs:
     - name: Setup Corepack and Yarn
       run: |
         corepack enable
-        corepack prepare yarn@3.6.1 --activate
+        corepack prepare yarn@4.9.2 --activate
+        yarn --version
       shell: bash
 
-    # Create required directory and install plugins
-    - name: Setup plugins
+    - name: Configure Yarn and Generate .yarnrc.yml
       run: |
-        mkdir -p .yarn/plugins
-        yarn plugin import @yarnpkg/plugin-interactive-tools
-        yarn plugin import @yarnpkg/plugin-workspace-tools
+        yarn set version 4.9.2
+        yarn config set nodeLinker node-modules
+        yarn config set nmHoistingLimits workspaces
       shell: bash
 
-    # Now update .yarnrc.yml to include the plugins
-    - name: Update Yarn config with plugins
+    - name: Verify .yarnrc.yml
       run: |
-        cat > .yarnrc.yml << EOF
-        nodeLinker: node-modules
-        nmHoistingLimits: workspaces
-        
-        plugins:
-          - path: .yarn/plugins/@yarnpkg/plugin-interactive-tools.cjs
-            spec: "@yarnpkg/plugin-interactive-tools"
-          - path: .yarn/plugins/@yarnpkg/plugin-workspace-tools.cjs
-            spec: "@yarnpkg/plugin-workspace-tools"
-        EOF
+        cat .yarnrc.yml
       shell: bash
 
-    - name: Restore cache
+    - name: Restore Yarn Cache
       uses: actions/cache/restore@v4
       id: yarn-cache
       with:
@@ -66,7 +56,7 @@ runs:
       run: yarn install
       shell: bash
 
-    - name: Save cache
+    - name: Save Yarn Cache
       uses: actions/cache/save@v4
       if: steps.yarn-cache.outputs.cache-hit != 'true'
       with:
@@ -75,4 +65,4 @@ runs:
           .yarn/cache
           .yarn/unplugged
           .yarn/install-state.gz
-        key: ${{ steps.yarn-cache.outputs.cache-primary-key || format('{0}-yarn-{1}-{2}', runner.os, hashFiles('yarn.lock'), hashFiles('**/package.json', '!node_modules/**')) }}
+        key: ${{ steps.yarn-cache.outputs.cache-primary-key }}

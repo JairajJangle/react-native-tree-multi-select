@@ -78,6 +78,7 @@
     "provenance": true
   },
   "devDependencies": {
+    "@babel/runtime": "^7.27.6",
     "@commitlint/config-conventional": "^19.7.1",
     "@evilmartians/lefthook": "^1.10.10",
     "@expo/vector-icons": "14.1.0",
@@ -125,7 +126,7 @@
       "optional": true
     }
   },
-  "packageManager": "yarn@3.6.1",
+  "packageManager": "yarn@4.9.2",
   "jest": {
     "preset": "react-native",
     "setupFilesAfterEnv": [
@@ -213,7 +214,7 @@
     ]
   },
   "dependencies": {
-    "@futurejj/react-native-checkbox": "^1.0.3",
+    "@futurejj/react-native-checkbox": "^1.0.4",
     "fast-is-equal": "^1.2.3",
     "zustand": "^5.0.5"
   },

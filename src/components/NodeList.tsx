@@ -205,18 +205,22 @@ function _Node<ID>(props: NodeProps<ID>) {
 
     if (!CustomNodeRowComponent) {
         return (
-            <View style={[
-                styles.nodeCheckboxAndArrowRow,
-                { paddingStart: level * indentationMultiplier }
-            ]}>
+            <View
+                testID={`node_row_${node.id}`}
+                style={[
+                    styles.nodeCheckboxAndArrowRow,
+                    { paddingStart: level * indentationMultiplier }
+                ]}>
                 <CheckboxComponent
                     text={node.name}
                     onValueChange={_onCheck}
                     value={value}
+                    testID={`${node.id}`}
                     {...checkBoxViewStyleProps} />
 
                 {node.children?.length ? (
                     <ExpandCollapseTouchableComponent
+                        testID={`expandable_arrow_${node.id}`}
                         style={styles.nodeExpandableArrowTouchable}
                         onPress={_onToggleExpand}>
                         <ExpandCollapseIconComponent

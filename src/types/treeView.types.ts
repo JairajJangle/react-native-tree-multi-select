@@ -96,6 +96,7 @@ export interface CheckBoxViewProps {
     value: CheckboxValueType;
     onValueChange: (value: boolean) => void;
     text: string;
+    testID?: string;
 }
 
 export interface BuiltInCheckBoxViewStyleProps {

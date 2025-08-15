@@ -116,7 +116,7 @@
     "typescript": "^5.0.2"
   },
   "peerDependencies": {
-    "@shopify/flash-list": "1.x.x",
+    "@shopify/flash-list": "1.x.x || 2.x.x",
     "react": ">=18.0.0",
     "react-native": "*",
     "react-native-vector-icons": "*"

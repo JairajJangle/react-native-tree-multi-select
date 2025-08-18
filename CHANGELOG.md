@@ -1,3 +1,30 @@
+## [2.0.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.0...v2.0.1) (2025-06-28)
+
+
+### Bug Fixes
+
+* added missing testID prop to built-in checkbox and expandable arrow components ([c169a80](https://github.com/JairajJangle/react-native-tree-multi-select/commit/c169a8043e259baa52d3de6972737ee5407cc869))
+
+# [2.0.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v1.9.4...v2.0.0) (2025-06-19)
+
+
+* feat!: removed react-native-paper dep BREAKING CHANGE: due to typecheck issues ([0038841](https://github.com/JairajJangle/react-native-tree-multi-select/commit/003884122df9a452627514a9a3f0a6a67c855921))
+* fix!: removed react-native-uuid in favor of useId from React 18+ BREAKING CHANGE: Dropped support for React < 18 ([b1ccd5d](https://github.com/JairajJangle/react-native-tree-multi-select/commit/b1ccd5d38848a8f49455db9d95a4de1838f64adb))
+
+
+### Bug Fixes
+
+* deps upgraded ([89fd985](https://github.com/JairajJangle/react-native-tree-multi-select/commit/89fd985c0069faa5005fa4fc4d58506ccf1d1ad2))
+* excluded tests in tsconfig ([cdae27e](https://github.com/JairajJangle/react-native-tree-multi-select/commit/cdae27e586ac931d57fe529fcf62e7b9157c9372))
+* replaced interaction manager with start transition and minor deps upgrade ([531b050](https://github.com/JairajJangle/react-native-tree-multi-select/commit/531b05073c5e0123708057ad0ba30af2a3994ee6))
+* use latest performant fast-is-equal package version for useDeepCompareEffect hook ([50adcc3](https://github.com/JairajJangle/react-native-tree-multi-select/commit/50adcc30eb01790dfb785ac75ab3941cc786a4ac))
+
+
+### BREAKING CHANGES
+
+* Dropped support for React < 18
+* due to typecheck issues
+
 # [2.0.0-beta.5](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.0-beta.4...v2.0.0-beta.5) (2025-06-15)
 
 

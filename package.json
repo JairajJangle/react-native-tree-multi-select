@@ -216,7 +216,7 @@
   "dependencies": {
     "@futurejj/react-native-checkbox": "^1.0.4",
     "fast-is-equal": "^1.2.3",
-    "zustand": "^5.0.5"
+    "zustand": "^5.0.7"
   },
   "workspaces": [
     "example"

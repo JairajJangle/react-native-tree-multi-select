@@ -1,3 +1,10 @@
+## [2.0.3](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.2...v2.0.3) (2025-10-23)
+
+
+### Bug Fixes
+
+* do patch release ([f45b1cf](https://github.com/JairajJangle/react-native-tree-multi-select/commit/f45b1cf6ca4cd25baf96d268c010998d316a97b5))
+
 ## [2.0.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.1...v2.0.2) (2025-08-19)
 
 

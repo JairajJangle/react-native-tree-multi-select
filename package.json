@@ -4,8 +4,8 @@
   "description": "A super-fast, customizable tree view component for React Native with multi-selection, checkboxes, and search filtering capabilities.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
-  "react-native": "src/index.tsx",
-  "source": "src/index.tsx",
+  "react-native": "src/index",
+  "source": "src/index",
   "files": [
     "src",
     "lib",
@@ -214,8 +214,8 @@
     ]
   },
   "dependencies": {
-    "@futurejj/react-native-checkbox": "^1.0.4",
-    "fast-is-equal": "^1.2.3",
+    "@futurejj/react-native-checkbox": "^1.0.5",
+    "fast-is-equal": "^1.2.4",
     "zustand": "^5.0.5"
   },
   "workspaces": [

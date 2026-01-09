@@ -2252,7 +2252,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@futurejj/react-native-checkbox@npm:^1.0.4":
+"@futurejj/react-native-checkbox@npm:^1.0.5":
   version: 1.0.5
   resolution: "@futurejj/react-native-checkbox@npm:1.0.5"
   peerDependencies:
@@ -7974,10 +7974,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-is-equal@npm:^1.2.3":
-  version: 1.2.3
-  resolution: "fast-is-equal@npm:1.2.3"
-  checksum: 10c0/ff1decdd0b36d81bd75e2ae3bc4b4135b807b8987547ea6afc3a82cf741b0d1389db6af8b65e0b83bc2233fda7c249589a3c933ff28515eca7b8d22da56280e3
+"fast-is-equal@npm:^1.2.4":
+  version: 1.2.4
+  resolution: "fast-is-equal@npm:1.2.4"
+  checksum: 10c0/bcb834ad7ebda4bcc521436c69b200e490ad4c096014e7853886a88e96e9676832fe0c6a0292593d349ba5f9ef0bbaeb41e3d8e129559784dd415d4277ce0a7f
   languageName: node
   linkType: hard
 
@@ -13999,7 +13999,7 @@ __metadata:
     "@commitlint/config-conventional": "npm:^19.7.1"
     "@evilmartians/lefthook": "npm:^1.10.10"
     "@expo/vector-icons": "npm:14.1.0"
-    "@futurejj/react-native-checkbox": "npm:^1.0.4"
+    "@futurejj/react-native-checkbox": "npm:^1.0.5"
     "@react-native-community/eslint-config": "npm:^3.2.0"
     "@react-native/babel-preset": "npm:0.78.2"
     "@release-it/conventional-changelog": "npm:^10.0.0"
@@ -14021,7 +14021,7 @@ __metadata:
     eslint: "npm:^8.4.1"
     eslint-config-prettier: "npm:^8.5.0"
     eslint-plugin-prettier: "npm:^4.0.0"
-    fast-is-equal: "npm:^1.2.3"
+    fast-is-equal: "npm:^1.2.4"
     jest: "npm:^29.7.0"
     patch-package: "npm:^8.0.0"
     prettier: "npm:^3.3.3"

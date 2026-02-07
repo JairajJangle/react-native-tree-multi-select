@@ -103,7 +103,4 @@ jobs:
         run: npx semantic-release  # Run semantic-release to manage versioning and publishing
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub token for authentication
-
-          # Why NODE_AUTH_TOKEN instead of NPM_TOKEN: https://github.com/semantic-release/semantic-release/issues/2313
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}  # npm token for publishing package
       

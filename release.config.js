@@ -27,7 +27,6 @@ module.exports = {
       "@semantic-release/npm",
       {
         npmPublish: true,
-        tag: "beta" // Publishes with a 'beta' tag to npm
       }
     ],
     "@semantic-release/github", // Handles GitHub releases

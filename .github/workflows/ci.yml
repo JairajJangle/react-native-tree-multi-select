@@ -107,6 +107,5 @@ jobs:
         run: npx semantic-release # Run semantic-release to manage versioning and publishing
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # 2. Enable provenance/OIDC
           NPM_CONFIG_PROVENANCE: true
     

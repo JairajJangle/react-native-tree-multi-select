@@ -103,5 +103,5 @@ jobs:
           NPM_CONFIG_PROVENANCE: true
           # 3. Dummy token to bypass semantic-release's internal check.
           # The npm CLI will ignore this and use the OIDC handshake instead.
-          NPM_TOKEN: 00000000-0000-0000-0000-000000000000
+          NODE_AUTH_TOKEN: 00000000-0000-0000-0000-000000000000
     

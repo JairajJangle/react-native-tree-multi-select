@@ -1,3 +1,5 @@
+## [2.0.8](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.7...v2.0.8) (2026-03-08)
+
 ## [2.0.7](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.6...v2.0.7) (2026-02-07)
 
 

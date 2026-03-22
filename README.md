@@ -44,6 +44,7 @@ Make sure to follow the native-related installation instructions for these depen
 - 🌳 **Multi-Level Selection**: Select individual nodes or entire branches with ease.
 - 📦 **Supports Large Datasets**: Efficiently handles large trees without much performance degradation.
 - 🔒 **TypeScript Support**: Full TypeScript support for better developer experience.
+- 🔀 **Drag-and-Drop**: Long-press to drag nodes and reorder or nest them anywhere in the tree.
 - 💻 **Cross-Platform**: Works seamlessly across iOS, Android, and web (with React Native Web).
 
 ## Usage
@@ -112,6 +113,46 @@ export function TreeViewUsageExample(){
 }
 ```
 
+### Drag-and-Drop Usage
+
+```tsx
+import {
+  TreeView,
+  type TreeNode,
+  type TreeViewRef,
+  type DragEndEvent
+} from 'react-native-tree-multi-select';
+
+const myData: TreeNode[] = [...];
+
+export function DragDropExample(){
+  const [data, setData] = React.useState<TreeNode[]>(myData);
+  const treeViewRef = React.useRef<TreeViewRef | null>(null);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    // event.newTreeData contains the reordered tree — just set it
+    setData(event.newTreeData);
+  };
+
+  return(
+    <TreeView
+      ref={treeViewRef}
+      data={data}
+      onCheck={(checked, indeterminate) => { /* ... */ }}
+      onExpand={(expanded) => { /* ... */ }}
+      dragEnabled={true}
+      onDragEnd={handleDragEnd}
+    />
+  );
+}
+```
+
+Long-press a node to start dragging. Drag over other nodes to see drop indicators. Drop above/below to reorder as siblings, or drop inside a parent node to nest it. The tree auto-scrolls when dragging near the edges.
+
+For visual customizations (overlay styles, indicator colors, or fully custom components), see the [`dragDropCustomizations`](#dragdropcustomizationsid) prop.
+
+---
+
 ### Properties
 
 #### TreeViewProps`<ID = string>`
@@ -134,6 +175,14 @@ export function TreeViewUsageExample(){
 | `ExpandCollapseIconComponent`      | `ComponentType<`[ExpandIconProps](#expandiconprops)`>`       | No       | A custom expand/collapse icon component                      |
 | `ExpandCollapseTouchableComponent` | `ComponentType<`[TouchableOpacityProps](https://reactnative.dev/docs/touchableopacity#props)`>` | No       | A custom expand/collapse touchable component                 |
 | `CustomNodeRowComponent`           | `React.ComponentType<`[NodeRowProps](#noderowpropsid--string)`<ID>>` | No       | Custom row item component                                    |
+| `dragEnabled`                      | `boolean`                                                    | No       | Enable drag-and-drop reordering                              |
+| `onDragEnd`                        | `(event: `[DragEndEvent](#dragendeventid--string)`<ID>) => void` | No       | Callback fired after a node is dropped at a new position     |
+| `longPressDuration`                | `number`                                                     | No       | Long press duration in ms to start drag (default: 400)       |
+| `autoScrollThreshold`              | `number`                                                     | No       | Distance from edge (px) to trigger auto-scroll (default: 60) |
+| `autoScrollSpeed`                  | `number`                                                     | No       | Speed multiplier for auto-scroll (default: 1.0)              |
+| `dragOverlayOffset`                | `number`                                                     | No       | Overlay offset from the finger, in item-height units (default: -1, i.e. one row above finger) |
+| `autoExpandDelay`                  | `number`                                                     | No       | Delay in ms before auto-expanding a collapsed node during drag hover (default: 800) |
+| `dragDropCustomizations`           | [DragDropCustomizations](#dragdropcustomizationsid)`<ID>`    | No       | Customizations for drag-and-drop visuals (overlay, indicator, opacity) |
 
 ##### Notes
 
@@ -262,6 +311,107 @@ Type: `boolean` OR `"indeterminate"`
 | `isExpanded`   | `boolean`                               | Yes      | Whether the node is expanded or not                     |
 | `onCheck`      | `() => void`                            | Yes      | Function to be called when the checkbox is pressed      |
 | `onExpand`     | `() => void`                            | Yes      | Function to be called when the expand button is pressed |
+| `isDragTarget` | `boolean`                               | No       | Whether this node is the current drop target during drag |
+| `isDragging`   | `boolean`                               | No       | Whether a drag operation is in progress                  |
+| `isDraggedNode`| `boolean`                               | No       | Whether this node is the one being dragged               |
+
+---
+
+#### DragEndEvent`<ID = string>`
+
+*The event object passed to the `onDragEnd` callback after a successful drop.*
+
+| Property        | Type                                    | Description                                                  |
+| --------------- | --------------------------------------- | ------------------------------------------------------------ |
+| `draggedNodeId` | `ID`                                    | The id of the node that was dragged                          |
+| `targetNodeId`  | `ID`                                    | The id of the target node where the dragged node was dropped |
+| `position`      | [DropPosition](#dropposition)           | Where relative to the target: `above`/`below` = sibling, `inside` = child |
+| `newTreeData`   | `TreeNode<ID>[]`                        | The reordered tree data after the move                       |
+
+#### DropPosition
+
+Type: `"above"` | `"below"` | `"inside"`
+
+---
+
+#### DragDropCustomizations`<ID>`
+
+*Customizations for drag-and-drop visuals.*
+
+| Property                       | Type                                                                                  | Required | Description                                                       |
+| ------------------------------ | ------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------- |
+| `draggedNodeOpacity`           | `number`                                                                              | No       | Opacity of the dragged node and invalid targets (default: 0.3)    |
+| `dropIndicatorStyleProps`      | [DropIndicatorStyleProps](#dropindicatorstyleprops)                                    | No       | Style props for the built-in drop indicator                       |
+| `dragOverlayStyleProps`        | [DragOverlayStyleProps](#dragoverlaystyleprops)                                       | No       | Style props for the drag overlay (lifted node ghost)              |
+| `CustomDropIndicatorComponent` | `ComponentType<`[DropIndicatorComponentProps](#dropindicatorcomponentprops)`>`         | No       | Fully custom drop indicator component                             |
+| `CustomDragOverlayComponent`   | `ComponentType<`[DragOverlayComponentProps](#dragoverlaycomponentpropsid--string)`<ID>>`| No       | Fully custom drag overlay component                               |
+
+---
+
+#### DropIndicatorStyleProps
+
+*Style props for customizing the built-in drop indicator appearance.*
+
+| Property              | Type     | Required | Description                                                    |
+| --------------------- | -------- | -------- | -------------------------------------------------------------- |
+| `lineColor`           | `string` | No       | Color of the line indicator for above/below (default: `"#0078FF"`) |
+| `lineThickness`       | `number` | No       | Thickness of the line indicator (default: 3)                   |
+| `circleSize`          | `number` | No       | Diameter of the circle at the line's start (default: 10)       |
+| `highlightColor`      | `string` | No       | Background color of the "inside" highlight (default: `"rgba(0, 120, 255, 0.15)"`) |
+| `highlightBorderColor`| `string` | No       | Border color of the "inside" highlight (default: `"rgba(0, 120, 255, 0.5)"`) |
+
+---
+
+#### DragOverlayStyleProps
+
+*Style props for customizing the drag overlay (the "lifted" node ghost).*
+
+| Property        | Type                   | Required | Description                                      |
+| --------------- | ---------------------- | -------- | ------------------------------------------------ |
+| `backgroundColor`| `string`              | No       | Background color (default: `"rgba(255, 255, 255, 0.95)"`) |
+| `shadowColor`   | `string`               | No       | Shadow color (default: `"#000"`)                 |
+| `shadowOpacity` | `number`               | No       | Shadow opacity (default: 0.25)                   |
+| `shadowRadius`  | `number`               | No       | Shadow radius (default: 4)                       |
+| `elevation`     | `number`               | No       | Android elevation (default: 10)                  |
+| `style`         | `StyleProp<ViewStyle>` | No       | Custom style applied to the overlay container    |
+
+---
+
+#### DropIndicatorComponentProps
+
+*Props passed to a custom drop indicator component (when using `CustomDropIndicatorComponent`).*
+
+| Property   | Type                          | Required | Description                                                  |
+| ---------- | ----------------------------- | -------- | ------------------------------------------------------------ |
+| `position` | [DropPosition](#dropposition) | Yes      | Whether the indicator is above, below, or inside the target  |
+
+---
+
+#### DragOverlayComponentProps`<ID = string>`
+
+*Props passed to a custom drag overlay component (when using `CustomDragOverlayComponent`).*
+
+| Property | Type            | Required | Description                    |
+| -------- | --------------- | -------- | ------------------------------ |
+| `node`   | `TreeNode<ID>`  | Yes      | The node being dragged         |
+| `level`  | `number`        | Yes      | The nesting level of the node  |
+
+---
+
+### Exported Utilities
+
+#### `moveTreeNode`
+
+```typescript
+moveTreeNode<ID>(
+  data: TreeNode<ID>[],
+  draggedNodeId: ID,
+  targetNodeId: ID,
+  position: DropPosition
+): TreeNode<ID>[]
+```
+
+Moves a node within a tree structure. Returns a new tree (no mutation). Useful if you want to perform tree moves manually outside of the `onDragEnd` callback.
 
 ---
 
@@ -274,6 +424,7 @@ Type: `boolean` OR `"indeterminate"`
 - [x] Ref function to programatically expand/collapse a certain node 
 - [x] Ref function to programatically un/check a certain node
 - [x] Ref function to auto-scroll to a certain node's position - available in 1.9.0+
+- [x] Drag-and-drop reordering with customizable visuals
 
 If you do not see what you want in the planned feature list, raise a feature request. 
 

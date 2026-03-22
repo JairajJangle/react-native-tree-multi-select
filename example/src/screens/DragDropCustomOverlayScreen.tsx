@@ -101,7 +101,7 @@ function CustomDropIndicator({ position }: DropIndicatorComponentProps) {
         <View
             style={[
                 indicatorStyles.lineContainer,
-                position === "above" ? { top: 0 } : { bottom: 0 },
+                position === "above" ? indicatorStyles.lineTop : indicatorStyles.lineBottom,
             ]}
         >
             <View style={indicatorStyles.diamond} />
@@ -232,6 +232,12 @@ const indicatorStyles = StyleSheet.create({
         height: 8,
         backgroundColor: "#6c63ff",
         transform: [{ rotate: "45deg" }],
+    },
+    lineTop: {
+        top: 0,
+    },
+    lineBottom: {
+        bottom: 0,
     },
     insideContainer: {
         position: "absolute",

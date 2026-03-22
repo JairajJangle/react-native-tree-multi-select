@@ -79,6 +79,7 @@ const avatarColors = [
 
 function getColor(id: string): string {
     let hash = 0;
+    // eslint-disable-next-line no-bitwise
     for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
     return avatarColors[Math.abs(hash) % avatarColors.length]!;
 }

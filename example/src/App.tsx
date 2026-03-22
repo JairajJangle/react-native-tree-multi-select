@@ -17,6 +17,10 @@ import packageJson from "../../package.json";
 import { TwoTreeViewsScreen } from "./screens/TwoTreeViewsScreen";
 import CustomNodeID from "./screens/CustomNodeIDScreen";
 import ControlsDemoScreen from "./screens/ControlsDemoScreen";
+import DragDropScreen from "./screens/DragDropScreen";
+import DragDropStyledScreen from "./screens/DragDropStyledScreen";
+import DragDropCustomOverlayScreen from "./screens/DragDropCustomOverlayScreen";
+import DragDropCustomRowScreen from "./screens/DragDropCustomRowScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const data: ShowcaseExampleScreenSectionType[] = [
@@ -87,6 +91,31 @@ const data: ShowcaseExampleScreenSectionType[] = [
         name: "Neither to children nor to parents",
         slug: "neither-children-nor-parent",
         getScreen: () => NeitherToChildrenNorToParentSmallDataScreen,
+      },
+    ],
+  },
+  {
+    title: "Drag & Drop",
+    data: [
+      {
+        name: "Basic",
+        slug: "drag-drop",
+        getScreen: () => DragDropScreen,
+      },
+      {
+        name: "Styled Indicators",
+        slug: "drag-drop-styled",
+        getScreen: () => DragDropStyledScreen,
+      },
+      {
+        name: "Custom Components",
+        slug: "drag-drop-custom-overlay",
+        getScreen: () => DragDropCustomOverlayScreen,
+      },
+      {
+        name: "Custom Row + Drag",
+        slug: "drag-drop-custom-row",
+        getScreen: () => DragDropCustomRowScreen,
       },
     ],
   },

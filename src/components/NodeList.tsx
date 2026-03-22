@@ -448,7 +448,7 @@ function NodeDropIndicator({ position, styleProps }: {
             style={[
                 styles.dropLineContainer,
                 { height: lineThickness },
-                position === "above" ? { top: 0 } : { bottom: 0 },
+                position === "above" ? styles.dropLineTop : styles.dropLineBottom,
             ]}
         >
             <View style={[
@@ -510,6 +510,12 @@ const styles = StyleSheet.create({
         alignItems: "center",
         height: 3,
         zIndex: 10,
+    },
+    dropLineTop: {
+        top: 0,
+    },
+    dropLineBottom: {
+        bottom: 0,
     },
     dropLineCircle: {
         width: 10,

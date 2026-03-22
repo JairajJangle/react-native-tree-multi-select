@@ -5,7 +5,7 @@ runs:
   using: composite
   steps:
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version-file: .nvmrc
 
@@ -39,7 +39,7 @@ runs:
       shell: bash
 
     - name: Restore Yarn Cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       id: yarn-cache
       with:
         path: |
@@ -57,7 +57,7 @@ runs:
       shell: bash
 
     - name: Save Yarn Cache
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       if: steps.yarn-cache.outputs.cache-hit != 'true'
       with:
         path: |

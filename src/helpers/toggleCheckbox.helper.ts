@@ -200,3 +200,99 @@ export function toggleCheckboxes<ID>(
     updateChecked(tempChecked);
     updateIndeterminate(tempIndeterminate);
 }
+
+/**
+ * Recalculates checked/indeterminate state for all parent nodes bottom-up.
+ * Should be called after tree structure changes (e.g., drag-drop moves) to ensure
+ * parent states correctly reflect their children's checked states.
+ */
+export function recalculateCheckedStates<ID>(storeId: string) {
+    const treeViewStore = getTreeViewStore<ID>(storeId);
+    const {
+        checked,
+        updateChecked,
+        indeterminate,
+        updateIndeterminate,
+        nodeMap,
+        childToParentMap,
+        selectionPropagation,
+    } = treeViewStore.getState();
+
+    // Only recalculate if parent propagation is enabled
+    if (!selectionPropagation.toParents) return;
+
+    const tempChecked = new Set(checked);
+    const tempIndeterminate = new Set(indeterminate);
+
+    // Collect parent nodes and clean up leaf nodes that shouldn't be indeterminate.
+    // A leaf node (no children) can never be indeterminate — this can happen when
+    // all children of a formerly-indeterminate parent are dragged away.
+    const parentNodes: ID[] = [];
+    for (const [id, node] of nodeMap) {
+        if (node.children && node.children.length > 0) {
+            parentNodes.push(id);
+        } else {
+            tempIndeterminate.delete(id);
+        }
+    }
+
+    // Sort by depth descending (deepest first) for correct bottom-up propagation
+    const nodeDepths = new Map<ID, number>();
+    function getDepth(nodeId: ID): number {
+        if (nodeDepths.has(nodeId)) return nodeDepths.get(nodeId)!;
+        let depth = 0;
+        let currentId: ID | undefined = nodeId;
+        while (currentId) {
+            const parentId = childToParentMap.get(currentId);
+            if (parentId) {
+                depth++;
+                currentId = parentId;
+            } else {
+                break;
+            }
+        }
+        nodeDepths.set(nodeId, depth);
+        return depth;
+    }
+
+    parentNodes.sort((a, b) => getDepth(b) - getDepth(a));
+
+    // Update each parent based on its children's current state
+    for (const parentId of parentNodes) {
+        const node = nodeMap.get(parentId);
+        if (!node?.children?.length) continue;
+
+        let allChecked = true;
+        let anyCheckedOrIndeterminate = false;
+
+        for (const child of node.children) {
+            const isChecked = tempChecked.has(child.id);
+            const isIndeterminate = tempIndeterminate.has(child.id);
+
+            if (isChecked) {
+                anyCheckedOrIndeterminate = true;
+            } else if (isIndeterminate) {
+                anyCheckedOrIndeterminate = true;
+                allChecked = false;
+            } else {
+                allChecked = false;
+            }
+
+            if (!allChecked && anyCheckedOrIndeterminate) break;
+        }
+
+        if (allChecked) {
+            tempChecked.add(parentId);
+            tempIndeterminate.delete(parentId);
+        } else if (anyCheckedOrIndeterminate) {
+            tempChecked.delete(parentId);
+            tempIndeterminate.add(parentId);
+        } else {
+            tempChecked.delete(parentId);
+            tempIndeterminate.delete(parentId);
+        }
+    }
+
+    updateChecked(tempChecked);
+    updateIndeterminate(tempIndeterminate);
+}

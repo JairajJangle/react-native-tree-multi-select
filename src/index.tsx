@@ -8,11 +8,21 @@ import type {
     CheckBoxViewProps,
     CheckboxValueType,
     BuiltInCheckBoxViewStyleProps,
-    SelectionPropagation
+    SelectionPropagation,
+    DragDropCustomizations,
+    DragOverlayStyleProps,
+    DragOverlayComponentProps,
+    DropIndicatorStyleProps,
+    DropIndicatorComponentProps,
 } from "./types/treeView.types";
+import type {
+    DragEndEvent,
+    DropPosition
+} from "./types/dragDrop.types";
 
 export * from "./TreeView";
 export * from "./components/CheckboxView";
+export { moveTreeNode } from "./helpers/moveTreeNode.helper";
 
 export type {
     TreeNode,
@@ -24,5 +34,12 @@ export type {
     CheckBoxViewProps,
     CheckboxValueType,
     BuiltInCheckBoxViewStyleProps,
-    SelectionPropagation
+    SelectionPropagation,
+    DragEndEvent,
+    DropPosition,
+    DragDropCustomizations,
+    DragOverlayStyleProps,
+    DragOverlayComponentProps,
+    DropIndicatorStyleProps,
+    DropIndicatorComponentProps,
 };

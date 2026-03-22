@@ -227,7 +227,7 @@ export interface DragOverlayStyleProps {
 }
 
 /** Combined drag-and-drop customization props */
-export interface DragDropCustomizations<ID> {
+export interface DragDropCustomizations<ID = string> {
     /** Opacity applied to the dragged node and its invalid drop targets. Default: 0.3 */
     draggedNodeOpacity?: number;
     /** Style props for the built-in drop indicator */

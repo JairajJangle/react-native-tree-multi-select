@@ -26,6 +26,8 @@ import type {
 	ScrollToNodeHandlerRef,
 	ScrollToNodeParams
 } from "./handlers/ScrollToNodeHandler";
+import type { DragEndEvent } from "./types/dragDrop.types";
+import { fastIsEqual } from "fast-is-equal";
 
 function _innerTreeView<ID>(
 	props: TreeViewProps<ID>,
@@ -54,6 +56,15 @@ function _innerTreeView<ID>(
 		ExpandCollapseTouchableComponent,
 
 		CustomNodeRowComponent,
+
+		dragEnabled,
+		onDragEnd,
+		longPressDuration,
+		autoScrollThreshold,
+		autoScrollSpeed,
+		dragOverlayOffset,
+		autoExpandDelay,
+		dragDropCustomizations,
 	} = props;
 
 	const storeId = useId();
@@ -123,8 +134,22 @@ function _innerTreeView<ID>(
 
 	const scrollToNodeHandlerRef = React.useRef<ScrollToNodeHandlerRef<ID>>(null);
 	const prevSearchText = usePreviousState(searchText);
+	const internalDataRef = React.useRef<TreeNode<ID>[] | null>(null);
+
+	// Wrap onDragEnd to set internalDataRef before calling consumer's callback
+	const wrappedOnDragEnd = React.useCallback((event: DragEndEvent<ID>) => {
+		internalDataRef.current = event.newTreeData;
+		onDragEnd?.(event);
+	}, [onDragEnd]);
 
 	useDeepCompareEffect(() => {
+		// If data matches what was set internally from a drag-drop, skip reinitialize
+		if (internalDataRef.current !== null && fastIsEqual(data, internalDataRef.current)) {
+			internalDataRef.current = null;
+			return;
+		}
+		internalDataRef.current = null;
+
 		cleanUpTreeViewStore();
 
 		updateInitialTreeViewData(data);
@@ -227,6 +252,15 @@ function _innerTreeView<ID>(
 			ExpandCollapseTouchableComponent={ExpandCollapseTouchableComponent}
 
 			CustomNodeRowComponent={CustomNodeRowComponent}
+
+			dragEnabled={dragEnabled}
+			onDragEnd={wrappedOnDragEnd}
+			longPressDuration={longPressDuration}
+			autoScrollThreshold={autoScrollThreshold}
+			autoScrollSpeed={autoScrollSpeed}
+			dragOverlayOffset={dragOverlayOffset}
+			autoExpandDelay={autoExpandDelay}
+			dragDropCustomizations={dragDropCustomizations}
 		/>
 	);
 }

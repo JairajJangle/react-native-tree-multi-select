@@ -1,4 +1,5 @@
 import type { SelectionPropagation, TreeNode } from "../types/treeView.types";
+import type { DropPosition } from "../types/dragDrop.types";
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 
 export type TreeViewState<ID> = {
@@ -42,6 +43,18 @@ export type TreeViewState<ID> = {
     setSelectionPropagation: (
         selectionPropagation: SelectionPropagation
     ) => void;
+
+    // Drag-and-drop state
+    draggedNodeId: ID | null;
+    updateDraggedNodeId: (draggedNodeId: ID | null) => void;
+
+    invalidDragTargetIds: Set<ID>;
+    updateInvalidDragTargetIds: (invalidDragTargetIds: Set<ID>) => void;
+
+    // Drop target state (used by nodes to render their own indicator)
+    dropTargetNodeId: ID | null;
+    dropPosition: DropPosition | null;
+    updateDropTarget: (nodeId: ID | null, position: DropPosition | null) => void;
 
     // Cleanup all states in this store
     cleanUpTreeViewStore: () => void;
@@ -97,6 +110,21 @@ export function getTreeViewStore<ID>(id: string): UseBoundStore<StoreApi<TreeVie
                 }
             }),
 
+            draggedNodeId: null,
+            updateDraggedNodeId: (draggedNodeId) => set({ draggedNodeId }),
+
+            invalidDragTargetIds: new Set<ID>(),
+            updateInvalidDragTargetIds: (invalidDragTargetIds) => set({
+                invalidDragTargetIds
+            }),
+
+            dropTargetNodeId: null,
+            dropPosition: null,
+            updateDropTarget: (nodeId, position) => set({
+                dropTargetNodeId: nodeId,
+                dropPosition: position,
+            }),
+
             cleanUpTreeViewStore: () =>
                 set({
                     checked: new Set(),
@@ -109,6 +137,10 @@ export function getTreeViewStore<ID>(id: string): UseBoundStore<StoreApi<TreeVie
                     searchKeys: [""],
                     innerMostChildrenIds: [],
                     selectionPropagation: { toChildren: true, toParents: true },
+                    draggedNodeId: null,
+                    invalidDragTargetIds: new Set<ID>(),
+                    dropTargetNodeId: null,
+                    dropPosition: null,
                 }),
         }));
 

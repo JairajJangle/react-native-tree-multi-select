@@ -599,7 +599,6 @@ export function useDragDrop<ID>(
                 return newTarget;
             });
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         [storeId, autoExpandDelay, cancelAutoExpandTimer, indentationMultiplier, overlayX]
     );
 

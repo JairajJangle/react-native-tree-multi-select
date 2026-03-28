@@ -77,15 +77,13 @@ module.exports = {
 
             context.contributors = Array.from(contributors.values()).map(
               (c) => {
-                // Link GitHub users by email pattern, show others as bold text
+                // Extract GitHub username from noreply email
                 const ghMatch = c.email.match(
                   /^(\d+\+)?(.+)@users\.noreply\.github\.com$/
                 );
                 return {
                   ...c,
-                  displayName: ghMatch
-                    ? `@${ghMatch[2]}`
-                    : `**${c.name}**`,
+                  displayName: `@${ghMatch ? ghMatch[2] : c.name}`,
                 };
               }
             );

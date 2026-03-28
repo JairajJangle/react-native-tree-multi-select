@@ -30,6 +30,8 @@ with isDragTarget, isDragging, isDraggedNode for custom row components.
 
 * **Claude Opus 4.6**
 
+## [2.0.12](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.11...v2.0.12) (2026-03-28)
+
 ## [2.0.11](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.10...v2.0.11) (2026-03-21)
 
 ## [2.0.10](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.9...v2.0.10) (2026-03-12)

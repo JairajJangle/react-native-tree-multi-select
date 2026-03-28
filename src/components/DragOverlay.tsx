@@ -13,6 +13,7 @@ import { defaultIndentationMultiplier } from "../constants/treeView.constants";
 
 interface DragOverlayProps<ID> extends TreeItemCustomizations<ID> {
     overlayY: Animated.Value;
+    overlayX: Animated.Value;
     node: __FlattenedTreeNode__<ID>;
     level: number;
     dragDropCustomizations?: DragDropCustomizations<ID>;
@@ -21,6 +22,7 @@ interface DragOverlayProps<ID> extends TreeItemCustomizations<ID> {
 function _DragOverlay<ID>(props: DragOverlayProps<ID>) {
     const {
         overlayY,
+        overlayX,
         node,
         level,
         indentationMultiplier = defaultIndentationMultiplier,
@@ -47,7 +49,7 @@ function _DragOverlay<ID>(props: DragOverlayProps<ID>) {
                     ...(overlayStyleProps.elevation != null && { elevation: overlayStyleProps.elevation }),
                 },
                 overlayStyleProps?.style,
-                { transform: [{ translateY: overlayY }] },
+                { transform: [{ translateX: overlayX }, { translateY: overlayY }] },
             ]}
         >
             {CustomOverlay ? (

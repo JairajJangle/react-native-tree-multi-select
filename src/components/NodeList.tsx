@@ -114,13 +114,18 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         updateInnerMostChildrenIds(updatedInnerMostChildrenIds);
     }, [filteredTree, updateInnerMostChildrenIds]);
 
+    const effectiveIndentationMultiplier = indentationMultiplier ?? defaultIndentationMultiplier;
+
     // --- Drag and drop ---
     const {
         panResponder,
         overlayY,
+        overlayX,
         isDragging,
         draggedNode,
+        effectiveDropLevel,
         handleNodeTouchStart,
+        handleNodeTouchEnd,
         cancelLongPressTimer,
         scrollOffsetRef,
     } = useDragDrop<ID>({
@@ -137,6 +142,7 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         measuredItemHeightRef,
         dragOverlayOffset,
         autoExpandDelay,
+        indentationMultiplier: effectiveIndentationMultiplier,
     });
 
     // Combined onScroll handler
@@ -149,8 +155,6 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         // Forward to user's onScroll
         treeFlashListProps?.onScroll?.(event as any);
     }, [scrollOffsetRef, cancelLongPressTimer, treeFlashListProps]);
-
-    const effectiveIndentationMultiplier = indentationMultiplier ?? defaultIndentationMultiplier;
 
     const nodeRenderer = React.useCallback((
         { item, index }: { item: __FlattenedTreeNode__<ID>; index: number; }
@@ -174,7 +178,7 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
                 dragEnabled={dragEnabled}
                 isDragging={isDragging}
                 onNodeTouchStart={dragEnabled ? handleNodeTouchStart : undefined}
-                onNodeTouchEnd={dragEnabled ? cancelLongPressTimer : undefined}
+                onNodeTouchEnd={dragEnabled ? handleNodeTouchEnd : undefined}
                 onItemLayout={dragEnabled ? handleItemLayout : undefined}
                 dragDropCustomizations={dragDropCustomizations}
             />
@@ -190,8 +194,8 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         dragEnabled,
         isDragging,
         handleNodeTouchStart,
+        handleNodeTouchEnd,
         dragDropCustomizations,
-        cancelLongPressTimer,
         handleItemLayout,
     ]);
 
@@ -237,8 +241,9 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
                     {isDragging && draggedNode && (
                         <DragOverlay<ID>
                             overlayY={overlayY}
+                            overlayX={overlayX}
                             node={draggedNode}
-                            level={draggedNode.level ?? 0}
+                            level={effectiveDropLevel}
                             indentationMultiplier={effectiveIndentationMultiplier}
                             CheckboxComponent={CheckboxComponent}
                             ExpandCollapseIconComponent={ExpandCollapseIconComponent}
@@ -306,6 +311,7 @@ function _Node<ID>(props: NodeProps<ID>) {
         isDragInvalid,
         isDropTarget,
         nodeDropPosition,
+        nodeDropLevel,
     } = useTreeViewStore<ID>(storeId)(useShallow(
         state => ({
             isExpanded: state.expanded.has(node.id),
@@ -317,18 +323,30 @@ function _Node<ID>(props: NodeProps<ID>) {
             isDragInvalid: state.invalidDragTargetIds.has(node.id),
             isDropTarget: state.dropTargetNodeId === node.id,
             nodeDropPosition: state.dropTargetNodeId === node.id ? state.dropPosition : null,
+            nodeDropLevel: state.dropTargetNodeId === node.id ? state.dropLevel : null,
         })
     ));
 
+    // Track when this node was dragged so we can swallow the onPress/onCheck
+    // that fires when the user lifts their finger after a long-press-initiated drag.
+    // The flag is set during render (synchronous) and cleared on the next touch start.
+    const wasDraggedRef = React.useRef(false);
+    if (isDraggingGlobal && isBeingDragged) {
+        wasDraggedRef.current = true;
+    }
+
     const _onToggleExpand = React.useCallback(() => {
+        if (wasDraggedRef.current) return;
         handleToggleExpand(storeId, node.id);
     }, [storeId, node.id]);
 
     const _onCheck = React.useCallback(() => {
+        if (wasDraggedRef.current) return;
         toggleCheckboxes(storeId, [node.id]);
     }, [storeId, node.id]);
 
     const handleTouchStart = React.useCallback((e: any) => {
+        wasDraggedRef.current = false;
         if (!onNodeTouchStart) return;
         const { pageY, locationY } = e.nativeEvent;
         onNodeTouchStart(node.id, pageY, locationY, nodeIndex);
@@ -355,10 +373,11 @@ function _Node<ID>(props: NodeProps<ID>) {
     } : undefined;
 
     const CustomDropIndicator = dragDropCustomizations?.CustomDropIndicatorComponent;
+    const indicatorLevel = nodeDropLevel ?? level;
     const dropIndicator = isDropTarget && nodeDropPosition ? (
         CustomDropIndicator
-            ? <CustomDropIndicator position={nodeDropPosition} />
-            : <NodeDropIndicator position={nodeDropPosition} styleProps={dragDropCustomizations?.dropIndicatorStyleProps} />
+            ? <CustomDropIndicator position={nodeDropPosition} level={indicatorLevel} indentationMultiplier={indentationMultiplier} />
+            : <NodeDropIndicator position={nodeDropPosition} level={indicatorLevel} indentationMultiplier={indentationMultiplier} styleProps={dragDropCustomizations?.dropIndicatorStyleProps} />
     ) : null;
 
     if (!CustomNodeRowComponent) {
@@ -371,6 +390,7 @@ function _Node<ID>(props: NodeProps<ID>) {
                     styles.nodeCheckboxAndArrowRow,
                     { paddingStart: level * indentationMultiplier },
                     { opacity: nodeOpacity },
+                    dropIndicator ? styles.nodeOverflowVisible : undefined,
                 ]}>
                 {dropIndicator}
                 <CheckboxComponent
@@ -398,7 +418,10 @@ function _Node<ID>(props: NodeProps<ID>) {
             <View
                 {...touchHandlers}
                 onLayout={onItemLayout ? handleLayout : undefined}
-                style={{ opacity: nodeOpacity }}
+                style={[
+                    { opacity: nodeOpacity },
+                    dropIndicator ? styles.nodeOverflowVisible : undefined,
+                ]}
             >
                 {dropIndicator}
                 <CustomNodeRowComponent
@@ -417,8 +440,10 @@ function _Node<ID>(props: NodeProps<ID>) {
     }
 };
 
-function NodeDropIndicator({ position, styleProps }: {
+function NodeDropIndicator({ position, level, indentationMultiplier, styleProps }: {
     position: DropPosition;
+    level: number;
+    indentationMultiplier: number;
     styleProps?: DropIndicatorStyleProps;
 }) {
     const lineColor = styleProps?.lineColor ?? "#0078FF";
@@ -427,6 +452,10 @@ function NodeDropIndicator({ position, styleProps }: {
     const highlightColor = styleProps?.highlightColor ?? "rgba(0, 120, 255, 0.15)";
     const highlightBorderColor = styleProps?.highlightBorderColor ?? "rgba(0, 120, 255, 0.5)";
 
+    // Indent the line to match the node's nesting level so users can
+    // visually distinguish drops at different tree depths.
+    const leftOffset = level * indentationMultiplier;
+
     if (position === "inside") {
         return (
             <View
@@ -434,6 +463,7 @@ function NodeDropIndicator({ position, styleProps }: {
                 style={[
                     styles.dropHighlight,
                     {
+                        left: leftOffset,
                         backgroundColor: highlightColor,
                         borderColor: highlightBorderColor,
                     },
@@ -442,26 +472,25 @@ function NodeDropIndicator({ position, styleProps }: {
         );
     }
 
+    // Ensure the circle isn't clipped at shallow indent levels
+    const safeLeftOffset = Math.max(leftOffset, circleSize / 2);
+
     return (
         <View
             pointerEvents="none"
             style={[
                 styles.dropLineContainer,
-                { height: lineThickness },
+                { height: lineThickness, left: safeLeftOffset },
                 position === "above" ? styles.dropLineTop : styles.dropLineBottom,
             ]}
         >
-            <View style={[
-                styles.dropLineCircle,
-                {
-                    width: circleSize,
-                    height: circleSize,
-                    borderRadius: circleSize / 2,
-                    backgroundColor: lineColor,
-                    marginLeft: -(circleSize / 2),
-                    marginTop: -(circleSize / 2 - lineThickness / 2),
-                },
-            ]} />
+            <View style={{
+                width: circleSize,
+                height: circleSize,
+                borderRadius: circleSize / 2,
+                backgroundColor: lineColor,
+                marginLeft: -(circleSize / 2),
+            }} />
             <View style={[
                 styles.dropLine,
                 {
@@ -510,6 +539,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         height: 3,
         zIndex: 10,
+        overflow: "visible",
     },
     dropLineTop: {
         top: 0,
@@ -517,17 +547,12 @@ const styles = StyleSheet.create({
     dropLineBottom: {
         bottom: 0,
     },
-    dropLineCircle: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        backgroundColor: "#0078FF",
-        marginLeft: -5,
-        marginTop: -4,
-    },
     dropLine: {
         flex: 1,
         height: 3,
         backgroundColor: "#0078FF",
+    },
+    nodeOverflowVisible: {
+        overflow: "visible",
     },
 });

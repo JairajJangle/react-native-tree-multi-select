@@ -54,7 +54,8 @@ export type TreeViewState<ID> = {
     // Drop target state (used by nodes to render their own indicator)
     dropTargetNodeId: ID | null;
     dropPosition: DropPosition | null;
-    updateDropTarget: (nodeId: ID | null, position: DropPosition | null) => void;
+    dropLevel: number | null;
+    updateDropTarget: (nodeId: ID | null, position: DropPosition | null, level?: number | null) => void;
 
     // Cleanup all states in this store
     cleanUpTreeViewStore: () => void;
@@ -120,9 +121,11 @@ export function getTreeViewStore<ID>(id: string): UseBoundStore<StoreApi<TreeVie
 
             dropTargetNodeId: null,
             dropPosition: null,
-            updateDropTarget: (nodeId, position) => set({
+            dropLevel: null,
+            updateDropTarget: (nodeId, position, level) => set({
                 dropTargetNodeId: nodeId,
                 dropPosition: position,
+                dropLevel: level ?? null,
             }),
 
             cleanUpTreeViewStore: () =>
@@ -141,6 +144,7 @@ export function getTreeViewStore<ID>(id: string): UseBoundStore<StoreApi<TreeVie
                     invalidDragTargetIds: new Set<ID>(),
                     dropTargetNodeId: null,
                     dropPosition: null,
+                    dropLevel: null,
                 }),
         }));
 

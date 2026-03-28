@@ -194,6 +194,10 @@ export interface SelectionPropagation {
 export interface DropIndicatorComponentProps {
     /** Whether the indicator is above, below, or inside the target node */
     position: DropPosition;
+    /** The nesting level of the target node (useful for indenting the indicator) */
+    level: number;
+    /** The indentation multiplier used for each level (pixels per level) */
+    indentationMultiplier: number;
 }
 
 /** Style props for customizing the built-in drop indicator appearance */

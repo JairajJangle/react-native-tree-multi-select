@@ -6,6 +6,7 @@ import {
     StyleSheet,
     Button,
     TouchableOpacity,
+    Alert,
 } from "react-native";
 
 import {
@@ -22,29 +23,33 @@ const initialData: TreeNode[] = [
     {
         id: "team",
         name: "Engineering Team",
+        type: "team",
         children: [
             {
                 id: "frontend",
                 name: "Frontend",
+                type: "team",
                 children: [
-                    { id: "fe-1", name: "Alice Chen" },
-                    { id: "fe-2", name: "Bob Park" },
-                    { id: "fe-3", name: "Carol Liu" },
+                    { id: "fe-1", name: "Alice Chen", type: "person" },
+                    { id: "fe-2", name: "Bob Park", type: "person" },
+                    { id: "fe-3", name: "Carol Liu", type: "person" },
                 ],
             },
             {
                 id: "backend",
                 name: "Backend",
+                type: "team",
                 children: [
-                    { id: "be-1", name: "Dave Kim" },
-                    { id: "be-2", name: "Eve Santos" },
+                    { id: "be-1", name: "Dave Kim", type: "person" },
+                    { id: "be-2", name: "Eve Santos", type: "person" },
                 ],
             },
             {
                 id: "devops",
                 name: "DevOps",
+                type: "team",
                 children: [
-                    { id: "do-1", name: "Frank Lee" },
+                    { id: "do-1", name: "Frank Lee", type: "person" },
                 ],
             },
         ],
@@ -52,17 +57,19 @@ const initialData: TreeNode[] = [
     {
         id: "design",
         name: "Design Team",
+        type: "team",
         children: [
-            { id: "d-1", name: "Grace Wang" },
-            { id: "d-2", name: "Henry Zhao" },
+            { id: "d-1", name: "Grace Wang", type: "person" },
+            { id: "d-2", name: "Henry Zhao", type: "person" },
         ],
     },
     {
         id: "pm",
         name: "Product",
+        type: "team",
         children: [
-            { id: "pm-1", name: "Iris Patel" },
-            { id: "pm-2", name: "Jack Moreno" },
+            { id: "pm-1", name: "Iris Patel", type: "person" },
+            { id: "pm-2", name: "Jack Moreno", type: "person" },
         ],
     },
 ];
@@ -89,7 +96,7 @@ function _TeamNodeRow<ID = string>(props: NodeRowProps<ID>) {
     const { node, level, checkedValue, isExpanded, onCheck, onExpand,
         isDragging, isDraggedNode, isDragTarget } = props;
 
-    const isLeaf = !node.children?.length;
+    const isLeaf = node.type === "person";
     const isChecked = checkedValue === true;
     const isIndeterminate = checkedValue === "indeterminate";
 
@@ -105,6 +112,19 @@ function _TeamNodeRow<ID = string>(props: NodeRowProps<ID>) {
                 isChecked && rowStyles.rowChecked,
             ]}
         >
+            {/* Expand/collapse arrow on the left for non-leaf nodes */}
+            {!isLeaf ? (
+                <TouchableOpacity
+                    onPress={onExpand}
+                    style={rowStyles.expandBtn}
+                    hitSlop={{ top: 16, bottom: 16, left: 12, right: 12 }}
+                >
+                    <Text style={rowStyles.expandIcon}>{isExpanded ? "▼" : "▶"}</Text>
+                </TouchableOpacity>
+            ) : (
+                <View style={rowStyles.expandSpacer} />
+            )}
+
             {isLeaf ? (
                 <View style={[rowStyles.avatar, { backgroundColor: getColor(String(node.id)) }]}>
                     <Text style={rowStyles.avatarText}>{getInitials(node.name)}</Text>
@@ -126,7 +146,7 @@ function _TeamNodeRow<ID = string>(props: NodeRowProps<ID>) {
                 </Text>
                 {!isLeaf && (
                     <Text style={rowStyles.subtitle}>
-                        {node.children!.length} member{node.children!.length !== 1 ? "s" : ""}
+                        {node.children?.length ?? 0} member{(node.children?.length ?? 0) !== 1 ? "s" : ""}
                         {isIndeterminate ? " · Partial" : isChecked ? " · All selected" : ""}
                     </Text>
                 )}
@@ -141,12 +161,6 @@ function _TeamNodeRow<ID = string>(props: NodeRowProps<ID>) {
                 {isChecked && <Text style={rowStyles.checkmark}>✓</Text>}
                 {isIndeterminate && <Text style={rowStyles.dash}>−</Text>}
             </View>
-
-            {!isLeaf && (
-                <TouchableOpacity onPress={onExpand} style={rowStyles.expandBtn}>
-                    <Text style={rowStyles.expandIcon}>{isExpanded ? "▾" : "▸"}</Text>
-                </TouchableOpacity>
-            )}
         </TouchableOpacity>
     );
 }
@@ -155,12 +169,40 @@ export default function DragDropCustomRowScreen() {
     const [data, setData] = useState<TreeNode[]>(initialData);
     const treeViewRef = useRef<TreeViewRef | null>(null);
     const [lastDrop, setLastDrop] = useState("");
+    const [treeKey, setTreeKey] = useState(0);
+
+    const findNode = useCallback((id: string, tree: TreeNode[]): TreeNode | null => {
+        for (const node of tree) {
+            if (node.id === id) return node;
+            if (node.children) {
+                const found = findNode(id, node.children);
+                if (found) return found;
+            }
+        }
+        return null;
+    }, []);
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
+        // Prevent dropping a person inside another person (leaf into leaf)
+        const targetNode = findNode(String(event.targetNodeId), data);
+        const isTargetLeaf = targetNode && targetNode.type === "person";
+
+        if (event.position === "inside" && isTargetLeaf) {
+            Alert.alert(
+                "Invalid Move",
+                `Cannot move a member inside "${targetNode.name}". Only teams can contain members.`,
+            );
+            // Force remount to revert — the store was already updated internally,
+            // so changing the key re-initializes TreeView with the unchanged data prop
+            setTreeKey(k => k + 1);
+            return;
+        }
+
         setData(event.newTreeData);
         const action = event.position === "inside" ? "into" : event.position;
-        setLastDrop(`Moved ${action} "${event.targetNodeId}"`);
-    }, []);
+        const targetName = targetNode?.name ?? String(event.targetNodeId);
+        setLastDrop(`Moved ${action} "${targetName}"`);
+    }, [data, findNode]);
 
     return (
         <SafeAreaView style={screenStyles.mainView}>
@@ -178,6 +220,7 @@ export default function DragDropCustomRowScreen() {
 
             <View style={screenStyles.treeViewParent}>
                 <TreeView
+                    key={treeKey}
                     ref={treeViewRef}
                     data={data}
                     onCheck={() => {}}
@@ -229,6 +272,7 @@ const rowStyles = StyleSheet.create({
     row: {
         flexDirection: "row",
         alignItems: "center",
+        minHeight: 48,
         paddingVertical: 8,
         paddingRight: 12,
         borderBottomWidth: StyleSheet.hairlineWidth,
@@ -311,11 +355,18 @@ const rowStyles = StyleSheet.create({
         marginTop: -2,
     },
     expandBtn: {
-        paddingLeft: 8,
-        paddingVertical: 4,
+        width: 36,
+        height: 36,
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: 4,
+    },
+    expandSpacer: {
+        width: 36,
+        marginRight: 4,
     },
     expandIcon: {
-        fontSize: 16,
-        color: "#999",
+        fontSize: 14,
+        color: "#888",
     },
 });

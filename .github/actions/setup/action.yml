@@ -4,21 +4,19 @@ description: Setup Node.js and install dependencies
 runs:
   using: composite
   steps:
+    # Enable Corepack BEFORE setup-node so that its internal yarn
+    # diagnostics use the Corepack-managed yarn instead of the
+    # global 1.x which refuses to run when packageManager is set.
+    - name: Enable Corepack
+      run: corepack enable
+      shell: bash
+
     - name: Setup Node.js
       uses: actions/setup-node@v5
       with:
         node-version-file: .nvmrc
 
-    # Create a minimal .yarnrc.yml without any plugin references
-    - name: Create minimal Yarn config
-      run: |
-        cat > .yarnrc.yml << EOF
-        nodeLinker: node-modules
-        nmHoistingLimits: workspaces
-        EOF
-      shell: bash
-
-    # Setup Corepack for proper Yarn version management
+    # Re-enable Corepack for the newly installed Node version
     - name: Setup Corepack and Yarn
       run: |
         corepack enable
@@ -26,16 +24,10 @@ runs:
         yarn --version
       shell: bash
 
-    - name: Configure Yarn and Generate .yarnrc.yml
+    - name: Configure Yarn
       run: |
-        yarn set version 4.9.2
         yarn config set nodeLinker node-modules
         yarn config set nmHoistingLimits workspaces
-      shell: bash
-
-    - name: Verify .yarnrc.yml
-      run: |
-        cat .yarnrc.yml
       shell: bash
 
     - name: Restore Yarn Cache

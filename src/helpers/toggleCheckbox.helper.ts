@@ -225,7 +225,7 @@ export function recalculateCheckedStates<ID>(storeId: string) {
     const tempIndeterminate = new Set(indeterminate);
 
     // Collect parent nodes and clean up leaf nodes that shouldn't be indeterminate.
-    // A leaf node (no children) can never be indeterminate — this can happen when
+    // A leaf node (no children) can never be indeterminate - this can happen when
     // all children of a formerly-indeterminate parent are dragged away.
     const parentNodes: ID[] = [];
     for (const [id, node] of nodeMap) {

@@ -256,7 +256,7 @@ describe("recalculateCheckedStates", () => {
                 recalculateCheckedStates<string>(STORE_ID);
             });
 
-            // P is now a leaf — must NOT be indeterminate
+            // P is now a leaf - must NOT be indeterminate
             const { checked, indeterminate } = store.getState();
             expect(indeterminate.has("P")).toBe(false);
             expect(checked.has("P")).toBe(false);
@@ -491,7 +491,7 @@ describe("recalculateCheckedStates", () => {
             expect(checked.has("2.1")).toBe(false);
         });
 
-        it("is idempotent — calling twice produces same result", () => {
+        it("is idempotent - calling twice produces same result", () => {
             act(() => {
                 toggleCheckboxes(STORE_ID, ["1.1.1", "2.1"], true);
             });

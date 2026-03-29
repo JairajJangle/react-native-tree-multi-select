@@ -16,7 +16,7 @@ interface UseDragDropParams<ID> {
     storeId: string;
     flattenedNodes: __FlattenedTreeNode__<ID>[];
     flashListRef: React.RefObject<FlashList<__FlattenedTreeNode__<ID>> | null>;
-    containerRef: React.RefObject<{ measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => void } | null>;
+    containerRef: React.RefObject<{ measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => void; } | null>;
     dragEnabled: boolean;
     onDragEnd?: (event: DragEndEvent<ID>) => void;
     longPressDuration: number;
@@ -107,7 +107,7 @@ export function useDragDrop<ID>(
     const panResponderActiveRef = useRef(false);
 
     // Previous drop target for hysteresis (prevents flicker between "below N" / "above N+1")
-    const prevDropTargetRef = useRef<{ targetIndex: number; position: "above" | "below" | "inside" } | null>(null);
+    const prevDropTargetRef = useRef<{ targetIndex: number; position: "above" | "below" | "inside"; } | null>(null);
 
     // Keep flattenedNodes ref current for PanResponder closures
     const flattenedNodesRef = useRef(flattenedNodes);
@@ -123,7 +123,7 @@ export function useDragDrop<ID>(
     const [dropTarget, setDropTarget] = useState<DropTarget<ID> | null>(null);
     const [effectiveDropLevel, setEffectiveDropLevel] = useState(0);
 
-    // Ref mirror of dropTarget — avoids nesting Zustand updates inside React state updaters
+    // Ref mirror of dropTarget - avoids nesting Zustand updates inside React state updaters
     const dropTargetRef = useRef<DropTarget<ID> | null>(null);
 
     // --- Long press timer ---
@@ -391,7 +391,7 @@ export function useDragDrop<ID>(
                         shallowLevel = nextLevel;
                     }
                 } else if (currentLevel > 0) {
-                    // Last item in the list — treat as cliff to root level
+                    // Last item in the list - treat as cliff to root level
                     isCliff = true;
                     shallowLevel = 0;
                 }
@@ -434,7 +434,7 @@ export function useDragDrop<ID>(
                 const prevLevel = prevNode?.level ?? 0;
                 const currentLevel = targetNode.level ?? 0;
                 if (prevNode && prevLevel > currentLevel) {
-                    // Level cliff above — same generous threshold
+                    // Level cliff above - same generous threshold
                     const threshold =
                         ((prevLevel + currentLevel) / 2) * indentationMultiplier
                         + indentationMultiplier * 2;
@@ -485,10 +485,10 @@ export function useDragDrop<ID>(
                     const lowerLevel = nodes[lowerIdx]?.level ?? 0;
 
                     if (upperLevel === lowerLevel) {
-                        // Same level — pure visual hysteresis, keep previous
+                        // Same level - pure visual hysteresis, keep previous
                         return;
                     }
-                    // Level cliff — horizontal control already resolved this,
+                    // Level cliff - horizontal control already resolved this,
                     // let the result pass through.
                 }
             }
@@ -507,7 +507,7 @@ export function useDragDrop<ID>(
             // --- Auto-expand: if hovering "inside" a collapsed expandable node ---
             if (isValid && position === "inside" && targetNode.children?.length && !expanded.has(targetNode.id)) {
                 if (autoExpandTargetRef.current !== targetNode.id) {
-                    // New hover target — start timer
+                    // New hover target - start timer
                     cancelAutoExpandTimer();
                     autoExpandTargetRef.current = targetNode.id;
                     autoExpandTimerRef.current = setTimeout(() => {
@@ -518,7 +518,7 @@ export function useDragDrop<ID>(
                     }, autoExpandDelay);
                 }
             } else {
-                // Not hovering inside a collapsed expandable node — cancel timer
+                // Not hovering inside a collapsed expandable node - cancel timer
                 if (autoExpandTargetRef.current !== null) {
                     cancelAutoExpandTimer();
                 }
@@ -673,17 +673,31 @@ export function useDragDrop<ID>(
                     newTreeData: newData,
                 });
 
-                // Scroll to the dropped node after React processes the expansion
+                // Scroll to the dropped node after React processes the expansion,
+                // but only if it's outside the visible viewport.  An animated
+                // scroll would consume the user's next touch (RN stops the
+                // animation on tap), so we skip when the node is already visible.
                 setTimeout(() => {
                     const nodes = flattenedNodesRef.current;
                     const idx = nodes.findIndex(n => n.id === droppedNodeId);
-                    if (idx >= 0) {
-                        flashListRef.current?.scrollToIndex?.({
-                            index: idx,
-                            animated: true,
-                            viewPosition: 0.5,
-                        });
+                    if (idx < 0) return;
+
+                    const itemH = itemHeightRef.current;
+                    const scrollTop = scrollOffsetRef.current;
+                    const containerH = containerHeightRef.current;
+                    const estimatedTop = idx * itemH;
+                    const estimatedBottom = estimatedTop + itemH;
+
+                    // Already in view → no scroll needed
+                    if (estimatedTop >= scrollTop && estimatedBottom <= scrollTop + containerH) {
+                        return;
                     }
+
+                    flashListRef.current?.scrollToIndex?.({
+                        index: idx,
+                        animated: true,
+                        viewPosition: 0.5,
+                    });
                 }, 100);
             }
 
@@ -783,7 +797,7 @@ export function useDragDrop<ID>(
                 // Calculate drop target (horizontal position used at level cliffs)
                 calculateDropTarget(fingerPageY, evt.nativeEvent.pageX);
 
-                // Auto-scroll at edges — use delta-based position relative to container
+                // Auto-scroll at edges - use delta-based position relative to container
                 const fingerInContainer =
                     initialFingerContainerYRef.current +
                     (fingerPageY - initialFingerPageYRef.current);

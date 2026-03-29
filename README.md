@@ -130,7 +130,7 @@ export function DragDropExample(){
   const treeViewRef = React.useRef<TreeViewRef | null>(null);
 
   const handleDragEnd = (event: DragEndEvent) => {
-    // event.newTreeData contains the reordered tree — just set it
+    // event.newTreeData contains the reordered tree - just set it
     setData(event.newTreeData);
   };
 

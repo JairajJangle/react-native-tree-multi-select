@@ -192,7 +192,7 @@ export default function DragDropCustomRowScreen() {
                 "Invalid Move",
                 `Cannot move a member inside "${targetNode.name}". Only teams can contain members.`,
             );
-            // Force remount to revert — the store was already updated internally,
+            // Force remount to revert - the store was already updated internally,
             // so changing the key re-initializes TreeView with the unchanged data prop
             setTreeKey(k => k + 1);
             return;
@@ -223,8 +223,8 @@ export default function DragDropCustomRowScreen() {
                     key={treeKey}
                     ref={treeViewRef}
                     data={data}
-                    onCheck={() => {}}
-                    onExpand={() => {}}
+                    onCheck={() => { }}
+                    onExpand={() => { }}
                     dragEnabled={true}
                     onDragEnd={handleDragEnd}
                     preExpandedIds={["team", "frontend", "backend", "devops", "design", "pm"]}

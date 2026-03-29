@@ -12,6 +12,8 @@
 
 * @Claude Opus 4.6
 
+## [2.0.13](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.12...v2.0.13) (2026-03-28)
+
 # [3.0.0-beta.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.11...v3.0.0-beta.1) (2026-03-22)
 
 

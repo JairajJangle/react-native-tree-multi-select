@@ -270,7 +270,7 @@ describe("Drag-drop integration with checked/expanded state", () => {
     });
 
     it("invalid drag targets include self and all descendants", () => {
-        // Simulate dragging node "1" — descendants are 1.1, 1.1.1, 1.1.2, 1.2
+        // Simulate dragging node "1" - descendants are 1.1, 1.1.1, 1.1.2, 1.2
         const { nodeMap } = store.getState();
 
         // Build descendant set like useDragDrop does

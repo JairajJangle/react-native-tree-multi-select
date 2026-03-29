@@ -330,10 +330,18 @@ function _Node<ID>(props: NodeProps<ID>) {
     // Track when this node was dragged so we can swallow the onPress/onCheck
     // that fires when the user lifts their finger after a long-press-initiated drag.
     // The flag is set during render (synchronous) and cleared on the next touch start.
+    // It is also cleared via effect when dragging ends, to prevent stale `true`
+    // values surviving FlashList recycling (where refs persist across items).
     const wasDraggedRef = React.useRef(false);
     if (isDraggingGlobal && isBeingDragged) {
         wasDraggedRef.current = true;
     }
+
+    React.useEffect(() => {
+        if (!isDraggingGlobal) {
+            wasDraggedRef.current = false;
+        }
+    }, [isDraggingGlobal]);
 
     const _onToggleExpand = React.useCallback(() => {
         if (wasDraggedRef.current) return;

@@ -1,3 +1,19 @@
+# [3.0.0-beta.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.1...v3.0.0-beta.2) (2026-03-28)
+
+
+### Bug Fixes
+
+* **ci:** enable Corepack before setup-node to fix yarn detection ([6be37d6](https://github.com/JairajJangle/react-native-tree-multi-select/commit/6be37d647090f82e8e6e0745a80e8c15c32eeb18))
+* **drag-drop:** multiple UX fixes for drag-and-drop interactions ([4b5220d](https://github.com/JairajJangle/react-native-tree-multi-select/commit/4b5220dabf7f41955e785266d510feaa18d310df))
+* **lint:** remove unused eslint-disable comment in calculateDropTarget ([46747e3](https://github.com/JairajJangle/react-native-tree-multi-select/commit/46747e395b09aeb2a0316f3c91e37e6b3627f1d8))
+
+
+### Contributors
+
+* @Claude Opus 4.6
+
+## [2.0.13](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.12...v2.0.13) (2026-03-28)
+
 # [3.0.0-beta.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.11...v3.0.0-beta.1) (2026-03-22)
 
 

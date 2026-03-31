@@ -1,4 +1,13 @@
-import React, { startTransition, useId } from "react";
+import {
+	forwardRef,
+	startTransition,
+	useCallback,
+	useEffect,
+	useId,
+	useImperativeHandle,
+	useRef,
+	type ForwardedRef,
+} from "react";
 import type {
 	TreeNode,
 	TreeViewProps,
@@ -25,13 +34,13 @@ import { typedMemo } from "./utils/typedMemo";
 import type {
 	ScrollToNodeHandlerRef,
 	ScrollToNodeParams
-} from "./handlers/ScrollToNodeHandler";
+} from "./hooks/useScrollToNode";
 import type { DragEndEvent } from "./types/dragDrop.types";
 import { fastIsEqual } from "fast-is-equal";
 
 function _innerTreeView<ID>(
 	props: TreeViewProps<ID>,
-	ref: React.ForwardedRef<TreeViewRef<ID>>
+	ref: ForwardedRef<TreeViewRef<ID>>
 ) {
 	const {
 		data,
@@ -57,15 +66,10 @@ function _innerTreeView<ID>(
 
 		CustomNodeRowComponent,
 
-		dragEnabled,
-		onDragEnd,
-		longPressDuration,
-		autoScrollThreshold,
-		autoScrollSpeed,
-		dragOverlayOffset,
-		autoExpandDelay,
-		dragDropCustomizations,
+		dragAndDrop,
 	} = props;
+
+	const onDragEnd = dragAndDrop?.onDragEnd;
 
 	const storeId = useId();
 
@@ -109,7 +113,7 @@ function _innerTreeView<ID>(
 		})
 	));
 
-	React.useImperativeHandle(ref, () => ({
+	useImperativeHandle(ref, () => ({
 		selectAll: () => selectAll(storeId),
 		unselectAll: () => unselectAll(storeId),
 
@@ -132,12 +136,12 @@ function _innerTreeView<ID>(
 		getChildToParentMap
 	}));
 
-	const scrollToNodeHandlerRef = React.useRef<ScrollToNodeHandlerRef<ID>>(null);
+	const scrollToNodeHandlerRef = useRef<ScrollToNodeHandlerRef<ID>>(null);
 	const prevSearchText = usePreviousState(searchText);
-	const internalDataRef = React.useRef<TreeNode<ID>[] | null>(null);
+	const internalDataRef = useRef<TreeNode<ID>[] | null>(null);
 
 	// Wrap onDragEnd to set internalDataRef before calling consumer's callback
-	const wrappedOnDragEnd = React.useCallback((event: DragEndEvent<ID>) => {
+	const wrappedOnDragEnd = useCallback((event: DragEndEvent<ID>) => {
 		internalDataRef.current = event.newTreeData;
 		onDragEnd?.(event);
 	}, [onDragEnd]);
@@ -191,7 +195,7 @@ function _innerTreeView<ID>(
 		return treeViewStore.getState().childToParentMap;
 	}
 
-	const getIds = React.useCallback((node: TreeNode<ID>): ID[] => {
+	const getIds = useCallback((node: TreeNode<ID>): ID[] => {
 		if (!node.children || node.children.length === 0) {
 			return [node.id];
 		} else {
@@ -199,15 +203,15 @@ function _innerTreeView<ID>(
 		}
 	}, []);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		onCheck?.(Array.from(checked), Array.from(indeterminate));
 	}, [onCheck, checked, indeterminate]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		onExpand?.(Array.from(expanded));
 	}, [onExpand, expanded]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		if (searchText) {
 			startTransition(() => {
 				updateExpanded(new Set(initialTreeViewData.flatMap(
@@ -230,7 +234,7 @@ function _innerTreeView<ID>(
 		updateExpanded
 	]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		return () => {
 			cleanUpTreeViewStore();
 		};
@@ -253,20 +257,16 @@ function _innerTreeView<ID>(
 
 			CustomNodeRowComponent={CustomNodeRowComponent}
 
-			dragEnabled={dragEnabled}
-			onDragEnd={wrappedOnDragEnd}
-			longPressDuration={longPressDuration}
-			autoScrollThreshold={autoScrollThreshold}
-			autoScrollSpeed={autoScrollSpeed}
-			dragOverlayOffset={dragOverlayOffset}
-			autoExpandDelay={autoExpandDelay}
-			dragDropCustomizations={dragDropCustomizations}
+			dragAndDrop={dragAndDrop && {
+				...dragAndDrop,
+				onDragEnd: wrappedOnDragEnd,
+			}}
 		/>
 	);
 }
 
-const _TreeView = React.forwardRef(_innerTreeView) as <ID>(
-	props: TreeViewProps<ID> & { ref?: React.ForwardedRef<TreeViewRef<ID>>; }
+const _TreeView = forwardRef(_innerTreeView) as <ID>(
+	props: TreeViewProps<ID> & { ref?: ForwardedRef<TreeViewRef<ID>>; }
 ) => ReturnType<typeof _innerTreeView>;
 
 export const TreeView = typedMemo<typeof _TreeView>(_TreeView);

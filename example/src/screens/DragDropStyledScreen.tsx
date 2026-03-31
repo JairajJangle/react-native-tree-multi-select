@@ -533,15 +533,17 @@ export default function DragDropStyledScreen() {
                         data={data}
                         onCheck={() => {}}
                         onExpand={() => {}}
-                        dragEnabled={true}
-                        onDragEnd={handleDragEnd}
+                        dragAndDrop={{
+                            enabled: true,
+                            onDragEnd: handleDragEnd,
+                            customizations: {
+                                draggedNodeOpacity: 0.15,
+                                CustomDropIndicatorComponent: FancyDropIndicator,
+                                CustomDragOverlayComponent: FancyDragOverlay,
+                            },
+                        }}
                         preExpandedIds={["1", "2", "3"]}
                         CustomNodeRowComponent={BlinkableNodeRow}
-                        dragDropCustomizations={{
-                            draggedNodeOpacity: 0.15,
-                            CustomDropIndicatorComponent: FancyDropIndicator,
-                            CustomDragOverlayComponent: FancyDragOverlay,
-                        }}
                     />
                 </View>
             </SafeAreaView>

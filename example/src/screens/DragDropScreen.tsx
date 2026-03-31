@@ -139,8 +139,10 @@ export default function DragDropScreen() {
                     data={data}
                     onCheck={handleSelectionChange}
                     onExpand={handleExpanded}
-                    dragEnabled={dragEnabled}
-                    onDragEnd={handleDragEnd}
+                    dragAndDrop={{
+                        enabled: dragEnabled,
+                        onDragEnd: handleDragEnd,
+                    }}
                     preExpandedIds={["1", "2"]}
                 />
             </View>

@@ -143,16 +143,18 @@ export default function DragDropCustomOverlayScreen() {
                     data={data}
                     onCheck={() => {}}
                     onExpand={() => {}}
-                    dragEnabled={true}
-                    onDragEnd={handleDragEnd}
-                    preExpandedIds={["inbox", "work", "personal"]}
-                    longPressDuration={300}
-                    autoExpandDelay={600}
-                    dragDropCustomizations={{
-                        draggedNodeOpacity: 0.2,
-                        CustomDragOverlayComponent: CustomDragOverlay,
-                        CustomDropIndicatorComponent: CustomDropIndicator,
+                    dragAndDrop={{
+                        enabled: true,
+                        onDragEnd: handleDragEnd,
+                        longPressDuration: 300,
+                        autoExpandDelay: 600,
+                        customizations: {
+                            draggedNodeOpacity: 0.2,
+                            CustomDragOverlayComponent: CustomDragOverlay,
+                            CustomDropIndicatorComponent: CustomDropIndicator,
+                        },
                     }}
+                    preExpandedIds={["inbox", "work", "personal"]}
                 />
             </View>
         </SafeAreaView>

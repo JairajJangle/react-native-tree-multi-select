@@ -140,8 +140,10 @@ export function DragDropExample(){
       data={data}
       onCheck={(checked, indeterminate) => { /* ... */ }}
       onExpand={(expanded) => { /* ... */ }}
-      dragEnabled={true}
-      onDragEnd={handleDragEnd}
+      dragAndDrop={{
+        enabled: true,
+        onDragEnd: handleDragEnd,
+      }}
     />
   );
 }
@@ -149,7 +151,7 @@ export function DragDropExample(){
 
 Long-press a node to start dragging. Drag over other nodes to see drop indicators. Drop above/below to reorder as siblings, or drop inside a parent node to nest it. The tree auto-scrolls when dragging near the edges.
 
-For visual customizations (overlay styles, indicator colors, or fully custom components), see the [`dragDropCustomizations`](#dragdropcustomizationsid) prop.
+For visual customizations (overlay styles, indicator colors, or fully custom components), see the [`dragAndDrop.customizations`](#dragdropcustomizationsid) option.
 
 ---
 
@@ -175,14 +177,20 @@ For visual customizations (overlay styles, indicator colors, or fully custom com
 | `ExpandCollapseIconComponent`      | `ComponentType<`[ExpandIconProps](#expandiconprops)`>`       | No       | A custom expand/collapse icon component                      |
 | `ExpandCollapseTouchableComponent` | `ComponentType<`[TouchableOpacityProps](https://reactnative.dev/docs/touchableopacity#props)`>` | No       | A custom expand/collapse touchable component                 |
 | `CustomNodeRowComponent`           | `React.ComponentType<`[NodeRowProps](#noderowpropsid--string)`<ID>>` | No       | Custom row item component                                    |
-| `dragEnabled`                      | `boolean`                                                    | No       | Enable drag-and-drop reordering                              |
-| `onDragEnd`                        | `(event: `[DragEndEvent](#dragendeventid--string)`<ID>) => void` | No       | Callback fired after a node is dropped at a new position     |
-| `longPressDuration`                | `number`                                                     | No       | Long press duration in ms to start drag (default: 400)       |
-| `autoScrollThreshold`              | `number`                                                     | No       | Distance from edge (px) to trigger auto-scroll (default: 60) |
-| `autoScrollSpeed`                  | `number`                                                     | No       | Speed multiplier for auto-scroll (default: 1.0)              |
-| `dragOverlayOffset`                | `number`                                                     | No       | Overlay offset from the finger, in item-height units (default: -1, i.e. one row above finger) |
-| `autoExpandDelay`                  | `number`                                                     | No       | Delay in ms before auto-expanding a collapsed node during drag hover (default: 800) |
-| `dragDropCustomizations`           | [DragDropCustomizations](#dragdropcustomizationsid)`<ID>`    | No       | Customizations for drag-and-drop visuals (overlay, indicator, opacity) |
+| `dragAndDrop`                      | [DragAndDropOptions](#draganddropoptionstid--string)`<ID>`   | No       | Drag-and-drop configuration (see below)                      |
+
+#### DragAndDropOptions`<ID = string>`
+
+| Property              | Type                                                         | Required | Description                                                  |
+| --------------------- | ------------------------------------------------------------ | -------- | ------------------------------------------------------------ |
+| `enabled`             | `boolean`                                                    | No       | Enable drag-and-drop reordering (default: false)             |
+| `onDragEnd`           | `(event: `[DragEndEvent](#dragendeventid--string)`<ID>) => void` | No       | Callback fired after a node is dropped at a new position     |
+| `longPressDuration`   | `number`                                                     | No       | Long press duration in ms to start drag (default: 400)       |
+| `autoScrollThreshold` | `number`                                                     | No       | Distance from edge (px) to trigger auto-scroll (default: 60) |
+| `autoScrollSpeed`     | `number`                                                     | No       | Speed multiplier for auto-scroll (default: 1.0)              |
+| `dragOverlayOffset`   | `number`                                                     | No       | Overlay offset from the finger, in item-height units (default: -1, i.e. one row above finger) |
+| `autoExpandDelay`     | `number`                                                     | No       | Delay in ms before auto-expanding a collapsed node during drag hover (default: 800) |
+| `customizations`      | [DragDropCustomizations](#dragdropcustomizationsid)`<ID>`    | No       | Customizations for drag-and-drop visuals (overlay, indicator, opacity) |
 
 ##### Notes
 
@@ -424,7 +432,7 @@ Moves a node within a tree structure. Returns a new tree (no mutation). Useful i
 - [x] Ref function to programatically expand/collapse a certain node 
 - [x] Ref function to programatically un/check a certain node
 - [x] Ref function to auto-scroll to a certain node's position - available in 1.9.0+
-- [x] Drag-and-drop reordering with customizable visuals
+- [x] Drag-and-drop reordering with customizable visuals. Can now be done using `dragAndDrop` prop 🎉
 
 If you do not see what you want in the planned feature list, raise a feature request. 
 

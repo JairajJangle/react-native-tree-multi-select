@@ -225,32 +225,34 @@ export default function DragDropCustomRowScreen() {
                     data={data}
                     onCheck={() => { }}
                     onExpand={() => { }}
-                    dragEnabled={true}
-                    onDragEnd={handleDragEnd}
-                    preExpandedIds={["team", "frontend", "backend", "devops", "design", "pm"]}
-                    CustomNodeRowComponent={TeamNodeRow}
-                    dragDropCustomizations={{
-                        draggedNodeOpacity: 0.15,
-                        dragOverlayStyleProps: {
-                            backgroundColor: "rgba(255, 255, 255, 0.98)",
-                            shadowColor: "#000",
-                            shadowOpacity: 0.2,
-                            shadowRadius: 12,
-                            elevation: 20,
-                            style: {
-                                borderRadius: 10,
-                                borderWidth: 1,
-                                borderColor: "rgba(0,0,0,0.06)",
+                    dragAndDrop={{
+                        enabled: true,
+                        onDragEnd: handleDragEnd,
+                        customizations: {
+                            draggedNodeOpacity: 0.15,
+                            dragOverlayStyleProps: {
+                                backgroundColor: "rgba(255, 255, 255, 0.98)",
+                                shadowColor: "#000",
+                                shadowOpacity: 0.2,
+                                shadowRadius: 12,
+                                elevation: 20,
+                                style: {
+                                    borderRadius: 10,
+                                    borderWidth: 1,
+                                    borderColor: "rgba(0,0,0,0.06)",
+                                },
+                            },
+                            dropIndicatorStyleProps: {
+                                lineColor: "#4ECDC4",
+                                lineThickness: 2,
+                                circleSize: 8,
+                                highlightColor: "rgba(78, 205, 196, 0.1)",
+                                highlightBorderColor: "rgba(78, 205, 196, 0.4)",
                             },
                         },
-                        dropIndicatorStyleProps: {
-                            lineColor: "#4ECDC4",
-                            lineThickness: 2,
-                            circleSize: 8,
-                            highlightColor: "rgba(78, 205, 196, 0.1)",
-                            highlightBorderColor: "rgba(78, 205, 196, 0.4)",
-                        },
                     }}
+                    preExpandedIds={["team", "frontend", "backend", "devops", "design", "pm"]}
+                    CustomNodeRowComponent={TeamNodeRow}
                 />
             </View>
         </SafeAreaView>

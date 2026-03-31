@@ -1,3 +1,4 @@
+import { ComponentType, RefObject } from "react";
 import type {
     StyleProp,
     TextProps,
@@ -8,7 +9,7 @@ import type { FlashListProps } from "@shopify/flash-list";
 import type {
     ScrollToNodeHandlerRef,
     ScrollToNodeParams
-} from "../handlers/ScrollToNodeHandler";
+} from "../hooks/useScrollToNode";
 import type {
     CheckboxProps as _CheckboxProps
 } from "@futurejj/react-native-checkbox";
@@ -82,14 +83,14 @@ export interface TreeItemCustomizations<ID> {
     indentationMultiplier?: number;
 
     /** Custom checkbox component replacing the built-in checkbox */
-    CheckboxComponent?: React.ComponentType<CheckBoxViewProps>;
+    CheckboxComponent?: ComponentType<CheckBoxViewProps>;
     /** Custom expand/collapse icon component */
-    ExpandCollapseIconComponent?: React.ComponentType<ExpandIconProps>;
+    ExpandCollapseIconComponent?: ComponentType<ExpandIconProps>;
     /** Custom touchable component wrapping the expand/collapse icon */
-    ExpandCollapseTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
+    ExpandCollapseTouchableComponent?: ComponentType<TouchableOpacityProps>;
 
     /** Fully custom node row component replacing the entire built-in row */
-    CustomNodeRowComponent?: React.ComponentType<NodeRowProps<ID>>;
+    CustomNodeRowComponent?: ComponentType<NodeRowProps<ID>>;
 }
 
 /** Internal props for a single node in the list (extends TreeItemCustomizations) */
@@ -124,21 +125,10 @@ export interface NodeProps<ID> extends TreeItemCustomizations<ID> {
     dragDropCustomizations?: DragDropCustomizations<ID>;
 }
 
-/** Props for the NodeList component that renders the flattened tree */
-export interface NodeListProps<ID> extends TreeItemCustomizations<ID> {
-    /** Additional props passed to the underlying FlashList */
-    treeFlashListProps?: TreeFlatListProps;
-
-    /** Ref for programmatic scroll-to-node functionality */
-    scrollToNodeHandlerRef: React.RefObject<ScrollToNodeHandlerRef<ID>>;
-    /** Node ID to scroll to on initial render */
-    initialScrollNodeID?: ID;
-
-    /** Internal store identifier */
-    storeId: string;
-
-    /** Enable drag-and-drop reordering */
-    dragEnabled?: boolean;
+/** Configuration options for drag-and-drop reordering */
+export interface DragAndDropOptions<ID = string> {
+    /** Enable drag-and-drop reordering. Default: false */
+    enabled?: boolean;
     /** Callback fired after a node is dropped at a new position */
     onDragEnd?: (event: DragEndEvent<ID>) => void;
     /** Long press duration in ms to start drag. Default: 400 */
@@ -152,7 +142,24 @@ export interface NodeListProps<ID> extends TreeItemCustomizations<ID> {
     /** Delay in ms before auto-expanding a collapsed node during drag hover. Default: 800 */
     autoExpandDelay?: number;
     /** Customizations for drag-and-drop visuals (overlay, indicator, opacity) */
-    dragDropCustomizations?: DragDropCustomizations<ID>;
+    customizations?: DragDropCustomizations<ID>;
+}
+
+/** Props for the NodeList component that renders the flattened tree */
+export interface NodeListProps<ID> extends TreeItemCustomizations<ID> {
+    /** Additional props passed to the underlying FlashList */
+    treeFlashListProps?: TreeFlatListProps;
+
+    /** Ref for programmatic scroll-to-node functionality */
+    scrollToNodeHandlerRef: RefObject<ScrollToNodeHandlerRef<ID>>;
+    /** Node ID to scroll to on initial render */
+    initialScrollNodeID?: ID;
+
+    /** Internal store identifier */
+    storeId: string;
+
+    /** Drag-and-drop configuration */
+    dragAndDrop?: DragAndDropOptions<ID>;
 }
 
 /** Props for the TreeView component */
@@ -176,20 +183,8 @@ export interface TreeViewProps<ID = string> extends Omit<
     /** Controls whether checking a node propagates to its children and/or parents */
     selectionPropagation?: SelectionPropagation;
 
-    /** Enable drag-and-drop reordering */
-    dragEnabled?: boolean;
-    /** Callback fired after a node is dropped at a new position */
-    onDragEnd?: (event: DragEndEvent<ID>) => void;
-    /** Long press duration in ms to start drag. Default: 400 */
-    longPressDuration?: number;
-    /** Distance from edge (px) to trigger auto-scroll during drag. Default: 60 */
-    autoScrollThreshold?: number;
-    /** Speed multiplier for auto-scroll during drag. Default: 1.0 */
-    autoScrollSpeed?: number;
-    /** Offset of the dragged overlay from the finger, in item-height units. Default: -1 (one item above finger) */
-    dragOverlayOffset?: number;
-    /** Delay in ms before auto-expanding a collapsed node during drag hover. Default: 800 */
-    autoExpandDelay?: number;
+    /** Drag-and-drop configuration */
+    dragAndDrop?: DragAndDropOptions<ID>;
 }
 
 type CheckboxProps = Omit<_CheckboxProps, "onPress" | "status">;
@@ -322,9 +317,9 @@ export interface DragDropCustomizations<ID = string> {
     /** Style props for the drag overlay (lifted node ghost) */
     dragOverlayStyleProps?: DragOverlayStyleProps;
     /** Fully custom drop indicator component - replaces the built-in line/highlight */
-    CustomDropIndicatorComponent?: React.ComponentType<DropIndicatorComponentProps>;
+    CustomDropIndicatorComponent?: ComponentType<DropIndicatorComponentProps>;
     /** Fully custom drag overlay component - replaces the built-in ghost node */
-    CustomDragOverlayComponent?: React.ComponentType<DragOverlayComponentProps<ID>>;
+    CustomDragOverlayComponent?: ComponentType<DragOverlayComponentProps<ID>>;
 }
 
 /** Props passed to a custom drag overlay component */

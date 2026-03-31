@@ -1,4 +1,10 @@
-import React from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  type DependencyList,
+  type EffectCallback,
+} from "react";
 import { fastIsEqual } from "fast-is-equal";
 
 /**
@@ -9,17 +15,17 @@ import { fastIsEqual } from "fast-is-equal";
  * @param deps The dependencies array to compare deeply.
  */
 export default function useDeepCompareEffect(
-  effect: React.EffectCallback,
-  deps: React.DependencyList
+  effect: EffectCallback,
+  deps: DependencyList
 ) {
   // Ref to track if it's the first render
-  const firstRenderRef = React.useRef<boolean>(true);
+  const firstRenderRef = useRef<boolean>(true);
 
   // Memoized dependencies to avoid redundant `isEqual` checks
-  const memoizedDependencies = React.useMemo(() => deps, [deps]);
+  const memoizedDependencies = useMemo(() => deps, [deps]);
 
   // Ref to store the previous dependencies
-  const dependenciesRef = React.useRef<React.DependencyList>(memoizedDependencies);
+  const dependenciesRef = useRef<DependencyList>(memoizedDependencies);
 
   // Check for dependency changes
   const dependenciesChanged = !fastIsEqual(
@@ -30,7 +36,7 @@ export default function useDeepCompareEffect(
     dependenciesRef.current = memoizedDependencies;
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (firstRenderRef.current) {
       firstRenderRef.current = false;
     }

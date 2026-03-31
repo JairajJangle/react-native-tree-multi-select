@@ -1,4 +1,4 @@
-import React from "react";
+import { memo, type ComponentType } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 
 import type {
@@ -26,7 +26,7 @@ function _DragOverlay<ID>(props: DragOverlayProps<ID>) {
         node,
         level,
         indentationMultiplier = defaultIndentationMultiplier,
-        CheckboxComponent = CheckboxView as React.ComponentType<CheckBoxViewProps>,
+        CheckboxComponent = CheckboxView as ComponentType<CheckBoxViewProps>,
         ExpandCollapseIconComponent = CustomExpandCollapseIcon,
         CustomNodeRowComponent,
         checkBoxViewStyleProps,
@@ -87,7 +87,7 @@ function _DragOverlay<ID>(props: DragOverlayProps<ID>) {
     );
 }
 
-export const DragOverlay = React.memo(_DragOverlay) as typeof _DragOverlay;
+export const DragOverlay = memo(_DragOverlay) as typeof _DragOverlay;
 
 const styles = StyleSheet.create({
     overlay: {

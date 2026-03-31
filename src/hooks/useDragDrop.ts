@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+    MutableRefObject,
+    RefObject,
+    useCallback,
+    useEffect,
+    useRef,
+    useState
+} from "react";
 import {
     Animated,
     PanResponder,
@@ -9,21 +16,27 @@ import type { FlashList } from "@shopify/flash-list";
 import type { __FlattenedTreeNode__, TreeNode } from "../types/treeView.types";
 import type { DragEndEvent, DropTarget } from "../types/dragDrop.types";
 import { getTreeViewStore } from "../store/treeView.store";
-import { collapseNodes, expandNodes, handleToggleExpand, initializeNodeMaps, recalculateCheckedStates } from "../helpers";
+import {
+    collapseNodes,
+    expandNodes,
+    handleToggleExpand,
+    initializeNodeMaps,
+    recalculateCheckedStates
+} from "../helpers";
 import { moveTreeNode } from "../helpers/moveTreeNode.helper";
 
 interface UseDragDropParams<ID> {
     storeId: string;
     flattenedNodes: __FlattenedTreeNode__<ID>[];
-    flashListRef: React.RefObject<FlashList<__FlattenedTreeNode__<ID>> | null>;
-    containerRef: React.RefObject<{ measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => void; } | null>;
+    flashListRef: RefObject<FlashList<__FlattenedTreeNode__<ID>> | null>;
+    containerRef: RefObject<{ measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => void; } | null>;
     dragEnabled: boolean;
     onDragEnd?: (event: DragEndEvent<ID>) => void;
     longPressDuration: number;
     autoScrollThreshold: number;
     autoScrollSpeed: number;
-    internalDataRef: React.MutableRefObject<TreeNode<ID>[] | null>;
-    measuredItemHeightRef: React.MutableRefObject<number>;
+    internalDataRef: MutableRefObject<TreeNode<ID>[] | null>;
+    measuredItemHeightRef: MutableRefObject<number>;
     dragOverlayOffset: number;
     autoExpandDelay: number;
     /** Pixels per nesting level, used for magnetic overlay shift. */
@@ -46,8 +59,8 @@ interface UseDragDropReturn<ID> {
     ) => void;
     handleNodeTouchEnd: () => void;
     cancelLongPressTimer: () => void;
-    scrollOffsetRef: React.MutableRefObject<number>;
-    headerOffsetRef: React.MutableRefObject<number>;
+    scrollOffsetRef: MutableRefObject<number>;
+    headerOffsetRef: MutableRefObject<number>;
 }
 
 export function useDragDrop<ID>(

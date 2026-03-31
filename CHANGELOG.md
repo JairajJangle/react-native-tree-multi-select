@@ -1,3 +1,15 @@
+# [3.0.0-beta.3](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.2...v3.0.0-beta.3) (2026-03-29)
+
+
+### Features
+
+* **drag-drop:** refine drag-and-drop implementation and tests ([b554dd7](https://github.com/JairajJangle/react-native-tree-multi-select/commit/b554dd7b4cee11fcf191fe91be4bc824efb9221a))
+
+
+### Contributors
+
+* @Claude Opus 4.6
+
 # [3.0.0-beta.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.1...v3.0.0-beta.2) (2026-03-28)
 
 

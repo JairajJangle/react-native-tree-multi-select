@@ -284,9 +284,12 @@ const indicatorStyles = StyleSheet.create({
 // Uses the library's own exported CheckboxView and the same FontAwesome icon,
 // so visually it's indistinguishable from the built-in row.
 
-function BlinkableNodeRow({ node, level, checkedValue, isExpanded, onCheck, onExpand }: NodeRowProps) {
+function BlinkableNodeRow({ node, level, checkedValue, isExpanded, onCheck, onExpand, isDragging, isDraggedNode, isInvalidDropTarget, dragHandleProps }: NodeRowProps) {
     const droppedNodeId = useContext(DroppedNodeContext);
     const justDropped = droppedNodeId === node.id;
+
+    // Drag opacity: custom rows are responsible for their own visual feedback
+    const dragOpacity = isDragging && (isDraggedNode || isInvalidDropTarget) ? 0.15 : 1;
 
     // Rainbow blink: cycle through colors behind the row then fade out
     const [blinkCycle] = useState(() => new Animated.Value(0));
@@ -347,7 +350,7 @@ function BlinkableNodeRow({ node, level, checkedValue, isExpanded, onCheck, onEx
     }, [blinkCycle, blinkIntensity]);
 
     return (
-        <View style={rowStyles.row}>
+        <View {...dragHandleProps} style={[rowStyles.row, { opacity: dragOpacity }]}>
             {/* Rainbow blink background layers */}
             {justDropped && RAINBOW.map((color, i) => (
                 <Animated.View
@@ -534,7 +537,6 @@ export default function DragDropStyledScreen() {
                         onCheck={() => {}}
                         onExpand={() => {}}
                         dragAndDrop={{
-                            enabled: true,
                             onDragEnd: handleDragEnd,
                             customizations: {
                                 draggedNodeOpacity: 0.15,

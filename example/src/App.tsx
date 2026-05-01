@@ -21,6 +21,7 @@ import DragDropScreen from "./screens/DragDropScreen";
 import DragDropStyledScreen from "./screens/DragDropStyledScreen";
 import DragDropCustomOverlayScreen from "./screens/DragDropCustomOverlayScreen";
 import DragDropCustomRowScreen from "./screens/DragDropCustomRowScreen";
+import DragDropUndoScreen from "./screens/DragDropUndoScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const data: ShowcaseExampleScreenSectionType[] = [
@@ -116,6 +117,11 @@ const data: ShowcaseExampleScreenSectionType[] = [
         name: "Custom Row + Drag",
         slug: "drag-drop-custom-row",
         getScreen: () => DragDropCustomRowScreen,
+      },
+      {
+        name: "Undo / Redo",
+        slug: "drag-drop-undo",
+        getScreen: () => DragDropUndoScreen,
       },
     ],
   },

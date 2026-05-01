@@ -6,7 +6,6 @@ import {
     StyleSheet,
     Button,
     TouchableOpacity,
-    Alert,
 } from "react-native";
 
 import {
@@ -94,74 +93,84 @@ function getColor(id: string): string {
 const TeamNodeRow = memo(_TeamNodeRow) as typeof _TeamNodeRow;
 function _TeamNodeRow<ID = string>(props: NodeRowProps<ID>) {
     const { node, level, checkedValue, isExpanded, onCheck, onExpand,
-        isDragging, isDraggedNode, isDragTarget } = props;
+        isDragging, isDraggedNode, isInvalidDropTarget, dragHandleProps } = props;
 
     const isLeaf = node.type === "person";
     const isChecked = checkedValue === true;
     const isIndeterminate = checkedValue === "indeterminate";
 
-    const rowOpacity = isDragging && (isDraggedNode || isDragTarget) ? 0.3 : 1;
+    const rowOpacity = isDragging && (isDraggedNode || isInvalidDropTarget) ? 0.3 : 1;
 
     return (
-        <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={onCheck}
+        <View
             style={[
                 rowStyles.row,
                 { paddingLeft: 12 + level * 20, opacity: rowOpacity },
                 isChecked && rowStyles.rowChecked,
             ]}
         >
-            {/* Expand/collapse arrow on the left for non-leaf nodes */}
-            {!isLeaf ? (
-                <TouchableOpacity
-                    onPress={onExpand}
-                    style={rowStyles.expandBtn}
-                    hitSlop={{ top: 16, bottom: 16, left: 12, right: 12 }}
-                >
-                    <Text style={rowStyles.expandIcon}>{isExpanded ? "▼" : "▶"}</Text>
-                </TouchableOpacity>
-            ) : (
-                <View style={rowStyles.expandSpacer} />
-            )}
+            {/* Drag handle — only this area initiates drag */}
+            <View {...dragHandleProps} style={rowStyles.dragHandle}>
+                <Text style={rowStyles.gripIcon}>⠿</Text>
+            </View>
 
-            {isLeaf ? (
-                <View style={[rowStyles.avatar, { backgroundColor: getColor(String(node.id)) }]}>
-                    <Text style={rowStyles.avatarText}>{getInitials(node.name)}</Text>
-                </View>
-            ) : (
-                <View style={[rowStyles.folderIcon, isChecked && rowStyles.folderIconChecked]}>
-                    <Text style={rowStyles.folderEmoji}>
-                        {isExpanded ? "📂" : "📁"}
-                    </Text>
-                </View>
-            )}
-
-            <View style={rowStyles.textContainer}>
-                <Text style={[
-                    rowStyles.name,
-                    isChecked && rowStyles.nameChecked,
-                ]} numberOfLines={1}>
-                    {node.name}
-                </Text>
-                {!isLeaf && (
-                    <Text style={rowStyles.subtitle}>
-                        {node.children?.length ?? 0} member{(node.children?.length ?? 0) !== 1 ? "s" : ""}
-                        {isIndeterminate ? " · Partial" : isChecked ? " · All selected" : ""}
-                    </Text>
+            {/* Main content — tapping checks the node */}
+            <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={onCheck}
+                style={rowStyles.content}
+            >
+                {/* Expand/collapse arrow for non-leaf nodes */}
+                {!isLeaf ? (
+                    <TouchableOpacity
+                        onPress={onExpand}
+                        style={rowStyles.expandBtn}
+                        hitSlop={{ top: 16, bottom: 16, left: 12, right: 12 }}
+                    >
+                        <Text style={rowStyles.expandIcon}>{isExpanded ? "▼" : "▶"}</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <View style={rowStyles.expandSpacer} />
                 )}
-            </View>
 
-            {/* Checkbox indicator */}
-            <View style={[
-                rowStyles.checkbox,
-                isChecked && rowStyles.checkboxChecked,
-                isIndeterminate && rowStyles.checkboxIndeterminate,
-            ]}>
-                {isChecked && <Text style={rowStyles.checkmark}>✓</Text>}
-                {isIndeterminate && <Text style={rowStyles.dash}>−</Text>}
-            </View>
-        </TouchableOpacity>
+                {isLeaf ? (
+                    <View style={[rowStyles.avatar, { backgroundColor: getColor(String(node.id)) }]}>
+                        <Text style={rowStyles.avatarText}>{getInitials(node.name)}</Text>
+                    </View>
+                ) : (
+                    <View style={[rowStyles.folderIcon, isChecked && rowStyles.folderIconChecked]}>
+                        <Text style={rowStyles.folderEmoji}>
+                            {isExpanded ? "📂" : "📁"}
+                        </Text>
+                    </View>
+                )}
+
+                <View style={rowStyles.textContainer}>
+                    <Text style={[
+                        rowStyles.name,
+                        isChecked && rowStyles.nameChecked,
+                    ]} numberOfLines={1}>
+                        {node.name}
+                    </Text>
+                    {!isLeaf && (
+                        <Text style={rowStyles.subtitle}>
+                            {node.children?.length ?? 0} member{(node.children?.length ?? 0) !== 1 ? "s" : ""}
+                            {isIndeterminate ? " · Partial" : isChecked ? " · All selected" : ""}
+                        </Text>
+                    )}
+                </View>
+
+                {/* Checkbox indicator */}
+                <View style={[
+                    rowStyles.checkbox,
+                    isChecked && rowStyles.checkboxChecked,
+                    isIndeterminate && rowStyles.checkboxIndeterminate,
+                ]}>
+                    {isChecked && <Text style={rowStyles.checkmark}>✓</Text>}
+                    {isIndeterminate && <Text style={rowStyles.dash}>−</Text>}
+                </View>
+            </TouchableOpacity>
+        </View>
     );
 }
 
@@ -169,45 +178,21 @@ export default function DragDropCustomRowScreen() {
     const [data, setData] = useState<TreeNode[]>(initialData);
     const treeViewRef = useRef<TreeViewRef | null>(null);
     const [lastDrop, setLastDrop] = useState("");
-    const [treeKey, setTreeKey] = useState(0);
-
-    const findNode = useCallback((id: string, tree: TreeNode[]): TreeNode | null => {
-        for (const node of tree) {
-            if (node.id === id) return node;
-            if (node.children) {
-                const found = findNode(id, node.children);
-                if (found) return found;
-            }
-        }
-        return null;
-    }, []);
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
-        // Prevent dropping a person inside another person (leaf into leaf)
-        const targetNode = findNode(String(event.targetNodeId), data);
-        const isTargetLeaf = targetNode && targetNode.type === "person";
-
-        if (event.position === "inside" && isTargetLeaf) {
-            Alert.alert(
-                "Invalid Move",
-                `Cannot move a member inside "${targetNode.name}". Only teams can contain members.`,
-            );
-            // Force remount to revert - the store was already updated internally,
-            // so changing the key re-initializes TreeView with the unchanged data prop
-            setTreeKey(k => k + 1);
-            return;
-        }
-
         setData(event.newTreeData);
         const action = event.position === "inside" ? "into" : event.position;
-        const targetName = targetNode?.name ?? String(event.targetNodeId);
-        setLastDrop(`Moved ${action} "${targetName}"`);
-    }, [data, findNode]);
+        setLastDrop(`Moved ${action} "${event.targetNodeId}"`);
+    }, []);
 
     return (
         <SafeAreaView style={screenStyles.mainView}>
             <Text style={localStyles.header}>
-                {lastDrop || "Drag to reorganize team members"}
+                {lastDrop || "Drag the ⠿ handle to reorganize"}
+            </Text>
+            <Text style={localStyles.subheader}>
+                canNodeHaveChildren: only teams accept children{"\n"}
+                dragHandleProps: only the grip icon initiates drag
             </Text>
 
             <View style={screenStyles.selectionButtonRow}>
@@ -220,14 +205,13 @@ export default function DragDropCustomRowScreen() {
 
             <View style={screenStyles.treeViewParent}>
                 <TreeView
-                    key={treeKey}
                     ref={treeViewRef}
                     data={data}
                     onCheck={() => { }}
                     onExpand={() => { }}
                     dragAndDrop={{
-                        enabled: true,
                         onDragEnd: handleDragEnd,
+                        canNodeHaveChildren: (node) => node.type === "team",
                         customizations: {
                             draggedNodeOpacity: 0.15,
                             dragOverlayStyleProps: {
@@ -262,8 +246,18 @@ export default function DragDropCustomRowScreen() {
 const localStyles = StyleSheet.create({
     header: {
         padding: 12,
+        paddingBottom: 4,
         fontSize: 13,
         color: "#666",
+        textAlign: "center",
+        borderBottomWidth: 0,
+        borderColor: "lightgrey",
+    },
+    subheader: {
+        paddingHorizontal: 12,
+        paddingBottom: 8,
+        fontSize: 11,
+        color: "#999",
         textAlign: "center",
         borderBottomWidth: 0.5,
         borderColor: "lightgrey",
@@ -282,6 +276,22 @@ const rowStyles = StyleSheet.create({
     },
     rowChecked: {
         backgroundColor: "rgba(78, 205, 196, 0.06)",
+    },
+    dragHandle: {
+        width: 28,
+        height: 36,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    gripIcon: {
+        fontSize: 18,
+        color: "#bbb",
+        letterSpacing: 2,
+    },
+    content: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
     },
     avatar: {
         width: 32,
@@ -357,14 +367,14 @@ const rowStyles = StyleSheet.create({
         marginTop: -2,
     },
     expandBtn: {
-        width: 36,
+        width: 28,
         height: 36,
         alignItems: "center",
         justifyContent: "center",
         marginRight: 4,
     },
     expandSpacer: {
-        width: 36,
+        width: 28,
         marginRight: 4,
     },
     expandIcon: {

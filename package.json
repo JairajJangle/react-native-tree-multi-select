@@ -222,7 +222,11 @@
   ],
   "funding": [
     {
-      "type": "individual",
+      "type": "github",
+      "url": "https://github.com/sponsors/JairajJangle"
+    },
+    {
+      "type": "paypal",
       "url": "https://www.paypal.com/paypalme/jairajjangle001/usd"
     },
     {
@@ -230,7 +234,7 @@
       "url": "https://liberapay.com/FutureJJ/donate"
     },
     {
-      "type": "individual",
+      "type": "ko-fi",
       "url": "https://ko-fi.com/futurejj"
     }
   ]

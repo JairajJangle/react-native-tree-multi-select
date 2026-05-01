@@ -18,6 +18,9 @@ export function moveTreeNode<ID>(
 ): TreeNode<ID>[] {
     if (draggedNodeId === targetNodeId) return data;
 
+    // Prevent moving a node into its own descendant (would create a cycle)
+    if (isDescendant(data, draggedNodeId, targetNodeId)) return data;
+
     // Step 1: Deep clone the tree
     const cloned = deepCloneTree(data);
 
@@ -32,6 +35,36 @@ export function moveTreeNode<ID>(
     return cloned;
 }
 
+/**
+ * Check if `candidateDescendantId` is a descendant of `ancestorId` in the tree.
+ */
+function isDescendant<ID>(
+    nodes: TreeNode<ID>[],
+    ancestorId: ID,
+    candidateDescendantId: ID,
+): boolean {
+    for (const node of nodes) {
+        if (node.id === ancestorId) {
+            // Found the ancestor — search its subtree for the candidate
+            return containsNode(node.children ?? [], candidateDescendantId);
+        }
+        if (node.children && isDescendant(node.children, ancestorId, candidateDescendantId)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/** Check if a node with the given ID exists anywhere in the subtree. */
+function containsNode<ID>(nodes: TreeNode<ID>[], nodeId: ID): boolean {
+    for (const node of nodes) {
+        if (node.id === nodeId) return true;
+        if (node.children && containsNode(node.children, nodeId)) return true;
+    }
+    return false;
+}
+
+/** Deep clone a tree structure so mutations don't affect the original. */
 function deepCloneTree<ID>(nodes: TreeNode<ID>[]): TreeNode<ID>[] {
     return nodes.map(node => ({
         ...node,

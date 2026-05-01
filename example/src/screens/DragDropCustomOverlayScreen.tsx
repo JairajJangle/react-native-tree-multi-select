@@ -86,10 +86,12 @@ function CustomDragOverlay({ node, level }: DragOverlayComponentProps) {
     );
 }
 
-function CustomDropIndicator({ position }: DropIndicatorComponentProps) {
+function CustomDropIndicator({ position, level, indentationMultiplier }: DropIndicatorComponentProps) {
+    const leftOffset = level * indentationMultiplier;
+
     if (position === "inside") {
         return (
-            <View style={indicatorStyles.insideContainer}>
+            <View pointerEvents="none" style={[indicatorStyles.insideContainer, { left: leftOffset }]}>
                 <View style={indicatorStyles.insideDot} />
                 <Text style={indicatorStyles.insideText}>Drop here</Text>
                 <View style={indicatorStyles.insideDot} />
@@ -99,8 +101,10 @@ function CustomDropIndicator({ position }: DropIndicatorComponentProps) {
 
     return (
         <View
+            pointerEvents="none"
             style={[
                 indicatorStyles.lineContainer,
+                { left: leftOffset },
                 position === "above" ? indicatorStyles.lineTop : indicatorStyles.lineBottom,
             ]}
         >
@@ -143,16 +147,17 @@ export default function DragDropCustomOverlayScreen() {
                     data={data}
                     onCheck={() => {}}
                     onExpand={() => {}}
-                    dragEnabled={true}
-                    onDragEnd={handleDragEnd}
-                    preExpandedIds={["inbox", "work", "personal"]}
-                    longPressDuration={300}
-                    autoExpandDelay={600}
-                    dragDropCustomizations={{
-                        draggedNodeOpacity: 0.2,
-                        CustomDragOverlayComponent: CustomDragOverlay,
-                        CustomDropIndicatorComponent: CustomDropIndicator,
+                    dragAndDrop={{
+                        onDragEnd: handleDragEnd,
+                        longPressDuration: 300,
+                        autoExpandDelay: 600,
+                        customizations: {
+                            draggedNodeOpacity: 0.2,
+                            CustomDragOverlayComponent: CustomDragOverlay,
+                            CustomDropIndicatorComponent: CustomDropIndicator,
+                        },
                     }}
+                    preExpandedIds={["inbox", "work", "personal"]}
                 />
             </View>
         </SafeAreaView>
@@ -254,6 +259,7 @@ const indicatorStyles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
+        overflow: "hidden",
     },
     insideDot: {
         width: 4,

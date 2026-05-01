@@ -1,4 +1,4 @@
-import React from "react";
+import { memo } from "react";
 import { Animated, View, StyleSheet } from "react-native";
 import type { DropPosition } from "../types/dragDrop.types";
 
@@ -10,7 +10,7 @@ interface DropIndicatorProps {
     indentationMultiplier: number;
 }
 
-export const DropIndicator = React.memo(function DropIndicator(
+export const DropIndicator = memo(function DropIndicator(
     props: DropIndicatorProps
 ) {
     const {

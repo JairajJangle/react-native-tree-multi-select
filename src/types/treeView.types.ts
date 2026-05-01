@@ -1,3 +1,4 @@
+import { ComponentType, RefObject } from "react";
 import type {
     StyleProp,
     TextProps,
@@ -8,11 +9,11 @@ import type { FlashListProps } from "@shopify/flash-list";
 import type {
     ScrollToNodeHandlerRef,
     ScrollToNodeParams
-} from "../handlers/ScrollToNodeHandler";
+} from "../hooks/useScrollToNode";
 import type {
     CheckboxProps as _CheckboxProps
 } from "@futurejj/react-native-checkbox";
-import type { DragEndEvent, DropPosition } from "./dragDrop.types";
+import type { DragCancelEvent, DragEndEvent, DragStartEvent, DropPosition } from "./dragDrop.types";
 
 /** The tri-state value of a checkbox: checked, unchecked, or indeterminate */
 export type CheckboxValueType = boolean | "indeterminate";
@@ -66,11 +67,27 @@ export interface NodeRowProps<ID = string> {
     onExpand: () => void;
 
     /** Whether this node is an invalid drop target during a drag operation */
-    isDragTarget?: boolean;
+    isInvalidDropTarget?: boolean;
+    /** Whether this node is the current valid drop target */
+    isDropTarget?: boolean;
+    /** The drop position if this node is the current drop target */
+    dropPosition?: DropPosition;
     /** Whether a drag operation is currently in progress */
     isDragging?: boolean;
     /** Whether this node is the one being dragged */
     isDraggedNode?: boolean;
+
+    /** Props to spread on a drag handle element. Attach to a specific View to
+     *  make only that area initiate drag, or spread on the root for whole-row drag.
+     *  Only present when drag-and-drop is enabled. */
+    dragHandleProps?: DragHandleProps;
+}
+
+/** Touch handlers to spread on a drag handle element within a custom node row */
+export interface DragHandleProps {
+    onTouchStart: (e: any) => void;
+    onTouchEnd: () => void;
+    onTouchCancel: () => void;
 }
 
 /** Customization options for tree item appearance and behavior */
@@ -82,14 +99,14 @@ export interface TreeItemCustomizations<ID> {
     indentationMultiplier?: number;
 
     /** Custom checkbox component replacing the built-in checkbox */
-    CheckboxComponent?: React.ComponentType<CheckBoxViewProps>;
+    CheckboxComponent?: ComponentType<CheckBoxViewProps>;
     /** Custom expand/collapse icon component */
-    ExpandCollapseIconComponent?: React.ComponentType<ExpandIconProps>;
+    ExpandCollapseIconComponent?: ComponentType<ExpandIconProps>;
     /** Custom touchable component wrapping the expand/collapse icon */
-    ExpandCollapseTouchableComponent?: React.ComponentType<TouchableOpacityProps>;
+    ExpandCollapseTouchableComponent?: ComponentType<TouchableOpacityProps>;
 
     /** Fully custom node row component replacing the entire built-in row */
-    CustomNodeRowComponent?: React.ComponentType<NodeRowProps<ID>>;
+    CustomNodeRowComponent?: ComponentType<NodeRowProps<ID>>;
 }
 
 /** Internal props for a single node in the list (extends TreeItemCustomizations) */
@@ -116,12 +133,46 @@ export interface NodeProps<ID> extends TreeItemCustomizations<ID> {
     ) => void;
     /** Callback when a touch ends on this node */
     onNodeTouchEnd?: () => void;
-    /** Long press duration in ms to start drag */
-    longPressDuration?: number;
     /** Callback reporting this node's measured height */
     onItemLayout?: (height: number) => void;
     /** Customizations for drag-and-drop visuals */
     dragDropCustomizations?: DragDropCustomizations<ID>;
+}
+
+/** Configuration options for drag-and-drop reordering */
+export interface DragAndDropOptions<ID = string> {
+    /** Enable drag-and-drop reordering. Default: true (when dragAndDrop is provided) */
+    enabled?: boolean;
+    /** Callback fired when a drag operation begins */
+    onDragStart?: (event: DragStartEvent<ID>) => void;
+    /** Callback fired after a node is successfully dropped at a new position */
+    onDragEnd?: (event: DragEndEvent<ID>) => void;
+    /** Callback fired when a drag is cancelled without a successful drop */
+    onDragCancel?: (event: DragCancelEvent<ID>) => void;
+    /** Long press duration in ms to start drag. Default: 400 */
+    longPressDuration?: number;
+    /** Distance from edge (px) to trigger auto-scroll during drag. Default: 60 */
+    autoScrollThreshold?: number;
+    /** Speed multiplier for auto-scroll during drag. Default: 1.0 */
+    autoScrollSpeed?: number;
+    /** Offset of the dragged overlay from the finger, in item-height units. Default: -4 (four items above finger) */
+    dragOverlayOffset?: number;
+    /** Delay in ms before auto-expanding a collapsed node during drag hover. Default: 800 */
+    autoExpandDelay?: number;
+    /** Customizations for drag-and-drop visuals (overlay, indicator, opacity) */
+    customizations?: DragDropCustomizations<ID>;
+
+    /** Callback to determine if a node can be dropped on a specific target.
+     *  Return false to grey out the target and suppress the drop indicator. */
+    canDrop?: (draggedNode: TreeNode<ID>, targetNode: TreeNode<ID>, position: DropPosition) => boolean;
+    /** Maximum nesting depth allowed. Drops that would exceed this depth are suppressed. */
+    maxDepth?: number;
+    /** Callback to determine if a node can accept children.
+     *  Return false to suppress the "inside" drop zone for that node. */
+    canNodeHaveChildren?: (node: TreeNode<ID>) => boolean;
+    /** Callback to determine if a node can be dragged.
+     *  Return false to prevent dragging this node. Default: all nodes are draggable. */
+    canDrag?: (node: TreeNode<ID>) => boolean;
 }
 
 /** Props for the NodeList component that renders the flattened tree */
@@ -130,29 +181,15 @@ export interface NodeListProps<ID> extends TreeItemCustomizations<ID> {
     treeFlashListProps?: TreeFlatListProps;
 
     /** Ref for programmatic scroll-to-node functionality */
-    scrollToNodeHandlerRef: React.RefObject<ScrollToNodeHandlerRef<ID>>;
+    scrollToNodeHandlerRef: RefObject<ScrollToNodeHandlerRef<ID>>;
     /** Node ID to scroll to on initial render */
     initialScrollNodeID?: ID;
 
     /** Internal store identifier */
     storeId: string;
 
-    /** Enable drag-and-drop reordering */
-    dragEnabled?: boolean;
-    /** Callback fired after a node is dropped at a new position */
-    onDragEnd?: (event: DragEndEvent<ID>) => void;
-    /** Long press duration in ms to start drag. Default: 400 */
-    longPressDuration?: number;
-    /** Distance from edge (px) to trigger auto-scroll during drag. Default: 60 */
-    autoScrollThreshold?: number;
-    /** Speed multiplier for auto-scroll during drag. Default: 1.0 */
-    autoScrollSpeed?: number;
-    /** Offset of the dragged overlay from the finger, in item-height units. Default: -1 (one item above finger) */
-    dragOverlayOffset?: number;
-    /** Delay in ms before auto-expanding a collapsed node during drag hover. Default: 800 */
-    autoExpandDelay?: number;
-    /** Customizations for drag-and-drop visuals (overlay, indicator, opacity) */
-    dragDropCustomizations?: DragDropCustomizations<ID>;
+    /** Drag-and-drop configuration */
+    dragAndDrop?: DragAndDropOptions<ID>;
 }
 
 /** Props for the TreeView component */
@@ -176,20 +213,8 @@ export interface TreeViewProps<ID = string> extends Omit<
     /** Controls whether checking a node propagates to its children and/or parents */
     selectionPropagation?: SelectionPropagation;
 
-    /** Enable drag-and-drop reordering */
-    dragEnabled?: boolean;
-    /** Callback fired after a node is dropped at a new position */
-    onDragEnd?: (event: DragEndEvent<ID>) => void;
-    /** Long press duration in ms to start drag. Default: 400 */
-    longPressDuration?: number;
-    /** Distance from edge (px) to trigger auto-scroll during drag. Default: 60 */
-    autoScrollThreshold?: number;
-    /** Speed multiplier for auto-scroll during drag. Default: 1.0 */
-    autoScrollSpeed?: number;
-    /** Offset of the dragged overlay from the finger, in item-height units. Default: -1 (one item above finger) */
-    dragOverlayOffset?: number;
-    /** Delay in ms before auto-expanding a collapsed node during drag hover. Default: 800 */
-    autoExpandDelay?: number;
+    /** Drag-and-drop configuration */
+    dragAndDrop?: DragAndDropOptions<ID>;
 }
 
 type CheckboxProps = Omit<_CheckboxProps, "onPress" | "status">;
@@ -261,6 +286,10 @@ export interface TreeViewRef<ID = string> {
 
     /** Get a map of child node IDs to their parent node IDs */
     getChildToParentMap: () => Map<ID, ID>;
+
+    /** Programmatically move a node to a new position in the tree.
+     *  Works like a drag-and-drop but without user interaction. */
+    moveNode: (nodeId: ID, targetNodeId: ID, position: DropPosition) => void;
 }
 
 /** Controls how checkbox selection propagates through the tree hierarchy */
@@ -315,16 +344,18 @@ export interface DragOverlayStyleProps {
 
 /** Combined drag-and-drop customization props */
 export interface DragDropCustomizations<ID = string> {
-    /** Opacity applied to the dragged node and its invalid drop targets. Default: 0.3 */
+    /** Opacity applied to the node being dragged. Default: 0.3 */
     draggedNodeOpacity?: number;
+    /** Opacity applied to invalid drop targets during drag. Default: 0.3 */
+    invalidTargetOpacity?: number;
     /** Style props for the built-in drop indicator */
     dropIndicatorStyleProps?: DropIndicatorStyleProps;
     /** Style props for the drag overlay (lifted node ghost) */
     dragOverlayStyleProps?: DragOverlayStyleProps;
     /** Fully custom drop indicator component - replaces the built-in line/highlight */
-    CustomDropIndicatorComponent?: React.ComponentType<DropIndicatorComponentProps>;
+    CustomDropIndicatorComponent?: ComponentType<DropIndicatorComponentProps>;
     /** Fully custom drag overlay component - replaces the built-in ghost node */
-    CustomDragOverlayComponent?: React.ComponentType<DragOverlayComponentProps<ID>>;
+    CustomDragOverlayComponent?: ComponentType<DragOverlayComponentProps<ID>>;
 }
 
 /** Props passed to a custom drag overlay component */
@@ -333,4 +364,6 @@ export interface DragOverlayComponentProps<ID = string> {
     node: __FlattenedTreeNode__<ID>;
     /** The nesting level of the dragged node */
     level: number;
+    /** The current checkbox value of the dragged node */
+    checkedValue: CheckboxValueType;
 }

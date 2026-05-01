@@ -1,6 +1,7 @@
+import { create, type StoreApi, type UseBoundStore } from "zustand";
+
 import type { SelectionPropagation, TreeNode } from "../types/treeView.types";
 import type { DropPosition } from "../types/dragDrop.types";
-import { create, type StoreApi, type UseBoundStore } from "zustand";
 
 export type TreeViewState<ID> = {
     // Store ids of checked tree nodes
@@ -151,6 +152,10 @@ export function getTreeViewStore<ID>(id: string): UseBoundStore<StoreApi<TreeVie
         typedStore<ID>().set(id, store);
     }
     return typedStore<ID>().get(id)!;
+}
+
+export function deleteTreeViewStore(id: string) {
+    treeViewStores.delete(id);
 }
 
 export function useTreeViewStore<ID = string>(id: string) {

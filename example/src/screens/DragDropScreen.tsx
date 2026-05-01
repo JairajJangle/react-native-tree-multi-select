@@ -13,6 +13,7 @@ import {
     type TreeViewRef,
     type TreeNode,
     type DragEndEvent,
+    type DropPosition,
 } from "react-native-tree-multi-select";
 
 import { styles as screenStyles } from "./screens.styles";
@@ -78,11 +79,16 @@ const initialData: TreeNode[] = [
     { id: "6", name: "Beverages" },
 ];
 
+// IDs of nodes that are "locked" and cannot accept drops
+const LOCKED_IDS = new Set(["5", "6"]);
+
 export default function DragDropScreen() {
     const [data, setData] = useState<TreeNode[]>(initialData);
     const treeViewRef = useRef<TreeViewRef | null>(null);
     const [lastDrop, setLastDrop] = useState<string>("");
     const [dragEnabled, setDragEnabled] = useState(true);
+    const [maxDepthEnabled, setMaxDepthEnabled] = useState(false);
+    const [canDropEnabled, setCanDropEnabled] = useState(false);
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
         setData(event.newTreeData);
@@ -91,12 +97,14 @@ export default function DragDropScreen() {
         );
     }, []);
 
-    const handleSelectionChange = useCallback(
-        (_checkedIds: string[], _indeterminateIds: string[]) => {},
-        []
-    );
-
-    const handleExpanded = useCallback((_expandedIds: string[]) => {}, []);
+    // canDrop: prevent dropping onto "Snacks" or "Beverages"
+    const canDrop = useCallback((
+        _draggedNode: TreeNode,
+        targetNode: TreeNode,
+        _position: DropPosition,
+    ) => {
+        return !LOCKED_IDS.has(String(targetNode.id));
+    }, []);
 
     const expandAllPress = () => treeViewRef.current?.expandAll?.();
     const collapseAllPress = () => treeViewRef.current?.collapseAll?.();
@@ -133,14 +141,29 @@ export default function DragDropScreen() {
                 </View>
             </View>
 
+            <View style={localStyles.optionsRow}>
+                <View style={localStyles.toggleRow}>
+                    <Text style={localStyles.toggleLabel}>maxDepth: 2</Text>
+                    <Switch value={maxDepthEnabled} onValueChange={setMaxDepthEnabled} />
+                </View>
+                <View style={localStyles.toggleRow}>
+                    <Text style={localStyles.toggleLabel}>Lock Snacks/Beverages</Text>
+                    <Switch value={canDropEnabled} onValueChange={setCanDropEnabled} />
+                </View>
+            </View>
+
             <View style={screenStyles.treeViewParent}>
                 <TreeView
                     ref={treeViewRef}
                     data={data}
-                    onCheck={handleSelectionChange}
-                    onExpand={handleExpanded}
-                    dragEnabled={dragEnabled}
-                    onDragEnd={handleDragEnd}
+                    onCheck={() => {}}
+                    onExpand={() => {}}
+                    dragAndDrop={{
+                        enabled: dragEnabled,
+                        onDragEnd: handleDragEnd,
+                        maxDepth: maxDepthEnabled ? 2 : undefined,
+                        canDrop: canDropEnabled ? canDrop : undefined,
+                    }}
                     preExpandedIds={["1", "2"]}
                 />
             </View>
@@ -162,8 +185,15 @@ const localStyles = StyleSheet.create({
         alignItems: "center",
     },
     toggleLabel: {
-        fontSize: 14,
+        fontSize: 12,
         marginRight: 6,
         color: "#333",
+    },
+    optionsRow: {
+        flexDirection: "row",
+        justifyContent: "space-around",
+        paddingVertical: 6,
+        borderBottomWidth: 0.5,
+        borderColor: "lightgrey",
     },
 });

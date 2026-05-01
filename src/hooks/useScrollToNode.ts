@@ -1,7 +1,7 @@
 /**
- * ScrollToNodeHandler Component
+ * useScrollToNode Hook
  *
- * This component provides an imperative handle to scroll to a specified node within a tree view.
+ * Provides an imperative handle to scroll to a specified node within a tree view.
  * The scrolling action is orchestrated via a two-step "milestone" mechanism that ensures the target
  * node is both expanded in the tree and that the rendered list reflects this expansion before the scroll
  * is performed.
@@ -32,21 +32,22 @@
  * in the UI, thus preventing issues with attempting to scroll to an element that does not exist yet.
  */
 
-import React from "react";
+import {
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type MutableRefObject,
+  type RefObject,
+  type SetStateAction,
+} from "react";
 import { expandNodes } from "../helpers/expandCollapse.helper";
 import { useTreeViewStore } from "../store/treeView.store";
 import { useShallow } from "zustand/react/shallow";
 import { type __FlattenedTreeNode__ } from "../types/treeView.types";
-import { typedMemo } from "../utils/typedMemo";
 import { fastIsEqual } from "fast-is-equal";
-
-interface Props<ID> {
-  storeId: string;
-  flashListRef: React.MutableRefObject<any>;
-  flattenedFilteredNodes: __FlattenedTreeNode__<ID>[];
-  setInitialScrollIndex: React.Dispatch<React.SetStateAction<number>>;
-  initialScrollNodeID: ID | undefined;
-}
 
 export interface ScrollToNodeParams<ID> {
   nodeId: ID;
@@ -57,27 +58,34 @@ export interface ScrollToNodeParams<ID> {
   viewPosition?: number;
 }
 
+export interface ScrollToNodeHandlerRef<ID> {
+  scrollToNodeID: (params: ScrollToNodeParams<ID>) => void;
+}
+
 // Enum representing the two milestones needed before scrolling
 enum ExpandQueueAction {
   EXPANDED,
   RENDERED,
 }
 
-export interface ScrollToNodeHandlerRef<ID> {
-  scrollToNodeID: (params: ScrollToNodeParams<ID>) => void;
+interface UseScrollToNodeParams<ID> {
+  storeId: string;
+  scrollToNodeHandlerRef: RefObject<ScrollToNodeHandlerRef<ID>>;
+  flashListRef: MutableRefObject<any>;
+  flattenedFilteredNodes: __FlattenedTreeNode__<ID>[];
+  setInitialScrollIndex: Dispatch<SetStateAction<number>>;
+  initialScrollNodeID: ID | undefined;
 }
 
-function _innerScrollToNodeHandler<ID>(
-  props: Props<ID>,
-  ref: React.ForwardedRef<ScrollToNodeHandlerRef<ID>>
-) {
+export function useScrollToNode<ID>(params: UseScrollToNodeParams<ID>) {
   const {
     storeId,
+    scrollToNodeHandlerRef,
     flashListRef,
     flattenedFilteredNodes,
     setInitialScrollIndex,
     initialScrollNodeID
-  } = props;
+  } = params;
 
   const { expanded, childToParentMap } = useTreeViewStore<ID>(storeId)(useShallow(
     state => ({
@@ -86,9 +94,16 @@ function _innerScrollToNodeHandler<ID>(
     })
   ));
 
-  React.useImperativeHandle(ref, () => ({
-    scrollToNodeID: (params: ScrollToNodeParams<ID>) => {
-      queuedScrollToNodeParams.current = params;
+  // Ref to store the scroll parameters for the queued action.
+  const queuedScrollToNodeParams = useRef<ScrollToNodeParams<ID> | null>(null);
+
+  // State to track progression: first the expansion is triggered, then the list is rendered.
+  const [expandAndScrollToNodeQueue, setExpandAndScrollToNodeQueue]
+    = useState<ExpandQueueAction[]>([]);
+
+  useImperativeHandle(scrollToNodeHandlerRef, () => ({
+    scrollToNodeID: (scrollParams: ScrollToNodeParams<ID>) => {
+      queuedScrollToNodeParams.current = scrollParams;
       // Mark that expansion is initiated.
       setExpandAndScrollToNodeQueue([ExpandQueueAction.EXPANDED]);
       // Trigger expansion logic (this may update the store and subsequently re-render the list).
@@ -100,18 +115,11 @@ function _innerScrollToNodeHandler<ID>(
     }
   }), [storeId]);
 
-  // Ref to store the scroll parameters for the queued action.
-  const queuedScrollToNodeParams = React.useRef<ScrollToNodeParams<ID> | null>(null);
-
-  // State to track progression: first the expansion is triggered, then the list is rendered.
-  const [expandAndScrollToNodeQueue, setExpandAndScrollToNodeQueue]
-    = React.useState<ExpandQueueAction[]>([]);
-
-  const latestFlattenedFilteredNodesRef = React.useRef(flattenedFilteredNodes);
+  const latestFlattenedFilteredNodesRef = useRef(flattenedFilteredNodes);
 
   /* When the rendered node list changes, update the ref.
   If an expansion was triggered, mark that the list is now rendered. */
-  React.useEffect(() => {
+  useEffect(() => {
     setExpandAndScrollToNodeQueue(prevQueue => {
       if (prevQueue.includes(ExpandQueueAction.EXPANDED)) {
         latestFlattenedFilteredNodesRef.current = flattenedFilteredNodes;
@@ -127,7 +135,7 @@ function _innerScrollToNodeHandler<ID>(
 
   /* Once the target node is expanded and the list is updated (milestones reached),
   perform the scroll using the latest node list. */
-  React.useLayoutEffect(() => {
+  useLayoutEffect(() => {
     if (queuedScrollToNodeParams.current === null)
       return;
 
@@ -146,12 +154,16 @@ function _innerScrollToNodeHandler<ID>(
         parentId = childToParentMap.get(queuedScrollToNodeParams.current.nodeId) as ID;
       }
 
-      // Ensure if the parent is expanded before proceeding to scroll to the node
+      // Ensure if the parent is expanded before proceeding to scroll to the node.
+      // This fires transiently during the milestone system — the layout effect runs
+      // before the expansion has propagated to the store, then retries on next render.
+      /* istanbul ignore next -- async timing guard: expansion not yet propagated to store */
       if (parentId && !expanded.has(parentId))
         return;
     }
     // If node is set to expand
     else {
+      /* istanbul ignore next -- async timing guard: node expansion not yet propagated */
       if (!expanded.has(queuedScrollToNodeParams.current.nodeId))
         return;
     }
@@ -177,6 +189,7 @@ function _innerScrollToNodeHandler<ID>(
           viewPosition
         });
       } else {
+        /* istanbul ignore next -- __DEV__ is false in test/production */
         if (__DEV__) {
           console.info("Cannot find the item of the mentioned id to scroll in the rendered tree view list data!");
         }
@@ -193,8 +206,8 @@ function _innerScrollToNodeHandler<ID>(
   ////////////////////////////// Handle Initial Scroll /////////////////////////////
   /* On first render, if an initial scroll target is provided, determine its index.
   This is done only once. */
-  const initialScrollDone = React.useRef(false);
-  React.useLayoutEffect(() => {
+  const initialScrollDone = useRef(false);
+  useLayoutEffect(() => {
     if (initialScrollDone.current) return;
 
     const index = flattenedFilteredNodes.findIndex(
@@ -209,14 +222,4 @@ function _innerScrollToNodeHandler<ID>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flattenedFilteredNodes, initialScrollNodeID]);
   /////////////////////////////////////////////////////////////////////////////////
-
-  return null;
 }
-
-const _ScrollToNodeHandler = React.forwardRef(_innerScrollToNodeHandler) as <ID>(
-  props: Props<ID> & { ref?: React.ForwardedRef<ScrollToNodeHandlerRef<ID>>; }
-) => ReturnType<typeof _innerScrollToNodeHandler>;
-
-export const ScrollToNodeHandler = typedMemo<
-  typeof _ScrollToNodeHandler
->(_ScrollToNodeHandler);

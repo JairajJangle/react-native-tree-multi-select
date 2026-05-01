@@ -1,4 +1,10 @@
-import React from "react";
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import {
     View,
     StyleSheet,
@@ -9,7 +15,6 @@ import {
 import { FlashList } from "@shopify/flash-list";
 
 import type {
-    CheckboxValueType,
     __FlattenedTreeNode__,
     DropIndicatorStyleProps,
     NodeListProps,
@@ -21,6 +26,7 @@ import { useTreeViewStore } from "../store/treeView.store";
 import {
     getFilteredTreeData,
     getFlattenedTreeData,
+    getCheckboxValue,
     getInnerMostChildrenIdsInTree,
     handleToggleExpand,
     toggleCheckboxes
@@ -29,10 +35,13 @@ import { CheckboxView } from "./CheckboxView";
 import { CustomExpandCollapseIcon } from "./CustomExpandCollapseIcon";
 import { DragOverlay } from "./DragOverlay";
 import type { DropPosition } from "../types/dragDrop.types";
-import { defaultIndentationMultiplier } from "../constants/treeView.constants";
+import {
+    defaultIndentationMultiplier,
+    listHeaderFooterPadding
+} from "../constants/treeView.constants";
 import { useShallow } from "zustand/react/shallow";
 import { typedMemo } from "../utils/typedMemo";
-import { ScrollToNodeHandler } from "../handlers/ScrollToNodeHandler";
+import { useScrollToNode } from "../hooks/useScrollToNode";
 import { useDragDrop } from "../hooks/useDragDrop";
 
 const NodeList = typedMemo(_NodeList);
@@ -54,15 +63,29 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         ExpandCollapseTouchableComponent,
         CustomNodeRowComponent,
 
-        dragEnabled,
+        dragAndDrop,
+    } = props;
+
+    const {
+        enabled: _dragEnabled,
+        onDragStart,
         onDragEnd,
+        onDragCancel,
         longPressDuration = 400,
         autoScrollThreshold = 60,
         autoScrollSpeed = 1.0,
         dragOverlayOffset = -4,
         autoExpandDelay = 800,
-        dragDropCustomizations,
-    } = props;
+        customizations: dragDropCustomizations,
+        canDrop: canDropCallback,
+        maxDepth,
+        canNodeHaveChildren,
+        canDrag,
+    } = dragAndDrop ?? {};
+
+    // When the dragAndDrop prop is provided, drag is enabled by default.
+    // Users can still toggle it off with enabled: false at runtime.
+    const dragEnabled = dragAndDrop ? (_dragEnabled ?? true) : false;
 
     const {
         expanded,
@@ -80,34 +103,43 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         })
     ));
 
-    const flashListRef = React.useRef<FlashList<__FlattenedTreeNode__<ID>> | null>(null);
-    const containerRef = React.useRef<View>(null);
-    const internalDataRef = React.useRef<TreeNode<ID>[] | null>(null);
-    const measuredItemHeightRef = React.useRef(0);
+    const flashListRef = useRef<FlashList<__FlattenedTreeNode__<ID>> | null>(null);
+    const containerRef = useRef<View>(null);
+    const internalDataRef = useRef<TreeNode<ID>[] | null>(null);
+    const measuredItemHeightRef = useRef(0);
 
-    const handleItemLayout = React.useCallback((height: number) => {
+    const handleItemLayout = useCallback((height: number) => {
         if (measuredItemHeightRef.current === 0 && height > 0) {
             measuredItemHeightRef.current = height;
         }
     }, []);
 
-    const [initialScrollIndex, setInitialScrollIndex] = React.useState<number>(-1);
+    const [initialScrollIndex, setInitialScrollIndex] = useState<number>(-1);
 
     // First we filter the tree as per the search term and keys
-    const filteredTree = React.useMemo(() => getFilteredTreeData<ID>(
+    const filteredTree = useMemo(() => getFilteredTreeData<ID>(
         initialTreeViewData,
         searchText.trim().toLowerCase(),
         searchKeys
     ), [initialTreeViewData, searchText, searchKeys]);
 
     // Then we flatten the tree to make it "render-compatible" in a "flat" list
-    const flattenedFilteredNodes = React.useMemo(() => getFlattenedTreeData<ID>(
+    const flattenedFilteredNodes = useMemo(() => getFlattenedTreeData<ID>(
         filteredTree,
         expanded,
     ), [filteredTree, expanded]);
 
+    useScrollToNode<ID>({
+        storeId,
+        scrollToNodeHandlerRef,
+        flashListRef,
+        flattenedFilteredNodes,
+        setInitialScrollIndex,
+        initialScrollNodeID,
+    });
+
     // And update the innermost children id -> required to un/select filtered tree
-    React.useEffect(() => {
+    useEffect(() => {
         const updatedInnerMostChildrenIds = getInnerMostChildrenIdsInTree<ID>(
             filteredTree
         );
@@ -133,8 +165,10 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         flattenedNodes: flattenedFilteredNodes,
         flashListRef,
         containerRef,
-        dragEnabled: dragEnabled ?? false,
+        dragEnabled,
+        onDragStart,
         onDragEnd,
+        onDragCancel,
         longPressDuration,
         autoScrollThreshold,
         autoScrollSpeed,
@@ -143,10 +177,14 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         dragOverlayOffset,
         autoExpandDelay,
         indentationMultiplier: effectiveIndentationMultiplier,
+        canDrop: canDropCallback,
+        maxDepth,
+        canNodeHaveChildren,
+        canDrag,
     });
 
     // Combined onScroll handler
-    const handleScroll = React.useCallback((
+    const handleScroll = useCallback((
         event: NativeSyntheticEvent<NativeScrollEvent>
     ) => {
         scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
@@ -156,7 +194,7 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         treeFlashListProps?.onScroll?.(event as any);
     }, [scrollOffsetRef, cancelLongPressTimer, treeFlashListProps]);
 
-    const nodeRenderer = React.useCallback((
+    const nodeRenderer = useCallback((
         { item, index }: { item: __FlattenedTreeNode__<ID>; index: number; }
     ) => {
         return (
@@ -223,14 +261,6 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
 
     return (
         <>
-            <ScrollToNodeHandler
-                ref={scrollToNodeHandlerRef}
-                storeId={storeId}
-                flashListRef={flashListRef}
-                flattenedFilteredNodes={flattenedFilteredNodes}
-                setInitialScrollIndex={setInitialScrollIndex}
-                initialScrollNodeID={initialScrollNodeID} />
-
             {dragEnabled ? (
                 <View
                     ref={containerRef}
@@ -240,6 +270,7 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
                     {flashListElement}
                     {isDragging && draggedNode && (
                         <DragOverlay<ID>
+                            storeId={storeId}
                             overlayY={overlayY}
                             overlayX={overlayX}
                             node={draggedNode}
@@ -262,22 +293,10 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
 
 function HeaderFooterView() {
     return (
-        <View style={styles.defaultHeaderFooter} />
+        <View style={{ padding: listHeaderFooterPadding }} />
     );
 }
 
-function getValue(
-    isChecked: boolean,
-    isIndeterminate: boolean
-): CheckboxValueType {
-    if (isIndeterminate) {
-        return "indeterminate";
-    } else if (isChecked) {
-        return true;
-    } else {
-        return false;
-    }
-}
 
 const Node = typedMemo(_Node);
 function _Node<ID>(props: NodeProps<ID>) {
@@ -315,7 +334,7 @@ function _Node<ID>(props: NodeProps<ID>) {
     } = useTreeViewStore<ID>(storeId)(useShallow(
         state => ({
             isExpanded: state.expanded.has(node.id),
-            value: getValue(
+            value: getCheckboxValue(
                 state.checked.has(node.id),
                 state.indeterminate.has(node.id)
             ),
@@ -332,45 +351,51 @@ function _Node<ID>(props: NodeProps<ID>) {
     // The flag is set during render (synchronous) and cleared on the next touch start.
     // It is also cleared via effect when dragging ends, to prevent stale `true`
     // values surviving FlashList recycling (where refs persist across items).
-    const wasDraggedRef = React.useRef(false);
+    const wasDraggedRef = useRef(false);
     if (isDraggingGlobal && isBeingDragged) {
         wasDraggedRef.current = true;
     }
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!isDraggingGlobal) {
             wasDraggedRef.current = false;
         }
     }, [isDraggingGlobal]);
 
-    const _onToggleExpand = React.useCallback(() => {
+    const _onToggleExpand = useCallback(() => {
         if (wasDraggedRef.current) return;
         handleToggleExpand(storeId, node.id);
     }, [storeId, node.id]);
 
-    const _onCheck = React.useCallback(() => {
+    const _onCheck = useCallback(() => {
         if (wasDraggedRef.current) return;
         toggleCheckboxes(storeId, [node.id]);
     }, [storeId, node.id]);
 
-    const handleTouchStart = React.useCallback((e: any) => {
+    const handleTouchStart = useCallback((e: any) => {
         wasDraggedRef.current = false;
         if (!onNodeTouchStart) return;
         const { pageY, locationY } = e.nativeEvent;
         onNodeTouchStart(node.id, pageY, locationY, nodeIndex);
     }, [node.id, nodeIndex, onNodeTouchStart]);
 
-    const handleTouchEnd = React.useCallback(() => {
+    const handleTouchEnd = useCallback(() => {
         onNodeTouchEnd?.();
     }, [onNodeTouchEnd]);
 
-    // Determine opacity for drag state
-    const dragOpacity = dragDropCustomizations?.draggedNodeOpacity ?? 0.3;
-    const nodeOpacity = (isDraggingGlobal && (isBeingDragged || isDragInvalid))
-        ? dragOpacity
-        : 1.0;
+    // Determine opacity for drag state (separate values for dragged node vs invalid targets).
+    // When CustomNodeRowComponent is used, hand off all visual control
+    // (including drag opacity) to the custom component — it receives
+    // isDraggedNode / isInvalidDropTarget / isDragging props.
+    const draggedOpacity = dragDropCustomizations?.draggedNodeOpacity ?? 0.3;
+    const invalidOpacity = dragDropCustomizations?.invalidTargetOpacity ?? 0.3;
+    const nodeOpacity = CustomNodeRowComponent
+        ? 1.0
+        : isDraggingGlobal
+            ? (isBeingDragged ? draggedOpacity : isDragInvalid ? invalidOpacity : 1.0)
+            : 1.0;
 
-    const handleLayout = React.useCallback((e: any) => {
+    const handleLayout = useCallback((e: any) => {
         onItemLayout?.(e.nativeEvent.layout.height);
     }, [onItemLayout]);
 
@@ -424,7 +449,6 @@ function _Node<ID>(props: NodeProps<ID>) {
     else {
         return (
             <View
-                {...touchHandlers}
                 onLayout={onItemLayout ? handleLayout : undefined}
                 style={[
                     { opacity: nodeOpacity },
@@ -439,9 +463,12 @@ function _Node<ID>(props: NodeProps<ID>) {
                     isExpanded={isExpanded}
                     onCheck={_onCheck}
                     onExpand={_onToggleExpand}
-                    isDragTarget={isDragInvalid}
+                    isInvalidDropTarget={isDragInvalid}
+                    isDropTarget={isDropTarget}
+                    dropPosition={nodeDropPosition ?? undefined}
                     isDragging={isDraggingGlobal}
                     isDraggedNode={isBeingDragged}
+                    dragHandleProps={touchHandlers}
                 />
             </View>
         );
@@ -511,9 +538,6 @@ function NodeDropIndicator({ position, level, indentationMultiplier, styleProps 
 }
 
 const styles = StyleSheet.create({
-    defaultHeaderFooter: {
-        padding: 5
-    },
     nodeExpandableArrowTouchable: {
         flex: 1
     },

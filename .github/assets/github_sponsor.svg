@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="80" viewBox="0 0 220 80" fill="none">
+  <rect x="1.5" y="1.5" width="217" height="77" rx="10" fill="white" stroke="#C4C4C4" stroke-width="3"/>
+  <!-- Heart icon in GitHub Sponsors pink, centered vertically -->
+  <path d="M28 33c0-6 4.8-10.8 10.8-10.8 3.8 0 7.1 1.9 9 4.8 1.9-2.9 5.2-4.8 9-4.8 6 0 10.8 4.8 10.8 10.8 0 12-19.8 23.2-19.8 23.2S28 45 28 33z" fill="#EA4AAA"/>
+  <!-- Text, vertically centered -->
+  <text x="80" y="35" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="600" fill="#24292f">GitHub</text>
+  <text x="80" y="55" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="600" fill="#24292f">Sponsors</text>
+</svg>

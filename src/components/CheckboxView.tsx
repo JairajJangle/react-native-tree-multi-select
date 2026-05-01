@@ -1,4 +1,4 @@
-import React from "react";
+import { memo, useCallback } from "react";
 import {
     Platform,
     StyleSheet,
@@ -13,6 +13,8 @@ import type {
 } from "../types/treeView.types";
 import { Checkbox } from "@futurejj/react-native-checkbox";
 
+// Intentionally narrow: only re-render when the checkbox value or label text changes.
+// Other props (callbacks, styles) are stable references from parent memoization.
 function arePropsEqual(
     prevProps: BuiltInCheckBoxViewProps,
     nextProps: BuiltInCheckBoxViewProps
@@ -23,7 +25,7 @@ function arePropsEqual(
     );
 }
 
-export const CheckboxView = React.memo(_CheckboxView, arePropsEqual);
+export const CheckboxView = memo(_CheckboxView, arePropsEqual);
 
 function _CheckboxView(props: BuiltInCheckBoxViewProps) {
     const {
@@ -43,7 +45,7 @@ function _CheckboxView(props: BuiltInCheckBoxViewProps) {
         },
     } = props;
 
-    const customCheckboxValToCheckboxValType = React.useCallback((
+    const customCheckboxValToCheckboxValType = useCallback((
         customCheckboxValueType: CheckboxValueType
     ) => {
         return customCheckboxValueType === "indeterminate"
@@ -59,7 +61,7 @@ function _CheckboxView(props: BuiltInCheckBoxViewProps) {
      *
      * @param newValue This represents the updated CheckBox value after it's clicked.
      */
-    const onValueChangeModifier = React.useCallback(() => {
+    const onValueChangeModifier = useCallback(() => {
         // If the previous state was 'indeterminate', set checked to true
         if (value === "indeterminate") onValueChange(true);
         else onValueChange(!value);
@@ -106,6 +108,7 @@ export const defaultCheckboxViewStyles = StyleSheet.create({
     },
     checkboxTextStyle: {
         color: "black",
+        /* istanbul ignore next -- Platform.OS is never "android" in jest */
         marginTop: Platform.OS === "android" ? 2 : undefined,
     },
 });

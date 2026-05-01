@@ -1,4 +1,4 @@
-import React from "react";
+import { type ComponentType } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 
 import type {
@@ -10,8 +10,12 @@ import type {
 import { CheckboxView } from "./CheckboxView";
 import { CustomExpandCollapseIcon } from "./CustomExpandCollapseIcon";
 import { defaultIndentationMultiplier } from "../constants/treeView.constants";
+import { getTreeViewStore } from "../store/treeView.store";
+import { getCheckboxValue } from "../helpers";
+import { typedMemo } from "../utils/typedMemo";
 
 interface DragOverlayProps<ID> extends TreeItemCustomizations<ID> {
+    storeId: string;
     overlayY: Animated.Value;
     overlayX: Animated.Value;
     node: __FlattenedTreeNode__<ID>;
@@ -21,17 +25,23 @@ interface DragOverlayProps<ID> extends TreeItemCustomizations<ID> {
 
 function _DragOverlay<ID>(props: DragOverlayProps<ID>) {
     const {
+        storeId,
         overlayY,
         overlayX,
         node,
         level,
         indentationMultiplier = defaultIndentationMultiplier,
-        CheckboxComponent = CheckboxView as React.ComponentType<CheckBoxViewProps>,
+        CheckboxComponent = CheckboxView as ComponentType<CheckBoxViewProps>,
         ExpandCollapseIconComponent = CustomExpandCollapseIcon,
         CustomNodeRowComponent,
         checkBoxViewStyleProps,
         dragDropCustomizations,
     } = props;
+
+    // Read the actual checked state for the dragged node
+    const store = getTreeViewStore<ID>(storeId);
+    const { checked, indeterminate } = store.getState();
+    const checkedValue = getCheckboxValue(checked.has(node.id), indeterminate.has(node.id));
 
     const overlayStyleProps = dragDropCustomizations?.dragOverlayStyleProps;
     const CustomOverlay = dragDropCustomizations?.CustomDragOverlayComponent;
@@ -52,13 +62,16 @@ function _DragOverlay<ID>(props: DragOverlayProps<ID>) {
                 { transform: [{ translateX: overlayX }, { translateY: overlayY }] },
             ]}
         >
+            {/* Render priority: CustomDragOverlayComponent > CustomNodeRowComponent > built-in.
+               The overlay is display-only (pointerEvents="none" on parent), so handlers are no-ops.
+               isExpanded is always false because useDragDrop collapses the node at drag start. */}
             {CustomOverlay ? (
-                <CustomOverlay node={node} level={level} />
+                <CustomOverlay node={node} level={level} checkedValue={checkedValue} />
             ) : CustomNodeRowComponent ? (
                 <CustomNodeRowComponent
                     node={node}
                     level={level}
-                    checkedValue={false}
+                    checkedValue={checkedValue}
                     isExpanded={false}
                     onCheck={() => {}}
                     onExpand={() => {}}
@@ -73,7 +86,7 @@ function _DragOverlay<ID>(props: DragOverlayProps<ID>) {
                     <CheckboxComponent
                         text={node.name}
                         onValueChange={() => {}}
-                        value={false}
+                        value={checkedValue}
                         {...checkBoxViewStyleProps}
                     />
                     {node.children?.length ? (
@@ -87,7 +100,7 @@ function _DragOverlay<ID>(props: DragOverlayProps<ID>) {
     );
 }
 
-export const DragOverlay = React.memo(_DragOverlay) as typeof _DragOverlay;
+export const DragOverlay = typedMemo(_DragOverlay);
 
 const styles = StyleSheet.create({
     overlay: {

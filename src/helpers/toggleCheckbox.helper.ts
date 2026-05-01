@@ -1,4 +1,55 @@
+import type { CheckboxValueType, TreeNode } from "../types/treeView.types";
 import { getTreeViewStore } from "../store/treeView.store";
+
+/** Derive the tri-state checkbox value from checked and indeterminate booleans. */
+export function getCheckboxValue(
+    isChecked: boolean,
+    isIndeterminate: boolean
+): CheckboxValueType {
+    if (isIndeterminate) return "indeterminate";
+    return isChecked;
+}
+
+/**
+ * Update a parent node's checked/indeterminate state based on its children.
+ * Mutates tempChecked and tempIndeterminate in-place.
+ */
+function updateParentCheckState<ID>(
+    parentId: ID,
+    children: TreeNode<ID>[],
+    tempChecked: Set<ID>,
+    tempIndeterminate: Set<ID>,
+): void {
+    let allChecked = true;
+    let anyCheckedOrIndeterminate = false;
+
+    for (const child of children) {
+        const isChecked = tempChecked.has(child.id);
+        const isIndeterminate = tempIndeterminate.has(child.id);
+
+        if (isChecked) {
+            anyCheckedOrIndeterminate = true;
+        } else if (isIndeterminate) {
+            anyCheckedOrIndeterminate = true;
+            allChecked = false;
+        } else {
+            allChecked = false;
+        }
+
+        if (!allChecked && anyCheckedOrIndeterminate) break;
+    }
+
+    if (allChecked) {
+        tempChecked.add(parentId);
+        tempIndeterminate.delete(parentId);
+    } else if (anyCheckedOrIndeterminate) {
+        tempChecked.delete(parentId);
+        tempIndeterminate.add(parentId);
+    } else {
+        tempChecked.delete(parentId);
+        tempIndeterminate.delete(parentId);
+    }
+}
 
 /**
  * Function to toggle checkbox state for a tree structure.
@@ -106,7 +157,7 @@ export function toggleCheckboxes<ID>(
         while (stack.length > 0) {
             const nodeId = stack.pop()!;
             const node = nodeMap.get(nodeId);
-            if (!node) continue; // Node does not exist; skip
+            if (!node) continue;
 
             if (childrenChecked) {
                 tempChecked.add(nodeId);
@@ -157,43 +208,8 @@ export function toggleCheckboxes<ID>(
      */
     function updateNodeState(nodeId: ID) {
         const node = nodeMap.get(nodeId);
-        if (!node || !node.children || node.children.length === 0) {
-            // Leaf nodes are already updated.
-            return;
-        }
-
-        let allChildrenChecked = true;
-        let anyChildCheckedOrIndeterminate = false;
-
-        for (const child of node.children) {
-            const isChecked = tempChecked.has(child.id);
-            const isIndeterminate = tempIndeterminate.has(child.id);
-
-            if (isChecked) {
-                anyChildCheckedOrIndeterminate = true;
-            } else if (isIndeterminate) {
-                anyChildCheckedOrIndeterminate = true;
-                allChildrenChecked = false;
-            } else {
-                allChildrenChecked = false;
-            }
-
-            // If both conditions are met, we can break early.
-            if (!allChildrenChecked && anyChildCheckedOrIndeterminate) {
-                break;
-            }
-        }
-
-        if (allChildrenChecked) {
-            tempChecked.add(nodeId);
-            tempIndeterminate.delete(nodeId);
-        } else if (anyChildCheckedOrIndeterminate) {
-            tempChecked.delete(nodeId);
-            tempIndeterminate.add(nodeId);
-        } else {
-            tempChecked.delete(nodeId);
-            tempIndeterminate.delete(nodeId);
-        }
+        if (!node?.children?.length) return;
+        updateParentCheckState(nodeId, node.children, tempChecked, tempIndeterminate);
     }
 
     // Update the state object with the new checked and indeterminate sets.
@@ -260,37 +276,9 @@ export function recalculateCheckedStates<ID>(storeId: string) {
     // Update each parent based on its children's current state
     for (const parentId of parentNodes) {
         const node = nodeMap.get(parentId);
+        /* istanbul ignore next -- parentNodes is built from nodeMap entries with children above; same nodeMap, same iteration — unreachable unless nodeMap mutates between loops */
         if (!node?.children?.length) continue;
-
-        let allChecked = true;
-        let anyCheckedOrIndeterminate = false;
-
-        for (const child of node.children) {
-            const isChecked = tempChecked.has(child.id);
-            const isIndeterminate = tempIndeterminate.has(child.id);
-
-            if (isChecked) {
-                anyCheckedOrIndeterminate = true;
-            } else if (isIndeterminate) {
-                anyCheckedOrIndeterminate = true;
-                allChecked = false;
-            } else {
-                allChecked = false;
-            }
-
-            if (!allChecked && anyCheckedOrIndeterminate) break;
-        }
-
-        if (allChecked) {
-            tempChecked.add(parentId);
-            tempIndeterminate.delete(parentId);
-        } else if (anyCheckedOrIndeterminate) {
-            tempChecked.delete(parentId);
-            tempIndeterminate.add(parentId);
-        } else {
-            tempChecked.delete(parentId);
-            tempIndeterminate.delete(parentId);
-        }
+        updateParentCheckState(parentId, node.children, tempChecked, tempIndeterminate);
     }
 
     updateChecked(tempChecked);

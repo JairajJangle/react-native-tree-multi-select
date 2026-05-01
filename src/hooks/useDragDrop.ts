@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+    MutableRefObject,
+    RefObject,
+    useCallback,
+    useEffect,
+    useRef,
+    useState
+} from "react";
 import {
     Animated,
     PanResponder,
@@ -7,27 +14,44 @@ import {
 import type { FlashList } from "@shopify/flash-list";
 
 import type { __FlattenedTreeNode__, TreeNode } from "../types/treeView.types";
-import type { DragEndEvent, DropTarget } from "../types/dragDrop.types";
+import type { DragCancelEvent, DragEndEvent, DragStartEvent, DropTarget } from "../types/dragDrop.types";
 import { getTreeViewStore } from "../store/treeView.store";
-import { collapseNodes, expandNodes, handleToggleExpand, initializeNodeMaps, recalculateCheckedStates } from "../helpers";
+import {
+    collapseNodes,
+    expandNodes,
+    handleToggleExpand,
+    initializeNodeMaps,
+    recalculateCheckedStates
+} from "../helpers";
 import { moveTreeNode } from "../helpers/moveTreeNode.helper";
+import { listHeaderFooterPadding } from "../constants/treeView.constants";
 
 interface UseDragDropParams<ID> {
     storeId: string;
     flattenedNodes: __FlattenedTreeNode__<ID>[];
-    flashListRef: React.RefObject<FlashList<__FlattenedTreeNode__<ID>> | null>;
-    containerRef: React.RefObject<{ measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => void; } | null>;
+    flashListRef: RefObject<FlashList<__FlattenedTreeNode__<ID>> | null>;
+    containerRef: RefObject<{ measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => void; } | null>;
     dragEnabled: boolean;
+    onDragStart?: (event: DragStartEvent<ID>) => void;
     onDragEnd?: (event: DragEndEvent<ID>) => void;
+    onDragCancel?: (event: DragCancelEvent<ID>) => void;
     longPressDuration: number;
     autoScrollThreshold: number;
     autoScrollSpeed: number;
-    internalDataRef: React.MutableRefObject<TreeNode<ID>[] | null>;
-    measuredItemHeightRef: React.MutableRefObject<number>;
+    internalDataRef: MutableRefObject<TreeNode<ID>[] | null>;
+    measuredItemHeightRef: MutableRefObject<number>;
     dragOverlayOffset: number;
     autoExpandDelay: number;
     /** Pixels per nesting level, used for magnetic overlay shift. */
     indentationMultiplier: number;
+    /** Callback to determine if a drop is allowed on a specific target. */
+    canDrop?: (draggedNode: TreeNode<ID>, targetNode: TreeNode<ID>, position: "above" | "below" | "inside") => boolean;
+    /** Maximum nesting depth allowed. */
+    maxDepth?: number;
+    /** Callback to determine if a node can accept children. */
+    canNodeHaveChildren?: (node: TreeNode<ID>) => boolean;
+    /** Callback to determine if a node can be dragged. */
+    canDrag?: (node: TreeNode<ID>) => boolean;
 }
 
 interface UseDragDropReturn<ID> {
@@ -46,8 +70,8 @@ interface UseDragDropReturn<ID> {
     ) => void;
     handleNodeTouchEnd: () => void;
     cancelLongPressTimer: () => void;
-    scrollOffsetRef: React.MutableRefObject<number>;
-    headerOffsetRef: React.MutableRefObject<number>;
+    scrollOffsetRef: MutableRefObject<number>;
+    headerOffsetRef: MutableRefObject<number>;
 }
 
 export function useDragDrop<ID>(
@@ -59,7 +83,9 @@ export function useDragDrop<ID>(
         flashListRef,
         containerRef,
         dragEnabled,
+        onDragStart,
         onDragEnd,
+        onDragCancel,
         longPressDuration,
         autoScrollThreshold,
         autoScrollSpeed,
@@ -68,6 +94,10 @@ export function useDragDrop<ID>(
         dragOverlayOffset,
         autoExpandDelay,
         indentationMultiplier,
+        canDrop: canDropCallback,
+        maxDepth,
+        canNodeHaveChildren,
+        canDrag,
     } = params;
 
     // --- Refs for mutable state (no stale closures in PanResponder) ---
@@ -109,13 +139,40 @@ export function useDragDrop<ID>(
     // Previous drop target for hysteresis (prevents flicker between "below N" / "above N+1")
     const prevDropTargetRef = useRef<{ targetIndex: number; position: "above" | "below" | "inside"; } | null>(null);
 
+    // Depth of the dragged subtree (computed once at drag start, used for maxDepth check)
+    const draggedSubtreeDepthRef = useRef(0);
+
     // Keep flattenedNodes ref current for PanResponder closures
     const flattenedNodesRef = useRef(flattenedNodes);
     flattenedNodesRef.current = flattenedNodes;
 
     // Keep callbacks current
+    const onDragStartRef = useRef(onDragStart);
+    onDragStartRef.current = onDragStart;
     const onDragEndRef = useRef(onDragEnd);
     onDragEndRef.current = onDragEnd;
+    const onDragCancelRef = useRef(onDragCancel);
+    onDragCancelRef.current = onDragCancel;
+    const canDropRef = useRef(canDropCallback);
+    canDropRef.current = canDropCallback;
+    const canNodeHaveChildrenRef = useRef(canNodeHaveChildren);
+    canNodeHaveChildrenRef.current = canNodeHaveChildren;
+    const canDragRef = useRef(canDrag);
+    canDragRef.current = canDrag;
+
+    // Keep config values current for PanResponder closures
+    const dragOverlayOffsetRef = useRef(dragOverlayOffset);
+    dragOverlayOffsetRef.current = dragOverlayOffset;
+    const autoScrollThresholdRef = useRef(autoScrollThreshold);
+    autoScrollThresholdRef.current = autoScrollThreshold;
+    const autoScrollSpeedParamRef = useRef(autoScrollSpeed);
+    autoScrollSpeedParamRef.current = autoScrollSpeed;
+    const autoExpandDelayRef = useRef(autoExpandDelay);
+    autoExpandDelayRef.current = autoExpandDelay;
+    const indentationMultiplierRef = useRef(indentationMultiplier);
+    indentationMultiplierRef.current = indentationMultiplier;
+    const maxDepthRef = useRef(maxDepth);
+    maxDepthRef.current = maxDepth;
 
     // --- React state (triggers re-renders only at drag start/end + indicator changes) ---
     const [isDragging, setIsDragging] = useState(false);
@@ -157,6 +214,22 @@ export function useDragDrop<ID>(
         [storeId]
     );
 
+    // --- Get the maximum depth of a subtree (0 for leaf nodes) ---
+    const getSubtreeDepth = useCallback(
+        (nodeId: ID): number => {
+            const store = getTreeViewStore<ID>(storeId);
+            const { nodeMap } = store.getState();
+            const node = nodeMap.get(nodeId);
+            if (!node?.children?.length) return 0;
+            let max = 0;
+            for (const child of node.children) {
+                max = Math.max(max, 1 + getSubtreeDepth(child.id));
+            }
+            return max;
+        },
+        [storeId]
+    );
+
     // --- Initiate drag ---
     const initiateDrag = useCallback(
         (nodeId: ID, pageY: number, locationY: number, nodeIndex: number) => {
@@ -187,12 +260,11 @@ export function useDragDrop<ID>(
                 draggedNodeRef.current = node;
                 draggedNodeIdRef.current = nodeId;
                 draggedNodeIndexRef.current = nodeIndex;
+                draggedSubtreeDepthRef.current = getSubtreeDepth(nodeId);
 
-                // Use measured item height if available, fall back to estimatedItemSize
+                // Use measured item height if available, fall back to default
                 const measured = measuredItemHeightRef.current;
-                const estimatedSize =
-                    (flashListRef.current as any)?.props?.estimatedItemSize ?? 36;
-                itemHeightRef.current = measured > 0 ? measured : estimatedSize;
+                itemHeightRef.current = measured > 0 ? measured : 36;
 
                 // Calculate headerOffset dynamically:
                 // fingerLocalY = pageY - containerPageY
@@ -207,9 +279,8 @@ export function useDragDrop<ID>(
 
                 // Delta-based auto-scroll: compute finger's position in the container
                 // from the node's known index (avoids unreliable containerPageY).
-                // The FlashList header (padding:5 → ~10px) + nodeIndex * itemHeight - scroll + locationY
                 const iH = itemHeightRef.current;
-                const listHeaderHeight = 10; // HeaderFooterView has padding: 5 → 10px total
+                const listHeaderHeight = listHeaderFooterPadding * 2;
                 initialFingerPageYRef.current = pageY;
                 initialFingerContainerYRef.current =
                     listHeaderHeight + nodeIndex * iH - scrollOffsetRef.current + locationY;
@@ -223,7 +294,7 @@ export function useDragDrop<ID>(
                 store.getState().updateInvalidDragTargetIds(descendants);
 
                 // Set overlay initial position (with configurable offset)
-                const overlayLocalY = fingerLocalY - locationY + dragOverlayOffset * itemHeightRef.current;
+                const overlayLocalY = fingerLocalY - locationY + dragOverlayOffsetRef.current * itemHeightRef.current;
                 overlayY.setValue(overlayLocalY);
 
                 // Reset magnetic overlay
@@ -238,6 +309,9 @@ export function useDragDrop<ID>(
                 setEffectiveDropLevel(node.level ?? 0);
                 setDropTarget(null);
 
+                // Notify consumer that drag has started
+                onDragStartRef.current?.({ draggedNodeId: nodeId });
+
                 // Start auto-scroll loop
                 startAutoScrollLoop();
             });
@@ -249,6 +323,7 @@ export function useDragDrop<ID>(
             containerRef,
             flashListRef,
             getDescendantIds,
+            getSubtreeDepth,
             overlayY,
         ]
     );
@@ -257,6 +332,12 @@ export function useDragDrop<ID>(
     const handleNodeTouchStart = useCallback(
         (nodeId: ID, pageY: number, locationY: number, nodeIndex: number) => {
             if (!dragEnabled) return;
+
+            // Check if this node can be dragged
+            if (canDragRef.current) {
+                const node = flattenedNodesRef.current[nodeIndex];
+                if (node && !canDragRef.current(node)) return;
+            }
 
             // Cancel any existing timer
             cancelLongPressTimer();
@@ -281,7 +362,7 @@ export function useDragDrop<ID>(
                     scrollOffsetRef.current + autoScrollSpeedRef.current
                 );
                 scrollOffsetRef.current = newOffset;
-                (flashListRef.current as any)?.scrollToOffset?.({
+                flashListRef.current?.scrollToOffset?.({
                     offset: newOffset,
                     animated: false,
                 });
@@ -302,8 +383,8 @@ export function useDragDrop<ID>(
 
     const updateAutoScroll = useCallback(
         (fingerInContainer: number) => {
-            const threshold = autoScrollThreshold;
-            const maxSpeed = 8 * autoScrollSpeed;
+            const threshold = autoScrollThresholdRef.current;
+            const maxSpeed = 8 * autoScrollSpeedParamRef.current;
             const containerH = containerHeightRef.current;
 
             if (fingerInContainer < threshold) {
@@ -319,7 +400,7 @@ export function useDragDrop<ID>(
                 autoScrollSpeedRef.current = 0;
             }
         },
-        [autoScrollThreshold, autoScrollSpeed]
+        []
     );
 
     // --- Cancel auto-expand timer ---
@@ -365,6 +446,26 @@ export function useDragDrop<ID>(
                 position = "inside";
             }
 
+            // --- Determine if "inside" drop is allowed for this target ---
+            const canDropInsideTarget = (() => {
+                // canNodeHaveChildren: structural constraint
+                if (canNodeHaveChildrenRef.current && !canNodeHaveChildrenRef.current(targetNode)) {
+                    return false;
+                }
+                // maxDepth: the dragged subtree at (targetLevel + 1) must not exceed maxDepth
+                if (maxDepthRef.current !== undefined) {
+                    const targetLevel = targetNode.level ?? 0;
+                    const deepest = targetLevel + 1 + draggedSubtreeDepthRef.current;
+                    if (deepest > maxDepthRef.current) return false;
+                }
+                return true;
+            })();
+
+            // If "inside" is not allowed, convert to nearest zone
+            if (position === "inside" && !canDropInsideTarget) {
+                position = positionInItem < 0.5 ? "above" : "below";
+            }
+
             // --- Horizontal control at level cliffs ---
             // At the boundary between nodes at different depths, the user's
             // horizontal finger position decides the drop level:
@@ -398,9 +499,10 @@ export function useDragDrop<ID>(
 
                 if (isCliff) {
                     // Generous threshold: midpoint of the two levels + 2× indent buffer
+                    const indent = indentationMultiplierRef.current;
                     const threshold =
-                        ((currentLevel + shallowLevel) / 2) * indentationMultiplier
-                        + indentationMultiplier * 2;
+                        ((currentLevel + shallowLevel) / 2) * indent
+                        + indent * 2;
 
                     if (fingerLocalX < threshold) {
                         // User wants the shallow level
@@ -435,9 +537,10 @@ export function useDragDrop<ID>(
                 const currentLevel = targetNode.level ?? 0;
                 if (prevNode && prevLevel > currentLevel) {
                     // Level cliff above - same generous threshold
+                    const indent = indentationMultiplierRef.current;
                     const threshold =
-                        ((prevLevel + currentLevel) / 2) * indentationMultiplier
-                        + indentationMultiplier * 2;
+                        ((prevLevel + currentLevel) / 2) * indent
+                        + indent * 2;
 
                     if (fingerLocalX >= threshold) {
                         clampedIndex = clampedIndex - 1;
@@ -450,7 +553,8 @@ export function useDragDrop<ID>(
             // --- Suppress "below" when it's redundant or confusing ---
             // After horizontal control, any remaining "below" that isn't at a
             // cliff is redundant with "above" on the next node → show "inside".
-            if (position === "below") {
+            // Only convert to "inside" if inside drops are allowed for this target.
+            if (position === "below" && canDropInsideTarget) {
                 const expandedSet = getTreeViewStore<ID>(storeId).getState().expanded;
 
                 // (a) Expanded parent: "below" visually sits at the parent/child junction
@@ -500,9 +604,24 @@ export function useDragDrop<ID>(
             const store = getTreeViewStore<ID>(storeId);
             const { invalidDragTargetIds, draggedNodeId, expanded } =
                 store.getState();
+
+            // maxDepth check for above/below (sibling) positions
+            let maxDepthValid = true;
+            if (maxDepthRef.current !== undefined && (position === "above" || position === "below")) {
+                const targetLevel = targetNode.level ?? 0;
+                const deepest = targetLevel + draggedSubtreeDepthRef.current;
+                if (deepest > maxDepthRef.current) maxDepthValid = false;
+            }
+
             const isValid =
                 targetNode.id !== draggedNodeId &&
-                !invalidDragTargetIds.has(targetNode.id);
+                !invalidDragTargetIds.has(targetNode.id) &&
+                maxDepthValid &&
+                (!canDropRef.current || canDropRef.current(
+                    draggedNodeRef.current!,
+                    targetNode,
+                    position
+                ));
 
             // --- Auto-expand: if hovering "inside" a collapsed expandable node ---
             if (isValid && position === "inside" && targetNode.children?.length && !expanded.has(targetNode.id)) {
@@ -515,7 +634,7 @@ export function useDragDrop<ID>(
                         // Expand the node and track it
                         handleToggleExpand(storeId, targetNode.id);
                         autoExpandedDuringDragRef.current.add(targetNode.id);
-                    }, autoExpandDelay);
+                    }, autoExpandDelayRef.current);
                 }
             } else {
                 // Not hovering inside a collapsed expandable node - cancel timer
@@ -547,7 +666,7 @@ export function useDragDrop<ID>(
                 // then spring to 0 for a smooth "magnetic snap" transition.
                 if (prevLevel !== effectiveLevel) {
                     overlayX.setValue(
-                        (prevLevel - effectiveLevel) * indentationMultiplier
+                        (prevLevel - effectiveLevel) * indentationMultiplierRef.current
                     );
                     Animated.spring(overlayX, {
                         toValue: 0,
@@ -599,7 +718,7 @@ export function useDragDrop<ID>(
                 return newTarget;
             });
         },
-        [storeId, autoExpandDelay, cancelAutoExpandTimer, indentationMultiplier, overlayX]
+        [storeId, cancelAutoExpandTimer, overlayX]
     );
 
     // --- Handle drag end ---
@@ -699,6 +818,9 @@ export function useDragDrop<ID>(
                         viewPosition: 0.5,
                     });
                 }, 100);
+            } else if (droppedNodeId !== null) {
+                // Drag ended without a valid drop — notify consumer
+                onDragCancelRef.current?.({ draggedNodeId: droppedNodeId });
             }
 
             // Collapse auto-expanded nodes that aren't ancestors of the drop target
@@ -791,7 +913,7 @@ export function useDragDrop<ID>(
 
                 // Update overlay position (with configurable offset)
                 const overlayLocalY =
-                    fingerLocalY - grabOffsetYRef.current + dragOverlayOffset * itemHeightRef.current;
+                    fingerLocalY - grabOffsetYRef.current + dragOverlayOffsetRef.current * itemHeightRef.current;
                 overlayY.setValue(overlayLocalY);
 
                 // Calculate drop target (horizontal position used at level cliffs)

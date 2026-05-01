@@ -60,214 +60,202 @@ function findNode<ID>(nodes: TreeNode<ID>[], id: ID): TreeNode<ID> | null {
 }
 
 describe("moveTreeNode", () => {
-    // =====================
-    // POSITION: "above"
-    // =====================
-    describe("position: \"above\"", () => {
-        it("moves a leaf node above a root sibling", () => {
-            const tree = makeTree();
-            const result = moveTreeNode(tree, "C", "A", "above");
+    describe("given various node pairs", () => {
+        it("when moving above target, then node is inserted before target at correct level", () => {
+            // Leaf node above a root sibling
+            const tree1 = makeTree();
+            const result1 = moveTreeNode(tree1, "C", "A", "above");
 
-            expect(result[0]!.id).toBe("C");
-            expect(result[1]!.id).toBe("A");
-            expect(result[2]!.id).toBe("B");
-            expect(result.length).toBe(3);
-        });
+            expect(result1[0]!.id).toBe("C");
+            expect(result1[1]!.id).toBe("A");
+            expect(result1[2]!.id).toBe("B");
+            expect(result1.length).toBe(3);
 
-        it("moves a deep node above another deep node", () => {
-            const tree = makeTree();
-            const result = moveTreeNode(tree, "A1b", "B1", "above");
+            // Deep node above another deep node
+            const tree2 = makeTree();
+            const result2 = moveTreeNode(tree2, "A1b", "B1", "above");
 
-            const B = findNode(result, "B")!;
-            expect(B.children![0]!.id).toBe("A1b");
-            expect(B.children![1]!.id).toBe("B1");
-            expect(B.children![2]!.id).toBe("B2");
+            const B2 = findNode(result2, "B")!;
+            expect(B2.children![0]!.id).toBe("A1b");
+            expect(B2.children![1]!.id).toBe("B1");
+            expect(B2.children![2]!.id).toBe("B2");
 
             // A1b should be gone from A1
-            const A1 = findNode(result, "A1")!;
-            expect(A1.children!.length).toBe(1);
-            expect(A1.children![0]!.id).toBe("A1a");
-        });
+            const A1_2 = findNode(result2, "A1")!;
+            expect(A1_2.children!.length).toBe(1);
+            expect(A1_2.children![0]!.id).toBe("A1a");
 
-        it("moves a parent node (with children) above a root node", () => {
-            const tree = makeTree();
-            const result = moveTreeNode(tree, "A1", "B", "above");
+            // Parent node (with children) above a root node
+            const tree3 = makeTree();
+            const result3 = moveTreeNode(tree3, "A1", "B", "above");
 
-            expect(result[0]!.id).toBe("A");
-            expect(result[1]!.id).toBe("A1");
-            expect(result[1]!.children!.length).toBe(2); // A1a, A1b preserved
-            expect(result[2]!.id).toBe("B");
+            expect(result3[0]!.id).toBe("A");
+            expect(result3[1]!.id).toBe("A1");
+            expect(result3[1]!.children!.length).toBe(2); // A1a, A1b preserved
+            expect(result3[2]!.id).toBe("B");
 
             // A should no longer have A1 as a child
-            const A = result[0]!;
-            expect(A.children!.length).toBe(1);
-            expect(A.children![0]!.id).toBe("A2");
-        });
-    });
-
-    // =====================
-    // POSITION: "below"
-    // =====================
-    describe("position: \"below\"", () => {
-        it("moves a leaf node below a root node", () => {
-            const tree = makeTree();
-            const result = moveTreeNode(tree, "C", "A", "below");
-
-            expect(result[0]!.id).toBe("A");
-            expect(result[1]!.id).toBe("C");
-            expect(result[2]!.id).toBe("B");
+            const A3 = result3[0]!;
+            expect(A3.children!.length).toBe(1);
+            expect(A3.children![0]!.id).toBe("A2");
         });
 
-        it("moves a node below the last root node", () => {
-            const tree = makeTree();
-            const result = moveTreeNode(tree, "A2", "C", "below");
+        it("when moving below target, then node is inserted after target at correct level", () => {
+            // Leaf node below a root node
+            const tree1 = makeTree();
+            const result1 = moveTreeNode(tree1, "C", "A", "below");
 
-            expect(result.length).toBe(4); // A, B, C, A2 at root
-            expect(result[3]!.id).toBe("A2");
-        });
+            expect(result1[0]!.id).toBe("A");
+            expect(result1[1]!.id).toBe("C");
+            expect(result1[2]!.id).toBe("B");
 
-        it("moves a deep child below another deep child", () => {
-            const tree = makeTree();
-            const result = moveTreeNode(tree, "B2", "A1a", "below");
+            // Node below the last root node
+            const tree2 = makeTree();
+            const result2 = moveTreeNode(tree2, "A2", "C", "below");
 
-            const A1 = findNode(result, "A1")!;
-            expect(A1.children![0]!.id).toBe("A1a");
-            expect(A1.children![1]!.id).toBe("B2");
-            expect(A1.children![2]!.id).toBe("A1b");
+            expect(result2.length).toBe(4); // A, B, C, A2 at root
+            expect(result2[3]!.id).toBe("A2");
+
+            // Deep child below another deep child
+            const tree3 = makeTree();
+            const result3 = moveTreeNode(tree3, "B2", "A1a", "below");
+
+            const A1_3 = findNode(result3, "A1")!;
+            expect(A1_3.children![0]!.id).toBe("A1a");
+            expect(A1_3.children![1]!.id).toBe("B2");
+            expect(A1_3.children![2]!.id).toBe("A1b");
 
             // B should have lost B2
-            const B = findNode(result, "B")!;
-            expect(B.children!.length).toBe(1);
-            expect(B.children![0]!.id).toBe("B1");
-        });
-    });
-
-    // =====================
-    // POSITION: "inside"
-    // =====================
-    describe("position: \"inside\"", () => {
-        it("moves a node inside a leaf node (creates children)", () => {
-            const tree = makeTree();
-            const result = moveTreeNode(tree, "B1", "C", "inside");
-
-            const C = findNode(result, "C")!;
-            expect(C.children).toBeDefined();
-            expect(C.children!.length).toBe(1);
-            expect(C.children![0]!.id).toBe("B1");
+            const B3 = findNode(result3, "B")!;
+            expect(B3.children!.length).toBe(1);
+            expect(B3.children![0]!.id).toBe("B1");
         });
 
-        it("moves a node inside a parent (prepends as first child)", () => {
-            const tree = makeTree();
-            const result = moveTreeNode(tree, "C", "B", "inside");
+        it("when moving inside target, then node becomes first child of target", () => {
+            // Move inside a leaf node (creates children)
+            const tree1 = makeTree();
+            const result1 = moveTreeNode(tree1, "B1", "C", "inside");
 
-            const B = findNode(result, "B")!;
-            expect(B.children![0]!.id).toBe("C");
-            expect(B.children![1]!.id).toBe("B1");
-            expect(B.children![2]!.id).toBe("B2");
+            const C1 = findNode(result1, "C")!;
+            expect(C1.children).toBeDefined();
+            expect(C1.children!.length).toBe(1);
+            expect(C1.children![0]!.id).toBe("B1");
+
+            // Move inside a parent (prepends as first child)
+            const tree2 = makeTree();
+            const result2 = moveTreeNode(tree2, "C", "B", "inside");
+
+            const B2 = findNode(result2, "B")!;
+            expect(B2.children![0]!.id).toBe("C");
+            expect(B2.children![1]!.id).toBe("B1");
+            expect(B2.children![2]!.id).toBe("B2");
 
             // C removed from root
-            expect(result.length).toBe(2);
-        });
+            expect(result2.length).toBe(2);
 
-        it("moves a subtree inside another node, preserving the subtree's children", () => {
-            const tree = makeTree();
-            const result = moveTreeNode(tree, "A1", "C", "inside");
+            // Move a subtree inside another node, preserving the subtree's children
+            const tree3 = makeTree();
+            const result3 = moveTreeNode(tree3, "A1", "C", "inside");
 
-            const C = findNode(result, "C")!;
-            expect(C.children!.length).toBe(1);
-            expect(C.children![0]!.id).toBe("A1");
-            expect(C.children![0]!.children!.length).toBe(2);
-            expect(C.children![0]!.children![0]!.id).toBe("A1a");
-            expect(C.children![0]!.children![1]!.id).toBe("A1b");
+            const C3 = findNode(result3, "C")!;
+            expect(C3.children!.length).toBe(1);
+            expect(C3.children![0]!.id).toBe("A1");
+            expect(C3.children![0]!.children!.length).toBe(2);
+            expect(C3.children![0]!.children![0]!.id).toBe("A1a");
+            expect(C3.children![0]!.children![1]!.id).toBe("A1b");
+
+            // Move root node inside another root node
+            const tree4 = makeTree();
+            const result4 = moveTreeNode(tree4, "A", "B", "inside");
+
+            expect(result4.length).toBe(2); // B and C at root
+            const B4 = findNode(result4, "B")!;
+            expect(B4.children![0]!.id).toBe("A");
+            expect(B4.children![0]!.children!.length).toBe(2); // A1, A2 preserved
         });
     });
 
-    // =====================
-    // EDGE CASES
-    // =====================
-    describe("edge cases", () => {
-        it("returns original data when dragging onto self", () => {
+    describe("given ancestor-descendant pairs or invalid IDs", () => {
+        it("when attempting to create cycles, then original tree is returned unchanged", () => {
             const tree = makeTree();
-            const result = moveTreeNode(tree, "A", "A", "above");
-            expect(result).toBe(tree); // Same reference = no-op
+
+            // Self-drop is a no-op
+            const selfDrop = moveTreeNode(tree, "A", "A", "above");
+            expect(selfDrop).toBe(tree);
+
+            // Moving a parent into its own child would create a cycle
+            const parentToChild = moveTreeNode(tree, "A1", "A1a", "inside");
+            expect(parentToChild).toBe(tree);
+
+            // Moving a parent above its own descendant would create a cycle
+            const parentAboveDesc = moveTreeNode(tree, "A1", "A1b", "above");
+            expect(parentAboveDesc).toBe(tree);
+
+            // Moving a root into its own grandchild would create a cycle
+            const rootToGrandchild = moveTreeNode(tree, "A", "A1a", "inside");
+            expect(rootToGrandchild).toBe(tree);
         });
 
-        it("does not mutate the original tree", () => {
+        it("when moving with invalid node IDs, then original tree is returned", () => {
+            const tree = makeTree();
+
+            // Nonexistent dragged node ID
+            const noSource = moveTreeNode(tree, "NONEXISTENT", "A", "above");
+            expect(noSource).toBe(tree);
+
+            // Nonexistent target node ID
+            const noTarget = moveTreeNode(tree, "A", "NONEXISTENT", "above");
+            expect(noTarget).toBe(tree);
+        });
+    });
+
+    describe("given a move operation", () => {
+        it("when complete, then original tree is not mutated and all node IDs are preserved", () => {
             const tree = makeTree();
             const originalIds = collectIds(tree);
 
+            // Perform a move and verify original is untouched
             moveTreeNode(tree, "C", "A", "above");
-
             const afterIds = collectIds(tree);
             expect(afterIds).toEqual(originalIds);
-        });
 
-        it("preserves all node IDs after move (no data loss)", () => {
-            const tree = makeTree();
-            const originalIds = new Set(collectIds(tree));
-
+            // Verify all IDs are preserved in the result (no data loss)
+            const originalIdSet = new Set(collectIds(tree));
             const result = moveTreeNode(tree, "A1", "C", "inside");
-            const resultIds = new Set(collectIds(result));
-
-            expect(resultIds).toEqual(originalIds);
+            const resultIdSet = new Set(collectIds(result));
+            expect(resultIdSet).toEqual(originalIdSet);
         });
+    });
 
-        it("returns original data when dragged node ID doesn't exist", () => {
-            const tree = makeTree();
-            const result = moveTreeNode(tree, "NONEXISTENT", "A", "above");
-            expect(result).toBe(tree);
-        });
-
-        it("returns original data when target node ID doesn't exist", () => {
-            const tree = makeTree();
-            const result = moveTreeNode(tree, "A", "NONEXISTENT", "above");
-            expect(result).toBe(tree);
-        });
-
-        it("cleans up empty children array when last child is removed", () => {
-            // Tree with single child: X -> X1
-            const tree: TreeNode<string>[] = [
+    describe("given edge case trees", () => {
+        it("when moving nodes, then tree structure is correctly maintained", () => {
+            // Empty children cleanup when last child is removed
+            const singleChildTree: TreeNode<string>[] = [
                 { id: "X", name: "X", children: [{ id: "X1", name: "X1" }] },
                 { id: "Y", name: "Y" },
             ];
 
-            const result = moveTreeNode(tree, "X1", "Y", "below");
-
-            const X = findNode(result, "X")!;
+            const cleanupResult = moveTreeNode(singleChildTree, "X1", "Y", "below");
+            const X = findNode(cleanupResult, "X")!;
             expect(X.children).toBeUndefined();
-        });
 
-        it("handles moving first child to a different position", () => {
+            // Moving first child to reorder within same parent
             const tree = makeTree();
-            const result = moveTreeNode(tree, "A1a", "A1b", "below");
+            const reorderResult = moveTreeNode(tree, "A1a", "A1b", "below");
 
-            const A1 = findNode(result, "A1")!;
+            const A1 = findNode(reorderResult, "A1")!;
             expect(A1.children![0]!.id).toBe("A1b");
             expect(A1.children![1]!.id).toBe("A1a");
-        });
 
-        it("handles single-node tree", () => {
-            const tree: TreeNode<string>[] = [{ id: "only", name: "only" }];
-            const result = moveTreeNode(tree, "only", "only", "inside");
-            expect(result).toBe(tree); // Self-drop is no-op
-        });
-
-        it("handles moving root node to inside another root node", () => {
-            const tree = makeTree();
-            const result = moveTreeNode(tree, "A", "B", "inside");
-
-            expect(result.length).toBe(2); // B and C at root
-            const B = findNode(result, "B")!;
-            expect(B.children![0]!.id).toBe("A");
-            expect(B.children![0]!.children!.length).toBe(2); // A1, A2 preserved
+            // Single-node tree: self-drop is no-op
+            const singleTree: TreeNode<string>[] = [{ id: "only", name: "only" }];
+            const singleResult = moveTreeNode(singleTree, "only", "only", "inside");
+            expect(singleResult).toBe(singleTree);
         });
     });
 
-    // =====================
-    // NUMERIC IDs
-    // =====================
-    describe("numeric IDs", () => {
-        it("works with number-type IDs", () => {
+    describe("given numeric IDs", () => {
+        it("when moving nodes, then number-type IDs work correctly", () => {
             const tree: TreeNode<number>[] = [
                 {
                     id: 1, name: "One", children: [
@@ -288,45 +276,38 @@ describe("moveTreeNode", () => {
         });
     });
 
-    // =====================
-    // COMPLEX MOVES
-    // =====================
-    describe("complex multi-level moves", () => {
-        it("moves a deeply nested node to root level", () => {
-            const tree = makeTree();
-            const result = moveTreeNode(tree, "A1a", "C", "below");
+    describe("given multi-level trees", () => {
+        it("when performing cross-level moves, then nodes relocate correctly", () => {
+            // Deeply nested node to root level
+            const tree1 = makeTree();
+            const result1 = moveTreeNode(tree1, "A1a", "C", "below");
 
-            expect(result.length).toBe(4);
-            expect(result[3]!.id).toBe("A1a");
+            expect(result1.length).toBe(4);
+            expect(result1[3]!.id).toBe("A1a");
 
             // A1 should still have A1b
-            const A1 = findNode(result, "A1")!;
-            expect(A1.children!.length).toBe(1);
-            expect(A1.children![0]!.id).toBe("A1b");
-        });
+            const A1_1 = findNode(result1, "A1")!;
+            expect(A1_1.children!.length).toBe(1);
+            expect(A1_1.children![0]!.id).toBe("A1b");
 
-        it("moves a root node to become a deeply nested child", () => {
-            const tree = makeTree();
-            const result = moveTreeNode(tree, "C", "A1a", "inside");
+            // Root node to become a deeply nested child
+            const tree2 = makeTree();
+            const result2 = moveTreeNode(tree2, "C", "A1a", "inside");
 
-            expect(result.length).toBe(2); // A, B at root
-            const A1a = findNode(result, "A1a")!;
-            expect(A1a.children!.length).toBe(1);
-            expect(A1a.children![0]!.id).toBe("C");
-        });
+            expect(result2.length).toBe(2); // A, B at root
+            const A1a_2 = findNode(result2, "A1a")!;
+            expect(A1a_2.children!.length).toBe(1);
+            expect(A1a_2.children![0]!.id).toBe("C");
 
-        it("preserves all IDs through a chain of moves", () => {
-            let tree = makeTree();
-            const originalIds = new Set(collectIds(tree));
+            // Chain of moves preserves all IDs
+            let tree3 = makeTree();
+            const originalIds = new Set(collectIds(tree3));
 
-            // Move C inside A1
-            tree = moveTreeNode(tree, "C", "A1", "inside");
-            // Move B1 above A
-            tree = moveTreeNode(tree, "B1", "A", "above");
-            // Move A2 below B
-            tree = moveTreeNode(tree, "A2", "B", "below");
+            tree3 = moveTreeNode(tree3, "C", "A1", "inside");
+            tree3 = moveTreeNode(tree3, "B1", "A", "above");
+            tree3 = moveTreeNode(tree3, "A2", "B", "below");
 
-            const finalIds = new Set(collectIds(tree));
+            const finalIds = new Set(collectIds(tree3));
             expect(finalIds).toEqual(originalIds);
         });
     });

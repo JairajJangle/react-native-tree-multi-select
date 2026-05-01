@@ -1,7 +1,7 @@
 {
   "name": "react-native-tree-multi-select",
   "version": "3.0.0-beta.3",
-  "description": "A super-fast, customizable tree view component for React Native with multi-selection, checkboxes, and search filtering capabilities.",
+  "description": "Super-fast, customizable tree view component for React Native with drag-and-drop reordering, multi-selection, and search filtering.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "react-native": "src/index",
@@ -37,13 +37,29 @@
   },
   "keywords": [
     "react-native",
+    "react-native-web",
     "ios",
     "android",
+    "web",
+    "expo",
     "react-component",
     "treeview",
     "tree-view",
     "tree-select",
+    "tree-structure",
     "checkbox",
+    "tri-state-checkbox",
+    "indeterminate-checkbox",
+    "drag-and-drop",
+    "drag-drop",
+    "reorder",
+    "sortable-tree",
+    "nested-list",
+    "hierarchical-list",
+    "collapsible-list",
+    "expandable-list",
+    "multi-select",
+    "multi-selection",
     "react-tree-view",
     "react-tree-select",
     "react-checkbox-tree",
@@ -51,16 +67,14 @@
     "react-native-tree-select",
     "react-native-checkbox-list",
     "react-native-tree-checkbox",
-    "tree-structure",
-    "hierarchical-list",
-    "collapsible-list",
-    "nested-list",
-    "multi-select",
-    "dropdown-menu",
-    "expandable-list",
-    "customizable",
-    "expo",
-    "web"
+    "react-native-drag-drop",
+    "flashlist",
+    "search-filter",
+    "category-tree",
+    "file-tree",
+    "folder-tree",
+    "typescript",
+    "customizable"
   ],
   "repository": {
     "type": "git",
@@ -90,7 +104,6 @@
     "@semantic-release/github": "^12.0.5",
     "@semantic-release/npm": "^13.1.4",
     "@shopify/flash-list": "1.x.x",
-    "@testing-library/jest-native": "^5.4.3",
     "@testing-library/react-native": "^12.9.0",
     "@types/color": "^3.0.6",
     "@types/jest": "^29.5.14",
@@ -222,7 +235,11 @@
   ],
   "funding": [
     {
-      "type": "individual",
+      "type": "github",
+      "url": "https://github.com/sponsors/JairajJangle"
+    },
+    {
+      "type": "paypal",
       "url": "https://www.paypal.com/paypalme/jairajjangle001/usd"
     },
     {
@@ -230,7 +247,7 @@
       "url": "https://liberapay.com/FutureJJ/donate"
     },
     {
-      "type": "individual",
+      "type": "ko-fi",
       "url": "https://ko-fi.com/futurejj"
     }
   ]

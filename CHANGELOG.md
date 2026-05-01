@@ -23,6 +23,15 @@
 ### Contributors
 
 * @Claude Opus 4.6
+## [2.0.18](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.17...v2.0.18) (2026-04-24)
+
+## [2.0.17](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.16...v2.0.17) (2026-04-16)
+
+## [2.0.16](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.15...v2.0.16) (2026-04-04)
+
+## [2.0.15](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.14...v2.0.15) (2026-04-04)
+
+## [2.0.14](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.13...v2.0.14) (2026-04-04)
 
 ## [2.0.13](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.12...v2.0.13) (2026-03-28)
 

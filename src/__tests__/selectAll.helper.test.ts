@@ -14,7 +14,7 @@ import { getTreeViewStore } from "../store/treeView.store";
 import { act } from "react-test-renderer";
 import { testStoreId } from "../constants/tests.constants";
 
-describe("selectAll helpers functions", () => {
+describe("given a tree initialized in the store", () => {
     const useTreeViewStore = getTreeViewStore(testStoreId);
 
     beforeEach(() => {
@@ -25,15 +25,14 @@ describe("selectAll helpers functions", () => {
         initializeNodeMaps(testStoreId, tree3d2b);
     });
 
-    it("selectAll works correctly", () => {
-        // Act
+    it("when selecting then unselecting all, then all nodes toggle correctly", () => {
+        // Select all
         act(() => {
             selectAll(testStoreId);
         });
 
-        // Assert
-        const { checked, indeterminate } = useTreeViewStore.getState();
-        expect(checked).toEqual(new Set([
+        const { checked: checkedAfterSelect, indeterminate: indeterminateAfterSelect } = useTreeViewStore.getState();
+        expect(checkedAfterSelect).toEqual(new Set([
             "1",
             "1.1",
             "1.1.1",
@@ -50,33 +49,23 @@ describe("selectAll helpers functions", () => {
             "2.2.2",
             "3"
         ]));
-        expect(indeterminate).toEqual(new Set([]));
-    });
+        expect(indeterminateAfterSelect).toEqual(new Set([]));
 
-    it("unselectAll works correctly", () => {
-        // Arrange
-        act(() => {
-            selectAll(testStoreId);
-        });
-
-        // Act
+        // Unselect all
         act(() => {
             unselectAll(testStoreId);
         });
 
-        // Assert
-        const { checked, indeterminate } = useTreeViewStore.getState();
-        expect(checked).toEqual(new Set([]));
-        expect(indeterminate).toEqual(new Set([]));
+        const { checked: checkedAfterUnselect, indeterminate: indeterminateAfterUnselect } = useTreeViewStore.getState();
+        expect(checkedAfterUnselect).toEqual(new Set([]));
+        expect(indeterminateAfterUnselect).toEqual(new Set([]));
     });
 
-    it("getInnerMostChildrenIdsInTree works correctly", () => {
+    it("when getting leaf IDs, then only innermost nodes are returned", () => {
         const initialData = useTreeViewStore.getState().initialTreeViewData;;
 
-        // Act
         const innerMostChildrenIds = getInnerMostChildrenIdsInTree(initialData);
 
-        // Assert
         expect(innerMostChildrenIds.sort()).toEqual([
             "1.1.1",
             "1.1.2",
@@ -89,16 +78,14 @@ describe("selectAll helpers functions", () => {
         ].sort());
     });
 
-    ////////////////////////////////////////////////////////////////////////////////
-    it("selectAllFiltered works correctly for empty search term", () => {
-        // Act
+    it("when selecting all filtered with empty and non-empty search terms, then only matching leaf nodes and their ancestors are affected", () => {
+        // Empty search term: selects everything (same as selectAll)
         act(() => {
             selectAllFiltered(testStoreId);
         });
 
-        // Assert
-        const { checked, indeterminate } = useTreeViewStore.getState();
-        expect(checked).toEqual(new Set([
+        const { checked: checkedEmpty, indeterminate: indeterminateEmpty } = useTreeViewStore.getState();
+        expect(checkedEmpty).toEqual(new Set([
             "1",
             "1.1",
             "1.1.1",
@@ -115,13 +102,16 @@ describe("selectAll helpers functions", () => {
             "2.2.2",
             "3"
         ]));
-        expect(Array.from(indeterminate)).toEqual([]);
-    });
+        expect(Array.from(indeterminateEmpty)).toEqual([]);
 
-    it("selectAllFiltered works correctly for non-empty search term with found nodes", () => {
+        // Reset state for the non-empty search term test
+        act(() => {
+            unselectAll(testStoreId);
+        });
+
+        // Non-empty search term: selects only matching filtered nodes
         const searchTerm = "1.1";
 
-        // Act
         act(() => {
             // Update search related states in the store
             useTreeViewStore.getState().updateSearchText(searchTerm);
@@ -150,45 +140,39 @@ describe("selectAll helpers functions", () => {
             selectAllFiltered(testStoreId);
         });
 
-        // Assert
-        const { checked, indeterminate } = useTreeViewStore.getState();
-        expect(checked).toEqual(new Set([
+        const { checked: checkedFiltered, indeterminate: indeterminateFiltered } = useTreeViewStore.getState();
+        expect(checkedFiltered).toEqual(new Set([
             "1.1", // As both of it's children are checked
             "1.1.1",
             "1.1.2",
             "2.1.1"
         ]));
-        expect(indeterminate).toEqual(new Set([
+        expect(indeterminateFiltered).toEqual(new Set([
             "1", // As 1.2 is unchecked
             "2", // only one if it's children is checked
             "2.1"
         ]));
     });
-    ////////////////////////////////////////////////////////////////////////////////
 
-    it("unselectAllFiltered works correctly for empty search term", () => {
-        // Arrange
+    it("when unselecting filtered with empty and non-empty search terms, then only matching nodes are unchecked", () => {
+        // Empty search term: unselect all filtered after selecting all
         act(() => {
             selectAllFiltered(testStoreId);
         });
 
-        // Act
         act(() => {
             unselectAllFiltered(testStoreId);
         });
 
-        // Assert
-        const { checked, indeterminate } = useTreeViewStore.getState();
-        expect(checked).toEqual(new Set([]));
-        expect(indeterminate).toEqual(new Set([]));
-    });
+        const { checked: checkedEmpty, indeterminate: indeterminateEmpty } = useTreeViewStore.getState();
+        expect(checkedEmpty).toEqual(new Set([]));
+        expect(indeterminateEmpty).toEqual(new Set([]));
 
-    it("unselectAllFiltered works correctly for non-empty search term with found nodes", () => {
+        // Non-empty search term: unselect filtered nodes from a fully selected tree
         const searchTerm = "1.1";
 
-        // Act
         act(() => {
-            // First select all the nodes(unfiltered)
+            // First select all the nodes (unfiltered)
             selectAll(testStoreId);
 
             // Update search related states in the store
@@ -218,9 +202,8 @@ describe("selectAll helpers functions", () => {
             unselectAllFiltered(testStoreId);
         });
 
-        // Assert
-        const { checked, indeterminate } = useTreeViewStore.getState();
-        expect(checked).toEqual(new Set([
+        const { checked: checkedFiltered, indeterminate: indeterminateFiltered } = useTreeViewStore.getState();
+        expect(checkedFiltered).toEqual(new Set([
             "1.2",
             "1.2.1",
             "1.2.2",
@@ -230,7 +213,7 @@ describe("selectAll helpers functions", () => {
             "2.2.2",
             "3"
         ]));
-        expect(indeterminate).toEqual(new Set([
+        expect(indeterminateFiltered).toEqual(new Set([
             "1",
             "2",
             "2.1"

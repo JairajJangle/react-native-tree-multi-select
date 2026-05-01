@@ -13,7 +13,7 @@ import {
 import { act } from "react-test-renderer";
 import { testStoreId } from "../constants/tests.constants";
 
-describe("handleToggleExpand", () => {
+describe("expand/collapse helpers", () => {
   const useTreeViewStore = getTreeViewStore(testStoreId);
 
   beforeEach(() => {
@@ -23,65 +23,53 @@ describe("handleToggleExpand", () => {
     initializeNodeMaps(testStoreId, tree3d2b);
   });
 
-  test("handleToggleExpand correctly toggles the expanded state of a tree node", () => {
+  it("given a collapsed tree, when toggling expand on nodes, then expand/collapse lifecycle works correctly", () => {
+    // Expand node 1
     act(() => {
       handleToggleExpand(testStoreId, "1");
     });
 
-    // Node '1' should now be expanded
     let { expanded } = useTreeViewStore.getState();
     expect(expanded.has("1")).toBeTruthy();
 
+    // Expand child 1.2 while parent 1 remains expanded
     act(() => {
       handleToggleExpand(testStoreId, "1.2");
     });
 
-    // Node '1.2' should now be expanded, Node '1'(parent) should remain expanded
     expanded = useTreeViewStore.getState().expanded;
     expect(expanded.has("1.2")).toBeTruthy();
     expect(expanded.has("1")).toBeTruthy();
 
+    // Collapse parent 1 (collapses descendants too) and expand node 2
     act(() => {
       handleToggleExpand(testStoreId, "1");
       handleToggleExpand(testStoreId, "2");
     });
 
-    // Node '1' and its descendants should now be collapsed but Node '2' should remain expanded
     expanded = useTreeViewStore.getState().expanded;
-
     expect(expanded.has("1")).toBeFalsy();
     expect(expanded.has("1.1")).toBeFalsy();
     expect(expanded.has("1.2")).toBeFalsy();
     expect(expanded.has("1.2.1")).toBeFalsy();
-
     expect(expanded.has("2")).toBeTruthy();
   });
-});
 
-describe("expandAll", () => {
-  const useTreeViewStore = getTreeViewStore(testStoreId);
-
-  beforeEach(() => {
-    useTreeViewStore.setState(useTreeViewStore.getState(), true);
-
-    // Setup mock tree
-    useTreeViewStore.getState().updateInitialTreeViewData(tree3d2b);
-    initializeNodeMaps(testStoreId, tree3d2b);
-  });
-
-  it("calls expandAll on initial tree(all collapsed)", () => {
+  it("when calling expandAll, then all nodes are expanded regardless of prior state", () => {
+    // From fully collapsed
     act(() => {
       expandAll(testStoreId);
     });
 
-    const { expanded, nodeMap } = useTreeViewStore.getState();
-
-    // Convert nodeMap.keys() iterator to a Set for comparison
-    const nodeKeys = new Set(nodeMap.keys());
+    let { expanded, nodeMap } = useTreeViewStore.getState();
+    let nodeKeys = new Set(nodeMap.keys());
     expect(expanded).toEqual(nodeKeys);
-  });
 
-  it("expands all node in tree with some nodes which are already expanded", () => {
+    // Reset and partially expand, then expandAll again
+    useTreeViewStore.setState(useTreeViewStore.getState(), true);
+    useTreeViewStore.getState().updateInitialTreeViewData(tree3d2b);
+    initializeNodeMaps(testStoreId, tree3d2b);
+
     act(() => {
       handleToggleExpand(testStoreId, "1");
       handleToggleExpand(testStoreId, "2");
@@ -92,35 +80,21 @@ describe("expandAll", () => {
       expandAll(testStoreId);
     });
 
-    const { expanded, nodeMap } = useTreeViewStore.getState();
-
-    // Convert nodeMap.keys() iterator to a Set for comparison
-    const nodeKeys = new Set(nodeMap.keys());
+    ({ expanded, nodeMap } = useTreeViewStore.getState());
+    nodeKeys = new Set(nodeMap.keys());
     expect(expanded).toEqual(nodeKeys);
   });
-});
 
-describe("collapseAll", () => {
-  const useTreeViewStore = getTreeViewStore(testStoreId);
-
-  beforeEach(() => {
-    useTreeViewStore.setState(useTreeViewStore.getState(), true);
-
-    // Setup mock tree
-    useTreeViewStore.getState().updateInitialTreeViewData(tree3d2b);
-    initializeNodeMaps(testStoreId, tree3d2b);
-  });
-
-  it("calls collapseAll on initial tree(all collapsed)", () => {
+  it("when calling collapseAll, then all nodes are collapsed regardless of prior state", () => {
+    // From fully collapsed (no-op)
     act(() => {
       collapseAll(testStoreId);
     });
 
-    const { expanded } = useTreeViewStore.getState();
+    let { expanded } = useTreeViewStore.getState();
     expect(expanded).toEqual(new Set<string>());
-  });
 
-  it("collapses all node in tree with some nodes which are already expanded", () => {
+    // From partially expanded
     act(() => {
       handleToggleExpand(testStoreId, "1");
       handleToggleExpand(testStoreId, "2");
@@ -131,29 +105,17 @@ describe("collapseAll", () => {
       collapseAll(testStoreId);
     });
 
-    const { expanded } = useTreeViewStore.getState();
-
+    ({ expanded } = useTreeViewStore.getState());
     expect(expanded).toEqual(new Set<string>());
   });
-});
 
-describe("expandNodes & collapseNodes", () => {
-  const useTreeViewStore = getTreeViewStore(testStoreId);
-
-  beforeEach(() => {
-    useTreeViewStore.setState(useTreeViewStore.getState(), true);
-
-    useTreeViewStore.getState().updateInitialTreeViewData(tree3d2b);
-    initializeNodeMaps(testStoreId, tree3d2b);
-  });
-
-  it("expands and then collapses multiple nodes as needed", () => {
+  it("when calling expandNodes and collapseNodes, then targeted nodes and their ancestors/descendants update correctly", () => {
+    // expandNodes: expand specific nodes and their ancestors
     act(() => {
       expandNodes(testStoreId, ["1", "2.1", "2.2.2"]);
     });
 
     const { expanded: expandedAfterExpandNodes } = useTreeViewStore.getState();
-    // Both nodes and their parents should be expanded
     expect(expandedAfterExpandNodes.has("1")).toBeTruthy();
     expect(expandedAfterExpandNodes.has("1.1")).toBeFalsy();
     expect(expandedAfterExpandNodes.has("1.1.1")).toBeFalsy();
@@ -171,14 +133,13 @@ describe("expandNodes & collapseNodes", () => {
     expect(expandedAfterExpandNodes.has("2.2.1")).toBeFalsy();
     expect(expandedAfterExpandNodes.has("2.2.2")).toBeTruthy();
 
-    // Then collapse the same nodes
+    // collapseNodes: collapse specific parent nodes and their descendants
     act(() => {
       collapseNodes(testStoreId, ["1", "2.2"]);
     });
 
     const { expanded: expandedAfterCollapseNodes } =
       useTreeViewStore.getState();
-    // Both nodes and their children should be collapsed
     expect(expandedAfterCollapseNodes.has("1")).toBeFalsy();
     expect(expandedAfterCollapseNodes.has("1.1")).toBeFalsy();
     expect(expandedAfterCollapseNodes.has("1.1.1")).toBeFalsy();
@@ -195,30 +156,32 @@ describe("expandNodes & collapseNodes", () => {
     expect(expandedAfterCollapseNodes.has("2.2")).toBeFalsy();
     expect(expandedAfterCollapseNodes.has("2.2.1")).toBeFalsy();
     expect(expandedAfterCollapseNodes.has("2.2.2")).toBeFalsy();
-  });
 
-  it("expands to show nodes till parents without expanding to show children", () => {
+    // expandNodes with _doNotExpandToShowChildren: only expand ancestors, not the nodes themselves
+    useTreeViewStore.getState().cleanUpTreeViewStore();
+    useTreeViewStore.getState().updateInitialTreeViewData(tree3d2b);
+    initializeNodeMaps(testStoreId, tree3d2b);
+
     act(() => {
       expandNodes(testStoreId, ["1", "2.1", "2.2.2"], true);
     });
 
-    const { expanded: expandedAfterExpandNodes } = useTreeViewStore.getState();
-    // Both nodes and their parents should be expanded
-    expect(expandedAfterExpandNodes.has("1")).toBeFalsy();
-    expect(expandedAfterExpandNodes.has("1.1")).toBeFalsy();
-    expect(expandedAfterExpandNodes.has("1.1.1")).toBeFalsy();
-    expect(expandedAfterExpandNodes.has("1.1.2")).toBeFalsy();
-    expect(expandedAfterExpandNodes.has("1.2")).toBeFalsy();
-    expect(expandedAfterExpandNodes.has("1.2.1")).toBeFalsy();
-    expect(expandedAfterExpandNodes.has("1.2.2")).toBeFalsy();
+    const { expanded: expandedParentsOnly } = useTreeViewStore.getState();
+    expect(expandedParentsOnly.has("1")).toBeFalsy();
+    expect(expandedParentsOnly.has("1.1")).toBeFalsy();
+    expect(expandedParentsOnly.has("1.1.1")).toBeFalsy();
+    expect(expandedParentsOnly.has("1.1.2")).toBeFalsy();
+    expect(expandedParentsOnly.has("1.2")).toBeFalsy();
+    expect(expandedParentsOnly.has("1.2.1")).toBeFalsy();
+    expect(expandedParentsOnly.has("1.2.2")).toBeFalsy();
 
-    expect(expandedAfterExpandNodes.has("2")).toBeTruthy();
-    expect(expandedAfterExpandNodes.has("2.1")).toBeFalsy();
-    expect(expandedAfterExpandNodes.has("2.1.1")).toBeFalsy();
-    expect(expandedAfterExpandNodes.has("2.1.2")).toBeFalsy();
+    expect(expandedParentsOnly.has("2")).toBeTruthy();
+    expect(expandedParentsOnly.has("2.1")).toBeFalsy();
+    expect(expandedParentsOnly.has("2.1.1")).toBeFalsy();
+    expect(expandedParentsOnly.has("2.1.2")).toBeFalsy();
 
-    expect(expandedAfterExpandNodes.has("2.2")).toBeTruthy();
-    expect(expandedAfterExpandNodes.has("2.2.1")).toBeFalsy();
-    expect(expandedAfterExpandNodes.has("2.2.2")).toBeFalsy();
+    expect(expandedParentsOnly.has("2.2")).toBeTruthy();
+    expect(expandedParentsOnly.has("2.2.1")).toBeFalsy();
+    expect(expandedParentsOnly.has("2.2.2")).toBeFalsy();
   });
 });

@@ -1,7 +1,7 @@
 jest.mock("zustand");
 
 import { act } from "react-test-renderer";
-import { useTreeViewStore } from "../store/treeView.store";
+import { deleteTreeViewStore, getTreeViewStore, useTreeViewStore } from "../store/treeView.store";
 import { createRandomNumberSet, generateTree } from "../__mocks__/generateTree.mock";
 import { type TreeNode } from "../types/treeView.types";
 import { testStoreId } from "../constants/tests.constants";
@@ -13,56 +13,48 @@ describe("TreeViewStore", () => {
         treeViewStore.setState(treeViewStore.getState(), true);
     });
 
-    test("updateChecked correctly updates the checked state", () => {
-        const val1 = new Set(["1", "2"]);
+    it("given a fresh store, when updating each state property, then values persist correctly", () => {
+        // updateChecked
+        const checkedVal1 = new Set(["1", "2"]);
         act(() => {
-            treeViewStore.getState().updateChecked(val1);
+            treeViewStore.getState().updateChecked(checkedVal1);
         });
+        expect(treeViewStore.getState().checked).toEqual(checkedVal1);
 
-        expect(treeViewStore.getState().checked).toEqual(val1);
-
-        const val2 = createRandomNumberSet();
+        const checkedVal2 = createRandomNumberSet();
         act(() => {
-            treeViewStore.getState().updateChecked(val2);
+            treeViewStore.getState().updateChecked(checkedVal2);
         });
+        expect(treeViewStore.getState().checked).toEqual(checkedVal2);
 
-        expect(treeViewStore.getState().checked).toEqual(val2);
-    });
-
-    test("updateIndeterminate correctly updates the indeterminate state", () => {
-        const val1 = new Set(["1", "2"]);
+        // updateIndeterminate
+        const indeterminateVal1 = new Set(["1", "2"]);
         act(() => {
-            treeViewStore.getState().updateIndeterminate(val1);
+            treeViewStore.getState().updateIndeterminate(indeterminateVal1);
         });
+        expect(treeViewStore.getState().indeterminate).toEqual(indeterminateVal1);
 
-        expect(treeViewStore.getState().indeterminate).toEqual(val1);
-
-        const val2 = createRandomNumberSet();
+        const indeterminateVal2 = createRandomNumberSet();
         act(() => {
-            treeViewStore.getState().updateIndeterminate(val2);
+            treeViewStore.getState().updateIndeterminate(indeterminateVal2);
         });
+        expect(treeViewStore.getState().indeterminate).toEqual(indeterminateVal2);
 
-        expect(treeViewStore.getState().indeterminate).toEqual(val2);
-    });
-
-    test("updateExpanded correctly updates the expanded state", () => {
-        const val1 = new Set(["1", "2"]);
+        // updateExpanded
+        const expandedVal1 = new Set(["1", "2"]);
         act(() => {
-            treeViewStore.getState().updateExpanded(val1);
+            treeViewStore.getState().updateExpanded(expandedVal1);
         });
+        expect(treeViewStore.getState().expanded).toEqual(expandedVal1);
 
-        expect(treeViewStore.getState().expanded).toEqual(val1);
-
-        const val2 = createRandomNumberSet();
+        const expandedVal2 = createRandomNumberSet();
         act(() => {
-            treeViewStore.getState().updateExpanded(val2);
+            treeViewStore.getState().updateExpanded(expandedVal2);
         });
+        expect(treeViewStore.getState().expanded).toEqual(expandedVal2);
 
-        expect(treeViewStore.getState().expanded).toEqual(val2);
-    });
-
-    test("updateInitialTreeViewData correctly updates the initialTreeViewData state", () => {
-        const val1: TreeNode[] = [{
+        // updateInitialTreeViewData
+        const treeVal1: TreeNode[] = [{
             id: "1",
             name: "node1",
             children: [
@@ -90,109 +82,81 @@ describe("TreeViewStore", () => {
             ],
         }];
         act(() => {
-            treeViewStore.getState().updateInitialTreeViewData(val1);
+            treeViewStore.getState().updateInitialTreeViewData(treeVal1);
         });
+        expect(treeViewStore.getState().initialTreeViewData).toEqual(treeVal1);
 
-        expect(treeViewStore.getState().initialTreeViewData).toEqual(val1);
-
-        const val2 = generateTree(3, 3);
+        const treeVal2 = generateTree(3, 3);
         act(() => {
-            treeViewStore.getState().updateInitialTreeViewData(val2);
+            treeViewStore.getState().updateInitialTreeViewData(treeVal2);
         });
+        expect(treeViewStore.getState().initialTreeViewData).toEqual(treeVal2);
 
-        expect(treeViewStore.getState().initialTreeViewData).toEqual(val2);
+        // updateNodeMap
+        const nodeMapVal1 = new Map<string, TreeNode>();
+        nodeMapVal1.set("1", generateTree(5, 10)[0] as TreeNode);
+        act(() => {
+            treeViewStore.getState().updateNodeMap(nodeMapVal1);
+        });
+        expect(treeViewStore.getState().nodeMap).toEqual(nodeMapVal1);
+
+        const nodeMapVal2 = new Map<string, TreeNode>();
+        nodeMapVal2.set("2", {} as TreeNode);
+        act(() => {
+            treeViewStore.getState().updateNodeMap(nodeMapVal2);
+        });
+        expect(treeViewStore.getState().nodeMap).toEqual(nodeMapVal2);
+
+        // updateChildToParentMap
+        const childParentVal1 = new Map<string, string>();
+        childParentVal1.set("1", "2");
+        act(() => {
+            treeViewStore.getState().updateChildToParentMap(childParentVal1);
+        });
+        expect(treeViewStore.getState().childToParentMap).toEqual(childParentVal1);
+
+        const childParentVal2 = new Map<string, string>();
+        childParentVal2.set("3", "4");
+        act(() => {
+            treeViewStore.getState().updateChildToParentMap(childParentVal2);
+        });
+        expect(treeViewStore.getState().childToParentMap).toEqual(childParentVal2);
+
+        // updateSearchText
+        act(() => {
+            treeViewStore.getState().updateSearchText("hello");
+        });
+        expect(treeViewStore.getState().searchText).toEqual("hello");
+
+        act(() => {
+            treeViewStore.getState().updateSearchText("world");
+        });
+        expect(treeViewStore.getState().searchText).toEqual("world");
+
+        // updateSearchKeys
+        act(() => {
+            treeViewStore.getState().updateSearchKeys(["hello"]);
+        });
+        expect(treeViewStore.getState().searchKeys).toEqual(["hello"]);
+
+        act(() => {
+            treeViewStore.getState().updateSearchKeys(["world"]);
+        });
+        expect(treeViewStore.getState().searchKeys).toEqual(["world"]);
+
+        // updateInnerMostChildrenIds
+        act(() => {
+            treeViewStore.getState().updateInnerMostChildrenIds(["1", "2"]);
+        });
+        expect(treeViewStore.getState().innerMostChildrenIds).toEqual(["1", "2"]);
+
+        act(() => {
+            treeViewStore.getState().updateInnerMostChildrenIds(["3", "4"]);
+        });
+        expect(treeViewStore.getState().innerMostChildrenIds).toEqual(["3", "4"]);
     });
 
-    test("updateNodeMap correctly updates the node map", () => {
-        const val1 = new Map<string, TreeNode>();
-        val1.set("1", generateTree(5, 10)[0] as TreeNode);
-        act(() => {
-            treeViewStore.getState().updateNodeMap(val1);
-        });
-
-        expect(treeViewStore.getState().nodeMap).toEqual(val1);
-
-        const val2 = new Map<string, TreeNode>();
-        val2.set("2", {} as TreeNode);
-        act(() => {
-            treeViewStore.getState().updateNodeMap(val2);
-        });
-
-        expect(treeViewStore.getState().nodeMap).toEqual(val2);
-    });
-
-    // Testing updateChildToParentMap
-    test("updateChildToParentMap correctly updates the child to parent map", () => {
-        const val1 = new Map<string, string>();
-        val1.set("1", "2");
-        act(() => {
-            treeViewStore.getState().updateChildToParentMap(val1);
-        });
-
-        expect(treeViewStore.getState().childToParentMap).toEqual(val1);
-
-        const val2 = new Map<string, string>();
-        val2.set("3", "4");
-        act(() => {
-            treeViewStore.getState().updateChildToParentMap(val2);
-        });
-
-        expect(treeViewStore.getState().childToParentMap).toEqual(val2);
-    });
-
-    // Testing updateSearchText
-    test("updateSearchText correctly updates the search text", () => {
-        const val1 = "hello";
-        act(() => {
-            treeViewStore.getState().updateSearchText(val1);
-        });
-
-        expect(treeViewStore.getState().searchText).toEqual(val1);
-
-        const val2 = "world";
-        act(() => {
-            treeViewStore.getState().updateSearchText(val2);
-        });
-
-        expect(treeViewStore.getState().searchText).toEqual(val2);
-    });
-
-    // Testing updateSearchKeys
-    test("updateSearchKeys correctly updates the search keys", () => {
-        const val1 = ["hello"];
-        act(() => {
-            treeViewStore.getState().updateSearchKeys(val1);
-        });
-
-        expect(treeViewStore.getState().searchKeys).toEqual(val1);
-
-        const val2 = ["world"];
-        act(() => {
-            treeViewStore.getState().updateSearchKeys(val2);
-        });
-
-        expect(treeViewStore.getState().searchKeys).toEqual(val2);
-    });
-
-    // Testing updateInnerMostChildrenIds
-    test("updateInnerMostChildrenIds correctly updates the inner most children ids", () => {
-        const val1 = ["1", "2"];
-        act(() => {
-            treeViewStore.getState().updateInnerMostChildrenIds(val1);
-        });
-
-        expect(treeViewStore.getState().innerMostChildrenIds).toEqual(val1);
-
-        const val2 = ["3", "4"];
-        act(() => {
-            treeViewStore.getState().updateInnerMostChildrenIds(val2);
-        });
-
-        expect(treeViewStore.getState().innerMostChildrenIds).toEqual(val2);
-    });
-
-    // Testing cleanUpTreeViewStore
-    test("cleanUpTreeViewStore correctly cleans up the store", () => {
+    it("given a store with data, when cleaning up, then all state resets to defaults", () => {
         act(() => {
             treeViewStore.getState().cleanUpTreeViewStore();
         });
@@ -206,5 +170,26 @@ describe("TreeViewStore", () => {
         expect(treeViewStore.getState().searchText).toEqual("");
         expect(treeViewStore.getState().searchKeys).toEqual([""]);
         expect(treeViewStore.getState().innerMostChildrenIds).toEqual([]);
+    });
+
+    it("given an existing store, when deleting it, then next access creates fresh store", () => {
+        const tempId = "temp-store-for-delete-test";
+        const store = getTreeViewStore<string>(tempId);
+
+        // Set some state to verify it's a real store
+        act(() => {
+            store.getState().updateChecked(new Set(["x"]));
+        });
+        expect(store.getState().checked.has("x")).toBe(true);
+
+        // Delete the store
+        deleteTreeViewStore(tempId);
+
+        // Next access should create a fresh store with default state
+        const freshStore = getTreeViewStore<string>(tempId);
+        expect(freshStore.getState().checked.size).toBe(0);
+
+        // Clean up
+        deleteTreeViewStore(tempId);
     });
 });

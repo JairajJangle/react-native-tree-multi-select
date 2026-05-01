@@ -81,8 +81,8 @@ describe("recalculateCheckedStates", () => {
     // =====================
     // BASIC PARENT RECALCULATION
     // =====================
-    describe("parent state recalculation after move", () => {
-        it("makes fully-checked parent indeterminate when unchecked node is moved inside", () => {
+    describe("given a fully-checked parent", () => {
+        it("when an unchecked node is moved inside, then parent becomes indeterminate", () => {
             // Check all children of 2 → parent 2 becomes checked
             act(() => {
                 toggleCheckboxes(STORE_ID, ["2.1", "2.2"], true);
@@ -105,7 +105,33 @@ describe("recalculateCheckedStates", () => {
             expect(checked.has("3")).toBe(false);
         });
 
-        it("makes indeterminate parent unchecked when only checked child is moved out", () => {
+        it("when all checked children are moved out, then parent becomes unchecked leaf", () => {
+            // Check all of 2's children → 2 is checked
+            act(() => {
+                toggleCheckboxes(STORE_ID, ["2.1", "2.2"], true);
+            });
+
+            expect(store.getState().checked.has("2")).toBe(true);
+
+            // Move 2.1 out
+            simulateDragDrop("2.1", "3", "below");
+
+            // 2 has [2.2✓] → still checked
+            expect(store.getState().checked.has("2")).toBe(true);
+
+            // Move 2.2 out
+            simulateDragDrop("2.2", "3", "below");
+
+            // 2 has no children → children is undefined → it's a leaf
+            const { checked, indeterminate, nodeMap } = store.getState();
+            expect(nodeMap.get("2")?.children).toBeUndefined();
+            expect(checked.has("2")).toBe(true); // Keeps its checked state as a leaf
+            expect(indeterminate.has("2")).toBe(false); // Must NOT be indeterminate as a leaf
+        });
+    });
+
+    describe("given an indeterminate parent", () => {
+        it("when its only checked child is moved out, then parent becomes unchecked", () => {
             // Check 1.1.1 → 1.1 becomes indeterminate, 1 becomes indeterminate
             act(() => {
                 toggleCheckboxes(STORE_ID, ["1.1.1"], true);
@@ -129,7 +155,7 @@ describe("recalculateCheckedStates", () => {
             expect(checked.has("1.1.1")).toBe(true);
         });
 
-        it("makes parent checked when all children become checked after move", () => {
+        it("when its unchecked child is moved out leaving only checked children, then parent becomes checked", () => {
             // Check 2.1 only → 2 becomes indeterminate
             act(() => {
                 toggleCheckboxes(STORE_ID, ["2.1"], true);
@@ -150,8 +176,8 @@ describe("recalculateCheckedStates", () => {
     // =====================
     // CROSS-BRANCH MOVES
     // =====================
-    describe("cross-branch moves update both old and new parent chains", () => {
-        it("updates both source and target parent chains", () => {
+    describe("given a cross-branch move", () => {
+        it("when a checked leaf moves to an unchecked branch, then both source and target parent chains update", () => {
             // Check all of node 1's subtree → 1 is fully checked
             act(() => {
                 toggleCheckboxes(STORE_ID, ["1"], true);
@@ -176,7 +202,7 @@ describe("recalculateCheckedStates", () => {
             expect(checked.has("1.2")).toBe(true);
         });
 
-        it("moves checked subtree between branches and recalculates grandparents", () => {
+        it("when a checked subtree moves to another branch, then grandparents recalculate correctly", () => {
             // Check 1.1 (and its children via propagation) → 1.1 checked, 1 indeterminate
             act(() => {
                 toggleCheckboxes(STORE_ID, ["1.1"], true);
@@ -210,15 +236,8 @@ describe("recalculateCheckedStates", () => {
     // =====================
     // LEAF INDETERMINATE CLEANUP
     // =====================
-    describe("leaf node indeterminate cleanup", () => {
-        it("clears indeterminate from a node that loses all its children", () => {
-            // Make 2 have only 1 child: remove 2.2 first
-            simulateDragDrop("2.2", "3", "below");
-
-            // Now node 2 has one child [2.1]. Check 2.1 → 2 becomes checked.
-            // Then uncheck 2.1 → 2 becomes unchecked.
-            // But let's create indeterminate some other way...
-
+    describe("given a node that loses all its children", () => {
+        it("when its only child is moved out, then indeterminate is cleared and it becomes a leaf", () => {
             // Reset and use a tree where node has 1 indeterminate child
             store.getState().cleanUpTreeViewStore();
             const tree: TreeNode<string>[] = [
@@ -271,8 +290,8 @@ describe("recalculateCheckedStates", () => {
     // =====================
     // SELECTION PROPAGATION MODES
     // =====================
-    describe("respects selectionPropagation settings", () => {
-        it("does not recalculate when toParents is false", () => {
+    describe("given selectionPropagation settings", () => {
+        it("when toParents is false, then recalculation is skipped and parent stays checked", () => {
             // Set toParents = false
             act(() => {
                 store.getState().setSelectionPropagation({
@@ -300,7 +319,7 @@ describe("recalculateCheckedStates", () => {
             expect(checked.has("3")).toBe(false);
         });
 
-        it("recalculates correctly with default selectionPropagation (both true)", () => {
+        it("when both propagation directions are true, then parent becomes indeterminate after unchecked node is added", () => {
             // Default is toChildren: true, toParents: true
             // Check all of 2's children
             act(() => {
@@ -322,8 +341,8 @@ describe("recalculateCheckedStates", () => {
     // =====================
     // COMPLEX MULTI-LEVEL SCENARIOS
     // =====================
-    describe("complex multi-level recalculation", () => {
-        it("recalculates entire ancestor chain when deeply nested node is moved", () => {
+    describe("given a deeply nested tree with checked nodes", () => {
+        it("when a deeply nested checked node is moved, then the entire ancestor chain recalculates", () => {
             // Check 1.1.1 → 1.1 indeterminate, 1 indeterminate
             act(() => {
                 toggleCheckboxes(STORE_ID, ["1.1.1"], true);
@@ -355,7 +374,7 @@ describe("recalculateCheckedStates", () => {
             expect(indeterminate.has("2")).toBe(true);
         });
 
-        it("handles chain of moves maintaining consistency", () => {
+        it("when a chain of moves occurs, then consistency is maintained after each step", () => {
             // Check 1.1.1 and 2.1
             act(() => {
                 toggleCheckboxes(STORE_ID, ["1.1.1", "2.1"], true);
@@ -384,7 +403,7 @@ describe("recalculateCheckedStates", () => {
             expect(indeterminate.has("2")).toBe(false);
         });
 
-        it("handles moving a checked node into a fully unchecked subtree", () => {
+        it("when a checked node is moved into a fully unchecked subtree, then ancestors become indeterminate", () => {
             // Check node 3
             act(() => {
                 toggleCheckboxes(STORE_ID, ["3"], true);
@@ -403,37 +422,14 @@ describe("recalculateCheckedStates", () => {
             expect(indeterminate.has("1")).toBe(true);
             expect(checked.has("1")).toBe(false);
         });
-
-        it("handles moving all checked children out of parent → parent becomes unchecked", () => {
-            // Check all of 2's children → 2 is checked
-            act(() => {
-                toggleCheckboxes(STORE_ID, ["2.1", "2.2"], true);
-            });
-
-            expect(store.getState().checked.has("2")).toBe(true);
-
-            // Move 2.1 out
-            simulateDragDrop("2.1", "3", "below");
-
-            // 2 has [2.2✓] → still checked
-            expect(store.getState().checked.has("2")).toBe(true);
-
-            // Move 2.2 out
-            simulateDragDrop("2.2", "3", "below");
-
-            // 2 has no children → children is undefined → it's a leaf
-            const { checked, indeterminate, nodeMap } = store.getState();
-            expect(nodeMap.get("2")?.children).toBeUndefined();
-            expect(checked.has("2")).toBe(true); // Keeps its checked state as a leaf
-            expect(indeterminate.has("2")).toBe(false); // Must NOT be indeterminate as a leaf
-        });
     });
 
     // =====================
     // EDGE CASES
     // =====================
-    describe("edge cases", () => {
-        it("does not crash on empty tree", () => {
+    describe("given edge case trees", () => {
+        it("when recalculating, then no corruption occurs for empty tree, single node, or leaf nodes", () => {
+            // --- Empty tree ---
             store.getState().cleanUpTreeViewStore();
             act(() => {
                 store.getState().updateInitialTreeViewData([]);
@@ -445,12 +441,10 @@ describe("recalculateCheckedStates", () => {
                 recalculateCheckedStates<string>(STORE_ID);
             });
 
-            const { checked, indeterminate } = store.getState();
-            expect(checked.size).toBe(0);
-            expect(indeterminate.size).toBe(0);
-        });
+            expect(store.getState().checked.size).toBe(0);
+            expect(store.getState().indeterminate.size).toBe(0);
 
-        it("handles tree with single node correctly", () => {
+            // --- Single node tree ---
             store.getState().cleanUpTreeViewStore();
             const singleTree: TreeNode<string>[] = [{ id: "only", name: "only" }];
             act(() => {
@@ -466,9 +460,15 @@ describe("recalculateCheckedStates", () => {
             // Single checked leaf should remain checked
             expect(store.getState().checked.has("only")).toBe(true);
             expect(store.getState().indeterminate.has("only")).toBe(false);
-        });
 
-        it("does not affect leaf node checked states", () => {
+            // --- Leaf node checked states preserved ---
+            store.getState().cleanUpTreeViewStore();
+            const tree = makeTree();
+            act(() => {
+                store.getState().updateInitialTreeViewData(tree);
+                initializeNodeMaps(STORE_ID, tree);
+            });
+
             // Check some leaf nodes
             act(() => {
                 toggleCheckboxes(STORE_ID, ["1.1.1", "2.2", "3"], true);
@@ -490,8 +490,10 @@ describe("recalculateCheckedStates", () => {
             expect(checked.has("1.2")).toBe(false);
             expect(checked.has("2.1")).toBe(false);
         });
+    });
 
-        it("is idempotent - calling twice produces same result", () => {
+    describe("given unchanged structure", () => {
+        it("when recalculating, then state is identical", () => {
             act(() => {
                 toggleCheckboxes(STORE_ID, ["1.1.1", "2.1"], true);
             });
@@ -502,7 +504,7 @@ describe("recalculateCheckedStates", () => {
             const checked1Arr = Array.from(checked1).sort();
             const indeterminate1Arr = Array.from(indeterminate1).sort();
 
-            // Call recalculate again
+            // Call recalculate again - idempotency check
             act(() => {
                 recalculateCheckedStates<string>(STORE_ID);
             });
@@ -510,9 +512,15 @@ describe("recalculateCheckedStates", () => {
             const { checked: checked2, indeterminate: indeterminate2 } = store.getState();
             expect(Array.from(checked2).sort()).toEqual(checked1Arr);
             expect(Array.from(indeterminate2).sort()).toEqual(indeterminate1Arr);
-        });
 
-        it("handles moving node to same parent (reorder) without state change", () => {
+            // Reset and test reorder within same parent
+            store.getState().cleanUpTreeViewStore();
+            const tree = makeTree();
+            act(() => {
+                store.getState().updateInitialTreeViewData(tree);
+                initializeNodeMaps(STORE_ID, tree);
+            });
+
             // Check 1.1.1
             act(() => {
                 toggleCheckboxes(STORE_ID, ["1.1.1"], true);
@@ -534,8 +542,8 @@ describe("recalculateCheckedStates", () => {
     // =====================
     // NUMERIC IDs
     // =====================
-    describe("numeric IDs", () => {
-        it("works with number-type IDs", () => {
+    describe("given a tree with numeric IDs", () => {
+        it("when an unchecked node is moved into a fully-checked parent, then parent becomes indeterminate", () => {
             const numStore = getTreeViewStore<number>("recalc-num-store");
             numStore.getState().cleanUpTreeViewStore();
 

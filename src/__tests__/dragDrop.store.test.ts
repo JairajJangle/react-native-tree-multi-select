@@ -43,151 +43,108 @@ function makeTree(): TreeNode<string>[] {
     ];
 }
 
-describe("Drag-and-drop store state", () => {
+describe("given the drag-and-drop store", () => {
     const store = getTreeViewStore<string>(STORE_ID);
 
     beforeEach(() => {
         store.getState().cleanUpTreeViewStore();
     });
 
-    // =====================
-    // draggedNodeId
-    // =====================
-    describe("draggedNodeId", () => {
-        it("starts as null", () => {
-            expect(store.getState().draggedNodeId).toBeNull();
+    it("when setting and clearing drag state, then draggedNodeId, invalidDragTargetIds, and cleanup all update correctly", () => {
+        // All fields start at defaults
+        expect(store.getState().draggedNodeId).toBeNull();
+        expect(store.getState().invalidDragTargetIds.size).toBe(0);
+
+        // Set draggedNodeId
+        act(() => {
+            store.getState().updateDraggedNodeId("1.1");
+        });
+        expect(store.getState().draggedNodeId).toBe("1.1");
+
+        // Reset draggedNodeId back to null
+        act(() => {
+            store.getState().updateDraggedNodeId(null);
+        });
+        expect(store.getState().draggedNodeId).toBeNull();
+
+        // Set invalidDragTargetIds
+        const ids = new Set(["1", "1.1", "1.1.1", "1.1.2", "1.2"]);
+        act(() => {
+            store.getState().updateInvalidDragTargetIds(ids);
+        });
+        expect(store.getState().invalidDragTargetIds).toEqual(ids);
+
+        // Reset invalidDragTargetIds
+        act(() => {
+            store.getState().updateInvalidDragTargetIds(new Set());
+        });
+        expect(store.getState().invalidDragTargetIds.size).toBe(0);
+
+        // Set all drag state then cleanUpTreeViewStore
+        act(() => {
+            store.getState().updateDraggedNodeId("1");
+            store.getState().updateInvalidDragTargetIds(new Set(["1", "1.1"]));
+            store.getState().updateDropTarget("2", "inside");
         });
 
-        it("updates to a node ID", () => {
-            act(() => {
-                store.getState().updateDraggedNodeId("1.1");
-            });
-            expect(store.getState().draggedNodeId).toBe("1.1");
+        expect(store.getState().draggedNodeId).toBe("1");
+        expect(store.getState().invalidDragTargetIds.size).toBe(2);
+        expect(store.getState().dropTargetNodeId).toBe("2");
+        expect(store.getState().dropPosition).toBe("inside");
+
+        act(() => {
+            store.getState().cleanUpTreeViewStore();
         });
 
-        it("resets back to null", () => {
-            act(() => {
-                store.getState().updateDraggedNodeId("1.1");
-            });
-            act(() => {
-                store.getState().updateDraggedNodeId(null);
-            });
-            expect(store.getState().draggedNodeId).toBeNull();
-        });
+        expect(store.getState().draggedNodeId).toBeNull();
+        expect(store.getState().invalidDragTargetIds.size).toBe(0);
+        expect(store.getState().dropTargetNodeId).toBeNull();
+        expect(store.getState().dropPosition).toBeNull();
     });
 
-    // =====================
-    // invalidDragTargetIds
-    // =====================
-    describe("invalidDragTargetIds", () => {
-        it("starts as empty set", () => {
-            expect(store.getState().invalidDragTargetIds.size).toBe(0);
+    it("when updating drop target position, then target and position update correctly through all transitions", () => {
+        // Starts null
+        expect(store.getState().dropTargetNodeId).toBeNull();
+        expect(store.getState().dropPosition).toBeNull();
+
+        // Set target with "above" position
+        act(() => {
+            store.getState().updateDropTarget("2.1", "above");
         });
+        expect(store.getState().dropTargetNodeId).toBe("2.1");
+        expect(store.getState().dropPosition).toBe("above");
 
-        it("updates with a set of IDs", () => {
-            const ids = new Set(["1", "1.1", "1.1.1", "1.1.2", "1.2"]);
-            act(() => {
-                store.getState().updateInvalidDragTargetIds(ids);
-            });
-            expect(store.getState().invalidDragTargetIds).toEqual(ids);
+        // Update to "inside" position on a different node
+        act(() => {
+            store.getState().updateDropTarget("1", "inside");
         });
+        expect(store.getState().dropTargetNodeId).toBe("1");
+        expect(store.getState().dropPosition).toBe("inside");
 
-        it("resets back to empty set", () => {
-            act(() => {
-                store.getState().updateInvalidDragTargetIds(new Set(["1"]));
-            });
-            act(() => {
-                store.getState().updateInvalidDragTargetIds(new Set());
-            });
-            expect(store.getState().invalidDragTargetIds.size).toBe(0);
+        // Update same node to "below" position
+        act(() => {
+            store.getState().updateDropTarget("1", "below");
         });
-    });
+        expect(store.getState().dropTargetNodeId).toBe("1");
+        expect(store.getState().dropPosition).toBe("below");
 
-    // =====================
-    // dropTarget state
-    // =====================
-    describe("dropTarget state", () => {
-        it("starts with null dropTargetNodeId and dropPosition", () => {
-            expect(store.getState().dropTargetNodeId).toBeNull();
-            expect(store.getState().dropPosition).toBeNull();
+        // Change to a completely different node
+        act(() => {
+            store.getState().updateDropTarget("2", "below");
         });
+        expect(store.getState().dropTargetNodeId).toBe("2");
+        expect(store.getState().dropPosition).toBe("below");
 
-        it("updates drop target with node ID and position", () => {
-            act(() => {
-                store.getState().updateDropTarget("2.1", "above");
-            });
-            expect(store.getState().dropTargetNodeId).toBe("2.1");
-            expect(store.getState().dropPosition).toBe("above");
+        // Clear drop target
+        act(() => {
+            store.getState().updateDropTarget(null, null);
         });
-
-        it("updates drop target to different positions", () => {
-            act(() => {
-                store.getState().updateDropTarget("1", "inside");
-            });
-            expect(store.getState().dropTargetNodeId).toBe("1");
-            expect(store.getState().dropPosition).toBe("inside");
-
-            act(() => {
-                store.getState().updateDropTarget("1", "below");
-            });
-            expect(store.getState().dropTargetNodeId).toBe("1");
-            expect(store.getState().dropPosition).toBe("below");
-        });
-
-        it("clears drop target when set to null", () => {
-            act(() => {
-                store.getState().updateDropTarget("1.1", "above");
-            });
-            expect(store.getState().dropTargetNodeId).toBe("1.1");
-
-            act(() => {
-                store.getState().updateDropTarget(null, null);
-            });
-            expect(store.getState().dropTargetNodeId).toBeNull();
-            expect(store.getState().dropPosition).toBeNull();
-        });
-
-        it("changes drop target to a different node", () => {
-            act(() => {
-                store.getState().updateDropTarget("1", "above");
-            });
-            act(() => {
-                store.getState().updateDropTarget("2", "below");
-            });
-            expect(store.getState().dropTargetNodeId).toBe("2");
-            expect(store.getState().dropPosition).toBe("below");
-        });
-    });
-
-    // =====================
-    // cleanUpTreeViewStore includes drag state
-    // =====================
-    describe("cleanUpTreeViewStore", () => {
-        it("resets all drag state on cleanup", () => {
-            act(() => {
-                store.getState().updateDraggedNodeId("1");
-                store.getState().updateInvalidDragTargetIds(new Set(["1", "1.1"]));
-                store.getState().updateDropTarget("2", "inside");
-            });
-
-            expect(store.getState().draggedNodeId).toBe("1");
-            expect(store.getState().invalidDragTargetIds.size).toBe(2);
-            expect(store.getState().dropTargetNodeId).toBe("2");
-            expect(store.getState().dropPosition).toBe("inside");
-
-            act(() => {
-                store.getState().cleanUpTreeViewStore();
-            });
-
-            expect(store.getState().draggedNodeId).toBeNull();
-            expect(store.getState().invalidDragTargetIds.size).toBe(0);
-            expect(store.getState().dropTargetNodeId).toBeNull();
-            expect(store.getState().dropPosition).toBeNull();
-        });
+        expect(store.getState().dropTargetNodeId).toBeNull();
+        expect(store.getState().dropPosition).toBeNull();
     });
 });
 
-describe("Drag-drop integration with checked/expanded state", () => {
+describe("given a tree with checked and expanded nodes", () => {
     const store = getTreeViewStore<string>(STORE_ID);
 
     beforeEach(() => {
@@ -199,7 +156,7 @@ describe("Drag-drop integration with checked/expanded state", () => {
         });
     });
 
-    it("preserves checked state after moveTreeNode + store update", () => {
+    it("when performing a drag-drop move, then both checked and expanded states are preserved", () => {
         // Check nodes 1.1.1 and 2.1
         act(() => {
             toggleCheckboxes(STORE_ID, ["1.1.1", "2.1"], true);
@@ -209,22 +166,20 @@ describe("Drag-drop integration with checked/expanded state", () => {
         expect(checkedBefore.has("1.1.1")).toBe(true);
         expect(checkedBefore.has("2.1")).toBe(true);
 
-        // Simulate a drag: move "3" above "1"
-        const currentData = store.getState().initialTreeViewData;
-        const newData = moveTreeNode(currentData, "3", "1", "above");
+        // Move "3" above "1"
+        const currentData1 = store.getState().initialTreeViewData;
+        const newData1 = moveTreeNode(currentData1, "3", "1", "above");
 
         act(() => {
-            store.getState().updateInitialTreeViewData(newData);
-            initializeNodeMaps(STORE_ID, newData);
+            store.getState().updateInitialTreeViewData(newData1);
+            initializeNodeMaps(STORE_ID, newData1);
         });
 
-        // Checked state should still be intact
+        // Checked state is still intact after move
         const { checked: checkedAfter } = store.getState();
         expect(checkedAfter.has("1.1.1")).toBe(true);
         expect(checkedAfter.has("2.1")).toBe(true);
-    });
 
-    it("preserves expanded state after moveTreeNode + store update", () => {
         // Expand nodes 1 and 2
         act(() => {
             store.getState().updateExpanded(new Set(["1", "2"]));
@@ -234,22 +189,22 @@ describe("Drag-drop integration with checked/expanded state", () => {
         expect(expandedBefore.has("1")).toBe(true);
         expect(expandedBefore.has("2")).toBe(true);
 
-        // Simulate a drag: move "1.2" inside "2"
-        const currentData = store.getState().initialTreeViewData;
-        const newData = moveTreeNode(currentData, "1.2", "2", "inside");
+        // Move "1.2" inside "2"
+        const currentData2 = store.getState().initialTreeViewData;
+        const newData2 = moveTreeNode(currentData2, "1.2", "2", "inside");
 
         act(() => {
-            store.getState().updateInitialTreeViewData(newData);
-            initializeNodeMaps(STORE_ID, newData);
+            store.getState().updateInitialTreeViewData(newData2);
+            initializeNodeMaps(STORE_ID, newData2);
         });
 
-        // Expanded state should still be intact
+        // Expanded state is still intact after move
         const { expanded: expandedAfter } = store.getState();
         expect(expandedAfter.has("1")).toBe(true);
         expect(expandedAfter.has("2")).toBe(true);
     });
 
-    it("updated tree structure is correct after store update", () => {
+    it("when moving a node inside another, then node maps reflect new structure", () => {
         const currentData = store.getState().initialTreeViewData;
         const newData = moveTreeNode(currentData, "2.1", "1.1", "inside");
 
@@ -269,8 +224,7 @@ describe("Drag-drop integration with checked/expanded state", () => {
         expect(node1_1?.children?.[0]?.id).toBe("2.1");
     });
 
-    it("invalid drag targets include self and all descendants", () => {
-        // Simulate dragging node "1" - descendants are 1.1, 1.1.1, 1.1.2, 1.2
+    it("when computing drag targets for a parent node, then self and all descendants are invalid", () => {
         const { nodeMap } = store.getState();
 
         // Build descendant set like useDragDrop does
@@ -308,8 +262,8 @@ describe("Drag-drop integration with checked/expanded state", () => {
         expect(invalidDragTargetIds.has("3")).toBe(false);
     });
 
-    it("full drag lifecycle with recalculation: checked parent becomes indeterminate after unchecked node moved in", () => {
-        // Check all of 2's children → 2 becomes checked
+    it("when performing a full drag lifecycle with recalculation, then checked parent becomes indeterminate and drag state clears", () => {
+        // Check all of 2's children so 2 becomes checked
         act(() => {
             toggleCheckboxes(STORE_ID, ["2.1", "2.2"], true);
         });
@@ -332,7 +286,7 @@ describe("Drag-drop integration with checked/expanded state", () => {
             recalculateCheckedStates<string>(STORE_ID);
         });
 
-        // 2 now has [3✗, 2.1✓, 2.2✓] → indeterminate
+        // 2 now has [3 unchecked, 2.1 checked, 2.2 checked] -> indeterminate
         const { checked, indeterminate } = store.getState();
         expect(checked.has("2")).toBe(false);
         expect(indeterminate.has("2")).toBe(true);
@@ -350,22 +304,21 @@ describe("Drag-drop integration with checked/expanded state", () => {
         expect(store.getState().draggedNodeId).toBeNull();
         expect(store.getState().invalidDragTargetIds.size).toBe(0);
         expect(store.getState().dropTargetNodeId).toBeNull();
-    });
 
-    it("full drag lifecycle: set drag state → move → clear drag state", () => {
-        // 1. Start drag on node "3"
+        // Also exercise a simple set-move-clear lifecycle
+        // 1. Start drag on node "3" (in its new location)
         act(() => {
             store.getState().updateDraggedNodeId("3");
             store.getState().updateInvalidDragTargetIds(new Set(["3"]));
         });
         expect(store.getState().draggedNodeId).toBe("3");
 
-        // 2. Perform the move: "3" above "1"
-        const currentData = store.getState().initialTreeViewData;
-        const newData = moveTreeNode(currentData, "3", "1", "above");
+        // 2. Move "3" above "1" (using the already-moved tree)
+        const currentData2 = store.getState().initialTreeViewData;
+        const newData2 = moveTreeNode(currentData2, "3", "1", "above");
         act(() => {
-            store.getState().updateInitialTreeViewData(newData);
-            initializeNodeMaps(STORE_ID, newData);
+            store.getState().updateInitialTreeViewData(newData2);
+            initializeNodeMaps(STORE_ID, newData2);
         });
 
         // Verify the move

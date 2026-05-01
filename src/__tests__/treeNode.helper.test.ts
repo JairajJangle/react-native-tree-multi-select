@@ -6,14 +6,15 @@ import { type TreeNode } from "../types/treeView.types";
 import { initializeNodeMaps } from "../helpers";
 import { testStoreId } from "../constants/tests.constants";
 
-describe("initNodeMap helper", () => {
-    const useTreeViewStore = getTreeViewStore(testStoreId);
-
+describe("initializeNodeMaps", () => {
     beforeEach(() => {
-        useTreeViewStore.setState(useTreeViewStore.getState(), true);
+        const store = getTreeViewStore(testStoreId);
+        store.setState(store.getState(), true);
     });
 
-    test("initializeNodeMaps correctly initializes the node maps", () => {
+    it("given a tree with string IDs, when initializing, then nodeMap and childToParentMap are built correctly", () => {
+        const useTreeViewStore = getTreeViewStore(testStoreId);
+
         const initialData: TreeNode[] = [
             {
                 id: "1",
@@ -46,15 +47,10 @@ describe("initNodeMap helper", () => {
         expect(childToParentMap.get("1.2.1")).toEqual("1.2");
         expect(childToParentMap.has("2")).toBeFalsy(); // Root node
     });
-});
-describe("initNodeMap helper [number id]", () => {
-    const useTreeViewStore = getTreeViewStore<number>(testStoreId);
 
-    beforeEach(() => {
-        useTreeViewStore.setState(useTreeViewStore.getState(), true);
-    });
+    it("given a tree with numeric IDs, when initializing, then nodeMap and childToParentMap are built correctly", () => {
+        const useTreeViewStore = getTreeViewStore<number>(testStoreId);
 
-    test("initializeNodeMaps correctly initializes the node maps", () => {
         const initialData: TreeNode<number>[] = [
             {
                 id: 1,

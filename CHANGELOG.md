@@ -1,3 +1,24 @@
+# [3.0.0-beta.4](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.3...v3.0.0-beta.4) (2026-05-01)
+
+
+### Bug Fixes
+
+* add descendant validation and JSDoc to moveTreeNode helper ([d519d39](https://github.com/JairajJangle/react-native-tree-multi-select/commit/d519d3987bfb9ef93a1701c174df07ddc625270c))
+* add missing generic type params to helper functions ([9c9836f](https://github.com/JairajJangle/react-native-tree-multi-select/commit/9c9836faa07a07f4e40a4c5a81677bb64714bba9))
+* drag-drop API fixes - opacity, enabled default, onDragCancel ([6fb6575](https://github.com/JairajJangle/react-native-tree-multi-select/commit/6fb65752e6cfe36231ee78cb5c2cf73d1cd4e3f4))
+* prevent store memory leak by deleting map entry on unmount ([b7b1037](https://github.com/JairajJangle/react-native-tree-multi-select/commit/b7b10374d48e46bc0dc0f6f799d1f43b8f5cce3a))
+
+
+### Features
+
+* add moveNode ref method for programmatic tree reordering ([9d220d2](https://github.com/JairajJangle/react-native-tree-multi-select/commit/9d220d2dd1e763b05e9260b1be3b4101d407b8da))
+* update drag-drop examples and add undo/redo demo ([90ddd60](https://github.com/JairajJangle/react-native-tree-multi-select/commit/90ddd607d60691b4d9bcf9bb7ba3ca5ea02370a2))
+
+
+### Contributors
+
+* @Claude Opus 4.6 (1M context)
+
 # [3.0.0-beta.3](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.2...v3.0.0-beta.3) (2026-03-29)
 
 

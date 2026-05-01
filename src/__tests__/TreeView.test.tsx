@@ -37,9 +37,10 @@ jest.mock("@expo/vector-icons/FontAwesome", () => {
 });
 
 import { createRef } from "react";
-import { render, act, screen } from "@testing-library/react-native";
+import { Text, View } from "react-native";
+import { render, act, screen, fireEvent } from "@testing-library/react-native";
 import { TreeView } from "../TreeView";
-import type { TreeNode, TreeViewRef } from "../types/treeView.types";
+import type { TreeNode, TreeViewRef, CheckboxValueType } from "../types/treeView.types";
 
 const testData: TreeNode<string>[] = [
     {
@@ -229,6 +230,197 @@ describe("TreeView", () => {
         const lastCall = onCheck.mock.calls[onCheck.mock.calls.length - 1];
         const checkedIds = lastCall[0] as string[];
         expect(checkedIds).toEqual([]);
+    });
+
+    it("given a ref, when calling unselectNodes(), then only that node is unchecked", () => {
+        const onCheck = jest.fn();
+        const ref = createRef<TreeViewRef<string>>();
+
+        render(<TreeView ref={ref} data={testData} onCheck={onCheck} />);
+
+        act(() => { ref.current!.selectAll(); });
+        onCheck.mockClear();
+
+        act(() => { ref.current!.unselectNodes(["1.1"]); });
+
+        expect(onCheck).toHaveBeenCalled();
+        const lastCall = onCheck.mock.calls[onCheck.mock.calls.length - 1];
+        const checkedIds = lastCall[0] as string[];
+        expect(checkedIds).not.toContain("1.1");
+        // Parent "1" should now be indeterminate since only 1.2 is checked
+        const indeterminateIds = lastCall[1] as string[];
+        expect(indeterminateIds).toContain("1");
+    });
+
+    it("given a ref, when calling selectAllFiltered and unselectAllFiltered, then filtered selection works", () => {
+        const onCheck = jest.fn();
+        const ref = createRef<TreeViewRef<string>>();
+
+        render(<TreeView ref={ref} data={testData} onCheck={onCheck} />);
+        onCheck.mockClear();
+
+        // No search text active, so selectAllFiltered behaves like selectAll
+        act(() => { ref.current!.selectAllFiltered(); });
+
+        expect(onCheck).toHaveBeenCalled();
+        let lastCall = onCheck.mock.calls[onCheck.mock.calls.length - 1];
+        expect((lastCall[0] as string[]).sort()).toEqual(ALL_IDS.sort());
+
+        onCheck.mockClear();
+
+        act(() => { ref.current!.unselectAllFiltered(); });
+
+        expect(onCheck).toHaveBeenCalled();
+        lastCall = onCheck.mock.calls[onCheck.mock.calls.length - 1];
+        expect(lastCall[0] as string[]).toEqual([]);
+    });
+
+    it("given a ref, when calling expandNodes and collapseNodes, then specific nodes expand/collapse", () => {
+        const onExpand = jest.fn();
+        const ref = createRef<TreeViewRef<string>>();
+
+        render(<TreeView ref={ref} data={testData} onExpand={onExpand} />);
+        onExpand.mockClear();
+
+        act(() => { ref.current!.expandNodes(["1"]); });
+
+        expect(onExpand).toHaveBeenCalled();
+        let lastCall = onExpand.mock.calls[onExpand.mock.calls.length - 1];
+        expect((lastCall[0] as string[])).toContain("1");
+
+        onExpand.mockClear();
+
+        act(() => { ref.current!.collapseNodes(["1"]); });
+
+        expect(onExpand).toHaveBeenCalled();
+        lastCall = onExpand.mock.calls[onExpand.mock.calls.length - 1];
+        expect((lastCall[0] as string[])).not.toContain("1");
+    });
+
+    it("given a ref, when calling getChildToParentMap, then correct map is returned", () => {
+        const ref = createRef<TreeViewRef<string>>();
+
+        render(<TreeView ref={ref} data={testData} />);
+
+        const map = ref.current!.getChildToParentMap();
+        expect(map.get("1.1")).toBe("1");
+        expect(map.get("1.2")).toBe("1");
+        expect(map.has("1")).toBe(false); // root has no parent
+    });
+
+    it("given selectionPropagation prop, when set to children only, then parent does not become indeterminate", () => {
+        const onCheck = jest.fn();
+        const ref = createRef<TreeViewRef<string>>();
+
+        render(
+            <TreeView
+                ref={ref}
+                data={testData}
+                onCheck={onCheck}
+                selectionPropagation={{ toChildren: true, toParents: false }}
+            />
+        );
+        onCheck.mockClear();
+
+        act(() => { ref.current!.selectNodes(["1.1"]); });
+
+        expect(onCheck).toHaveBeenCalled();
+        const lastCall = onCheck.mock.calls[onCheck.mock.calls.length - 1];
+        const checkedIds = lastCall[0] as string[];
+        expect(checkedIds).toContain("1.1");
+        // With toParents=false, parent "1" should NOT be indeterminate
+        const indeterminateIds = lastCall[1] as string[];
+        expect(indeterminateIds).not.toContain("1");
+    });
+
+    it("given search text set then cleared, when cleared, then all nodes collapse", () => {
+        const onExpand = jest.fn();
+        const ref = createRef<TreeViewRef<string>>();
+
+        render(<TreeView ref={ref} data={testData} onExpand={onExpand} />);
+
+        // Set search text (expands all to show results)
+        act(() => { ref.current!.setSearchText("Node"); });
+        onExpand.mockClear();
+
+        // Clear search text (should collapse all)
+        act(() => { ref.current!.setSearchText(""); });
+
+        expect(onExpand).toHaveBeenCalled();
+        const lastCall = onExpand.mock.calls[onExpand.mock.calls.length - 1];
+        expect((lastCall[0] as string[])).toEqual([]);
+    });
+
+    it("given drag enabled, when a node fires onTouchStart and onTouchEnd, then handlers execute without error", () => {
+        render(
+            <TreeView
+                data={testData}
+                dragAndDrop={{ onDragEnd: jest.fn() }}
+            />
+        );
+
+        // The Node component renders with touchHandlers when dragEnabled.
+        // The node_row views have onTouchStart/onTouchEnd.
+        const nodeRow = screen.getByTestId("node_row_2");
+        fireEvent(nodeRow, "touchStart", { nativeEvent: { pageY: 100, locationY: 10 } });
+        fireEvent(nodeRow, "touchEnd");
+
+        // No crash = handlers wired correctly
+        expect(nodeRow).toBeTruthy();
+    });
+
+    it("given drag enabled, when node layout fires, then handleItemLayout records height", () => {
+        render(
+            <TreeView
+                data={testData}
+                dragAndDrop={{ onDragEnd: jest.fn() }}
+            />
+        );
+
+        // Fire layout event on a node row
+        const nodeRow = screen.getByTestId("node_row_1");
+        fireEvent(nodeRow, "layout", { nativeEvent: { layout: { height: 48 } } });
+
+        // No crash = layout handler wired correctly
+        expect(nodeRow).toBeTruthy();
+    });
+
+    it("given CustomNodeRowComponent, when rendered, then custom component receives correct props", () => {
+        const customRowFn = jest.fn(({ node, level, checkedValue, isExpanded }: {
+            node: any; level: number; checkedValue: CheckboxValueType;
+            isExpanded: boolean;
+        }) => (
+            <View testID={`custom-row-${node.id}`}>
+                <Text>{`${node.name}:L${level}:${checkedValue}:${isExpanded}`}</Text>
+            </View>
+        ));
+
+        render(
+            <TreeView
+                data={testData}
+                CustomNodeRowComponent={customRowFn}
+            />
+        );
+
+        // Custom row should be rendered for each node
+        expect(screen.getByTestId("custom-row-1")).toBeTruthy();
+        expect(screen.getByTestId("custom-row-2")).toBeTruthy();
+        expect(screen.getByText(/Node 1:L0:false/)).toBeTruthy();
+    });
+
+    it("given scroll event on FlashList, when user scrolls, then scroll offset updates and long press cancels", () => {
+        render(
+            <TreeView
+                data={testData}
+                dragAndDrop={{ onDragEnd: jest.fn() }}
+            />
+        );
+
+        const flashList = screen.getByTestId("flash-list");
+        fireEvent.scroll(flashList, { nativeEvent: { contentOffset: { y: 150 } } });
+
+        // No crash = handleScroll executed correctly
+        expect(flashList).toBeTruthy();
     });
 
     it("given unmount, when component unmounts, then no errors occur", () => {

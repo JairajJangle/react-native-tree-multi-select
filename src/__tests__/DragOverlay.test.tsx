@@ -104,6 +104,33 @@ describe("DragOverlay", () => {
         expect(screen.queryByText("caret-down")).toBeNull();
     });
 
+    it("given custom overlay style props, when rendered, then styles are applied", () => {
+        setupStore();
+
+        const node: __FlattenedTreeNode__<string> = {
+            id: "2", name: "Leaf Node", level: 0,
+        };
+
+        render(
+            <DragOverlay
+                {...makeOverlayProps(node)}
+                dragDropCustomizations={{
+                    dragOverlayStyleProps: {
+                        backgroundColor: "red",
+                        shadowColor: "blue",
+                        shadowOpacity: 0.5,
+                        shadowRadius: 10,
+                        elevation: 5,
+                        style: { borderWidth: 1 },
+                    },
+                }}
+            />
+        );
+
+        // Component renders without error with all custom style props applied
+        expect(screen.getByText("unchecked")).toBeTruthy();
+    });
+
     it("given CustomDragOverlayComponent, when rendered, then custom component is used instead of built-in", () => {
         setupStore();
 

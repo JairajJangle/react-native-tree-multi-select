@@ -73,7 +73,7 @@ describe("useScrollToNode", () => {
         initStore();
     });
 
-    it("given an initialScrollNodeID, when first rendered with the node in the list, then setInitialScrollIndex is called with the correct index", () => {
+    it("given an initialScrollNodeID, when first rendered with the node in the list, then setInitialScrollIndex is called once and subsequent re-renders are skipped", () => {
         const store = getTreeViewStore<string>(STORE_ID);
         // Expand A so that A1 is visible at index 1
         act(() => {
@@ -82,15 +82,29 @@ describe("useScrollToNode", () => {
 
         const flatNodes = buildFlatNodes(new Set(["A"]));
         const setInitialScrollIndex = jest.fn();
-
-        renderHook(() => useScrollToNode<string>(makeProps({
+        const props = makeProps({
             flattenedFilteredNodes: flatNodes,
             setInitialScrollIndex,
             initialScrollNodeID: "A1",
-        })));
+        });
+
+        const { rerender } = renderHook(
+            (p) => useScrollToNode<string>(p),
+            { initialProps: props }
+        );
 
         // A1 should be at index 1 (A=0, A1=1)
         expect(setInitialScrollIndex).toHaveBeenCalledWith(1);
+
+        setInitialScrollIndex.mockClear();
+
+        // Re-render with a new flattenedNodes reference to trigger the useLayoutEffect again.
+        // initialScrollDone is true, so setInitialScrollIndex should NOT be called again.
+        act(() => {
+            rerender({ ...props, flattenedFilteredNodes: [...flatNodes] });
+        });
+
+        expect(setInitialScrollIndex).not.toHaveBeenCalled();
     });
 
     it("given no initialScrollNodeID, when first rendered, then setInitialScrollIndex is called with -1", () => {
@@ -127,13 +141,17 @@ describe("useScrollToNode", () => {
         expect(expanded.has("A1")).toBe(true);
     });
 
-    it("given a node that needs parent expansion, when scrollToNodeID is called with expandScrolledNode=false, then parent is expanded but not the node itself", () => {
+    it("given a non-root node, when scrollToNodeID is called with expandScrolledNode=false, then parent is expanded and scroll completes", () => {
         const store = getTreeViewStore<string>(STORE_ID);
-        const props = makeProps();
+        const flashListRef: MutableRefObject<any> = { current: { scrollToIndex: jest.fn() } };
+        const props = makeProps({ flashListRef });
 
-        renderHook(() => useScrollToNode<string>(props));
+        const { rerender } = renderHook(
+            (p) => useScrollToNode<string>(p),
+            { initialProps: props }
+        );
 
-        // scrollToNodeID with expandScrolledNode=false should expand the parent, not the node
+        // scrollToNodeID with expandScrolledNode=false: expand parent A, but not A1 itself
         act(() => {
             props.scrollToNodeHandlerRef.current!.scrollToNodeID({
                 nodeId: "A1",
@@ -142,11 +160,17 @@ describe("useScrollToNode", () => {
         });
 
         const expanded = store.getState().expanded;
-        // "A" (parent of A1) should be expanded since that's needed to show A1
         expect(expanded.has("A")).toBe(true);
-        // A1 itself should NOT be expanded (expandScrolledNode=false means "just make it visible, don't expand it")
-        // Actually the behavior is: _doNotExpandToShowChildren=true means the parent of A1 (= A) is expanded, not A1 itself.
-        // So A1 should NOT be in the expanded set from this operation.
+
+        // Re-render with updated flat nodes to complete the RENDERED milestone
+        const updatedFlatNodes = buildFlatNodes(expanded);
+        act(() => {
+            rerender({ ...props, flattenedFilteredNodes: updatedFlatNodes });
+        });
+
+        // childToParentMap.has("A1") is true (A1's parent is A), and A is expanded,
+        // so the scroll should complete
+        expect(flashListRef.current.scrollToIndex).toHaveBeenCalled();
     });
 
     it("given a node already in view, when scrollToNodeID is called, then flashListRef.scrollToIndex is called", () => {

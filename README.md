@@ -141,7 +141,6 @@ export function DragDropExample(){
       onCheck={(checked, indeterminate) => { /* ... */ }}
       onExpand={(expanded) => { /* ... */ }}
       dragAndDrop={{
-        enabled: true,
         onDragEnd: handleDragEnd,
       }}
     />
@@ -150,6 +149,8 @@ export function DragDropExample(){
 ```
 
 Long-press a node to start dragging. Drag over other nodes to see drop indicators. Drop above/below to reorder as siblings, or drop inside a parent node to nest it. The tree auto-scrolls when dragging near the edges.
+
+**Search + drag**: Drag-and-drop works while a search filter is active. You can drag visible (filtered) nodes and drop them onto other visible nodes. The move is applied to the full tree, so nodes hidden by the filter are not affected. After the drop, the search filter remains active and the view updates to reflect the new tree structure.
 
 For visual customizations (overlay styles, indicator colors, or fully custom components), see the [`dragAndDrop.customizations`](#dragdropcustomizationsid) option.
 
@@ -183,14 +184,20 @@ For visual customizations (overlay styles, indicator colors, or fully custom com
 
 | Property              | Type                                                         | Required | Description                                                  |
 | --------------------- | ------------------------------------------------------------ | -------- | ------------------------------------------------------------ |
-| `enabled`             | `boolean`                                                    | No       | Enable drag-and-drop reordering (default: false)             |
-| `onDragEnd`           | `(event: `[DragEndEvent](#dragendeventid--string)`<ID>) => void` | No       | Callback fired after a node is dropped at a new position     |
+| `enabled`             | `boolean`                                                    | No       | Enable drag-and-drop reordering (default: true when `dragAndDrop` is provided). Set to `false` to temporarily disable at runtime. |
+| `onDragStart`         | `(event: `[DragStartEvent](#dragstarteventid--string)`<ID>) => void` | No       | Callback fired when a drag operation begins                  |
+| `onDragEnd`           | `(event: `[DragEndEvent](#dragendeventid--string)`<ID>) => void` | No       | Callback fired after a node is successfully dropped at a new position |
+| `onDragCancel`        | `(event: `[DragCancelEvent](#dragcanceleventid--string)`<ID>) => void` | No       | Callback fired when a drag is cancelled without a successful drop |
 | `longPressDuration`   | `number`                                                     | No       | Long press duration in ms to start drag (default: 400)       |
 | `autoScrollThreshold` | `number`                                                     | No       | Distance from edge (px) to trigger auto-scroll (default: 60) |
 | `autoScrollSpeed`     | `number`                                                     | No       | Speed multiplier for auto-scroll (default: 1.0)              |
-| `dragOverlayOffset`   | `number`                                                     | No       | Overlay offset from the finger, in item-height units (default: -1, i.e. one row above finger) |
+| `dragOverlayOffset`   | `number`                                                     | No       | Overlay offset from the finger, in item-height units (default: -4, i.e. four rows above finger) |
 | `autoExpandDelay`     | `number`                                                     | No       | Delay in ms before auto-expanding a collapsed node during drag hover (default: 800) |
 | `customizations`      | [DragDropCustomizations](#dragdropcustomizationsid)`<ID>`    | No       | Customizations for drag-and-drop visuals (overlay, indicator, opacity) |
+| `canDrop`             | `(draggedNode, targetNode, position) => boolean`             | No       | Callback to determine if a node can be dropped on a specific target |
+| `maxDepth`            | `number`                                                     | No       | Maximum nesting depth allowed. Drops exceeding this are suppressed |
+| `canNodeHaveChildren` | `(node: TreeNode<ID>) => boolean`                            | No       | Callback to determine if a node can accept children          |
+| `canDrag`             | `(node: TreeNode<ID>) => boolean`                            | No       | Callback to determine if a node can be dragged (default: all nodes) |
 
 ##### Notes
 
@@ -201,7 +208,8 @@ For visual customizations (overlay styles, indicator colors, or fully custom com
   1. `CheckboxComponent`
   1. `BuiltInCheckBoxViewStyleProps`
   1. `ExpandCollapseIconComponent`
-  1. `ExpandCollapseTouchableComponent`.
+  1. `ExpandCollapseTouchableComponent`
+  1. `dragAndDrop.customizations.draggedNodeOpacity` / `invalidTargetOpacity` — the custom component receives `isDraggedNode`, `isInvalidDropTarget`, and `isDragging` props and is responsible for its own drag-state visuals.
   
 - ⚠️ If the tree view doesn't scroll if rendered in a complex nested scroll view/s then try setting the `renderScrollComponent` value in  `treeFlashListProps` to `ScrollView` from `react-native-gesture-handler`.
 
@@ -235,10 +243,11 @@ For visual customizations (overlay styles, indicator colors, or fully custom com
 | `expandNodes`           | `(ids: ID[]) => void`                          | Expands specified nodes    |
 | `collapseNodes`           | `(ids: ID[]) => void`                           | Collapses specified nodes    |
 | `selectNodes`           | `(ids: ID[]) => void`                         | Selects specified nodes    |
-| `unSelectNodes`           | `(ids: ID[]) => void`                         | Unselects specified nodes    |
+| `unselectNodes`           | `(ids: ID[]) => void`                         | Unselects specified nodes    |
 | `setSearchText`       | `(searchText: string, searchKeys?: string[]) => void` | Set the search text and optionally the search keys. Default search key is "name"<br /><br />Recommended to call this inside a debounced function if you find any performance issue otherwise. |
 | `scrollToNodeID` | `(params: `[ScrollToNodeParams](#scrolltonodeparams)`<ID>) => void;` | Scrolls the tree view to the node of the specified ID. |
 | `getChildToParentMap` | `() => Map<ID, ID>` | Get the child to parent tree view map. |
+| `moveNode`            | `(nodeId: ID, targetNodeId: ID, position: `[DropPosition](#dropposition)`) => void` | Programmatically move a node to a new position. Works like drag-and-drop without user interaction. Useful for undo/redo or external state management. |
 
 #### ScrollToNodeParams
 | Property             | Type      | Required | Description                                                  |
@@ -319,9 +328,34 @@ Type: `boolean` OR `"indeterminate"`
 | `isExpanded`   | `boolean`                               | Yes      | Whether the node is expanded or not                     |
 | `onCheck`      | `() => void`                            | Yes      | Function to be called when the checkbox is pressed      |
 | `onExpand`     | `() => void`                            | Yes      | Function to be called when the expand button is pressed |
-| `isDragTarget` | `boolean`                               | No       | Whether this node is the current drop target during drag |
+| `isInvalidDropTarget` | `boolean`                        | No       | Whether this node is an invalid drop target during drag  |
+| `isDropTarget` | `boolean`                               | No       | Whether this node is the current valid drop target       |
+| `dropPosition` | `DropPosition`                          | No       | The drop position if this node is the current drop target |
 | `isDragging`   | `boolean`                               | No       | Whether a drag operation is in progress                  |
 | `isDraggedNode`| `boolean`                               | No       | Whether this node is the one being dragged               |
+| `dragHandleProps`| [DragHandleProps](#draghandleprops)    | No       | Touch handlers to spread on a drag handle element. Only present when drag-and-drop is enabled. Attach to a specific View to make only that area initiate drag, or spread on the root for whole-row drag. |
+
+---
+
+#### DragHandleProps
+
+*Touch handlers to spread on a drag handle element within a custom node row.*
+
+| Property       | Type                | Required | Description                    |
+| -------------- | ------------------- | -------- | ------------------------------ |
+| `onTouchStart` | `(e: any) => void`  | Yes      | Touch start handler for drag   |
+| `onTouchEnd`   | `() => void`        | Yes      | Touch end handler              |
+| `onTouchCancel`| `() => void`        | Yes      | Touch cancel handler           |
+
+---
+
+#### DragStartEvent`<ID = string>`
+
+*The event object passed to the `onDragStart` callback when a drag begins.*
+
+| Property        | Type                                    | Description                                                  |
+| --------------- | --------------------------------------- | ------------------------------------------------------------ |
+| `draggedNodeId` | `ID`                                    | The id of the node being dragged                             |
 
 ---
 
@@ -336,6 +370,14 @@ Type: `boolean` OR `"indeterminate"`
 | `position`      | [DropPosition](#dropposition)           | Where relative to the target: `above`/`below` = sibling, `inside` = child |
 | `newTreeData`   | `TreeNode<ID>[]`                        | The reordered tree data after the move                       |
 
+#### DragCancelEvent`<ID = string>`
+
+*The event object passed to the `onDragCancel` callback when a drag is cancelled without a successful drop.*
+
+| Property        | Type                                    | Description                                                  |
+| --------------- | --------------------------------------- | ------------------------------------------------------------ |
+| `draggedNodeId` | `ID`                                    | The id of the node that was being dragged                    |
+
 #### DropPosition
 
 Type: `"above"` | `"below"` | `"inside"`
@@ -348,7 +390,8 @@ Type: `"above"` | `"below"` | `"inside"`
 
 | Property                       | Type                                                                                  | Required | Description                                                       |
 | ------------------------------ | ------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------- |
-| `draggedNodeOpacity`           | `number`                                                                              | No       | Opacity of the dragged node and invalid targets (default: 0.3)    |
+| `draggedNodeOpacity`           | `number`                                                                              | No       | Opacity of the node being dragged (default: 0.3)                  |
+| `invalidTargetOpacity`         | `number`                                                                              | No       | Opacity of invalid drop targets during drag (default: 0.3)        |
 | `dropIndicatorStyleProps`      | [DropIndicatorStyleProps](#dropindicatorstyleprops)                                    | No       | Style props for the built-in drop indicator                       |
 | `dragOverlayStyleProps`        | [DragOverlayStyleProps](#dragoverlaystyleprops)                                       | No       | Style props for the drag overlay (lifted node ghost)              |
 | `CustomDropIndicatorComponent` | `ComponentType<`[DropIndicatorComponentProps](#dropindicatorcomponentprops)`>`         | No       | Fully custom drop indicator component                             |
@@ -389,9 +432,11 @@ Type: `"above"` | `"below"` | `"inside"`
 
 *Props passed to a custom drop indicator component (when using `CustomDropIndicatorComponent`).*
 
-| Property   | Type                          | Required | Description                                                  |
-| ---------- | ----------------------------- | -------- | ------------------------------------------------------------ |
-| `position` | [DropPosition](#dropposition) | Yes      | Whether the indicator is above, below, or inside the target  |
+| Property                 | Type                          | Required | Description                                                  |
+| ------------------------ | ----------------------------- | -------- | ------------------------------------------------------------ |
+| `position`               | [DropPosition](#dropposition) | Yes      | Whether the indicator is above, below, or inside the target  |
+| `level`                  | `number`                      | Yes      | The nesting level of the target node (useful for indenting)  |
+| `indentationMultiplier`  | `number`                      | Yes      | Pixels per nesting level                                     |
 
 ---
 
@@ -399,10 +444,11 @@ Type: `"above"` | `"below"` | `"inside"`
 
 *Props passed to a custom drag overlay component (when using `CustomDragOverlayComponent`).*
 
-| Property | Type            | Required | Description                    |
-| -------- | --------------- | -------- | ------------------------------ |
-| `node`   | `TreeNode<ID>`  | Yes      | The node being dragged         |
-| `level`  | `number`        | Yes      | The nesting level of the node  |
+| Property       | Type                                      | Required | Description                              |
+| -------------- | ----------------------------------------- | -------- | ---------------------------------------- |
+| `node`         | `TreeNode<ID>`                            | Yes      | The node being dragged                   |
+| `level`        | `number`                                  | Yes      | The nesting level of the node            |
+| `checkedValue` | [CheckboxValueType](#checkboxvaluetype)   | Yes      | The current checkbox value of the node   |
 
 ---
 

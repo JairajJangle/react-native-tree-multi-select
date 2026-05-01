@@ -1,6 +1,7 @@
+import { create, type StoreApi, type UseBoundStore } from "zustand";
+
 import type { SelectionPropagation, TreeNode } from "../types/treeView.types";
 import type { DropPosition } from "../types/dragDrop.types";
-import { create, type StoreApi, type UseBoundStore } from "zustand";
 
 export type TreeViewState<ID> = {
     // Store ids of checked tree nodes

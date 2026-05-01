@@ -15,7 +15,6 @@ import {
 import { FlashList } from "@shopify/flash-list";
 
 import type {
-    CheckboxValueType,
     __FlattenedTreeNode__,
     DropIndicatorStyleProps,
     NodeListProps,
@@ -27,6 +26,7 @@ import { useTreeViewStore } from "../store/treeView.store";
 import {
     getFilteredTreeData,
     getFlattenedTreeData,
+    getCheckboxValue,
     getInnerMostChildrenIdsInTree,
     handleToggleExpand,
     toggleCheckboxes
@@ -295,19 +295,6 @@ function HeaderFooterView() {
 }
 
 
-function getValue(
-    isChecked: boolean,
-    isIndeterminate: boolean
-): CheckboxValueType {
-    if (isIndeterminate) {
-        return "indeterminate";
-    } else if (isChecked) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
 const Node = typedMemo(_Node);
 function _Node<ID>(props: NodeProps<ID>) {
     const {
@@ -344,7 +331,7 @@ function _Node<ID>(props: NodeProps<ID>) {
     } = useTreeViewStore<ID>(storeId)(useShallow(
         state => ({
             isExpanded: state.expanded.has(node.id),
-            value: getValue(
+            value: getCheckboxValue(
                 state.checked.has(node.id),
                 state.indeterminate.has(node.id)
             ),

@@ -47,6 +47,8 @@ Make sure to follow the native-related installation instructions for these depen
 - 🔀 **Drag-and-Drop**: Long-press to drag nodes and reorder or nest them anywhere in the tree.
 - 💻 **Cross-Platform**: Works seamlessly across iOS, Android, and web (with React Native Web).
 
+> **Note**: Drag-and-drop is currently supported on iOS and Android only. Web support for drag-and-drop is a work in progress.
+
 ## Usage
 
 ```tsx

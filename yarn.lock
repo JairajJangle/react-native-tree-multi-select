@@ -4224,23 +4224,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/jest-native@npm:^5.4.3":
-  version: 5.4.3
-  resolution: "@testing-library/jest-native@npm:5.4.3"
-  dependencies:
-    chalk: "npm:^4.1.2"
-    jest-diff: "npm:^29.0.1"
-    jest-matcher-utils: "npm:^29.0.1"
-    pretty-format: "npm:^29.0.3"
-    redent: "npm:^3.0.0"
-  peerDependencies:
-    react: ">=16.0.0"
-    react-native: ">=0.59"
-    react-test-renderer: ">=16.0.0"
-  checksum: 10c0/9315989dc0377a778f7ec9317b98c1dab9a7e2ebe0ca20a5c75f9dba3a4b486c02452b4399dd1aeef9ebf0007247594c6357f62089f095fde5280ce0344f5e65
-  languageName: node
-  linkType: hard
-
 "@testing-library/react-native@npm:^12.9.0":
   version: 12.9.0
   resolution: "@testing-library/react-native@npm:12.9.0"
@@ -9795,7 +9778,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-diff@npm:^29.0.1, jest-diff@npm:^29.7.0":
+"jest-diff@npm:^29.7.0":
   version: 29.7.0
   resolution: "jest-diff@npm:29.7.0"
   dependencies:
@@ -9883,7 +9866,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-matcher-utils@npm:^29.0.1, jest-matcher-utils@npm:^29.7.0":
+"jest-matcher-utils@npm:^29.7.0":
   version: 29.7.0
   resolution: "jest-matcher-utils@npm:29.7.0"
   dependencies:
@@ -10830,10 +10813,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:^4.15.0, lodash@npm:^4.17.21, lodash@npm:^4.17.23, lodash@npm:^4.17.4":
-  version: 4.17.23
-  resolution: "lodash@npm:4.17.23"
-  checksum: 10c0/1264a90469f5bb95d4739c43eb6277d15b6d9e186df4ac68c3620443160fc669e2f14c11e7d8b2ccf078b81d06147c01a8ccced9aab9f9f63d50dcf8cace6bf6
+"lodash@npm:^4.15.0, lodash@npm:^4.17.21, lodash@npm:^4.17.4, lodash@npm:^4.18.1":
+  version: 4.18.1
+  resolution: "lodash@npm:4.18.1"
+  checksum: 10c0/757228fc68805c59789e82185135cf85f05d0b2d3d54631d680ca79ec21944ec8314d4533639a14b8bcfbd97a517e78960933041a5af17ecb693ec6eecb99a27
   languageName: node
   linkType: hard
 
@@ -13159,7 +13142,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pretty-format@npm:^29.0.0, pretty-format@npm:^29.0.3, pretty-format@npm:^29.7.0":
+"pretty-format@npm:^29.0.0, pretty-format@npm:^29.7.0":
   version: 29.7.0
   resolution: "pretty-format@npm:29.7.0"
   dependencies:
@@ -13614,7 +13597,7 @@ __metadata:
     babel-plugin-react-compiler: "npm:^1.0.0"
     expo: "npm:~53.0.26"
     expo-status-bar: "npm:~2.2.3"
-    lodash: "npm:^4.17.23"
+    lodash: "npm:^4.18.1"
     react: "npm:19.0.0"
     react-dom: "npm:19.0.0"
     react-native: "npm:0.79.7"
@@ -13644,7 +13627,6 @@ __metadata:
     "@semantic-release/github": "npm:^12.0.5"
     "@semantic-release/npm": "npm:^13.1.4"
     "@shopify/flash-list": "npm:1.x.x"
-    "@testing-library/jest-native": "npm:^5.4.3"
     "@testing-library/react-native": "npm:^12.9.0"
     "@types/color": "npm:^3.0.6"
     "@types/jest": "npm:^29.5.14"

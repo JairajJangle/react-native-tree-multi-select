@@ -498,4 +498,43 @@ describe("toggleCheckboxes", () => {
         expect(checked3).toEqual(new Set());
         expect(indeterminate3).toEqual(new Set());
     });
+
+    it("given inconsistent nodeMap, when toggling a node whose children are missing from nodeMap, then the guard skips gracefully", () => {
+        // Manually inject a node that references children not in nodeMap
+        const store = useTreeViewStore;
+        const nodeMap = new Map(store.getState().nodeMap);
+        // Add a fake parent whose child "ghost" doesn't exist in nodeMap
+        nodeMap.set("fake-parent" as any, { id: "fake-parent", name: "Fake", children: [{ id: "ghost", name: "Ghost" }] } as any);
+        act(() => {
+            store.getState().updateNodeMap(nodeMap as any);
+        });
+
+        // Toggle the fake parent — updateChildrenIteratively will try to find "ghost" in nodeMap
+        act(() => {
+            toggleCheckboxes(testStoreId, ["fake-parent" as any], true);
+        });
+
+        // The guard `if (!node) continue` should have skipped "ghost" without crashing
+        const { checked } = store.getState();
+        expect(checked.has("fake-parent" as any)).toBe(true);
+    });
+
+    it("given a childToParentMap pointing to a childless node, when toggling propagates to parents, then the guard skips gracefully", () => {
+        const store = useTreeViewStore;
+        const childToParentMap = new Map(store.getState().childToParentMap);
+        // Make a leaf node ("3") appear as a parent of a checked node
+        childToParentMap.set("1.1.1" as any, "3" as any);
+        act(() => {
+            store.getState().updateChildToParentMap(childToParentMap as any);
+        });
+
+        // Toggle 1.1.1 — parent propagation walks up to "3" which has no children
+        act(() => {
+            toggleCheckboxes(testStoreId, ["1.1.1"], true);
+        });
+
+        // The guard `if (!node?.children?.length) return` in updateNodeState should have skipped "3"
+        const { checked } = store.getState();
+        expect(checked.has("1.1.1")).toBe(true);
+    });
 });

@@ -579,4 +579,24 @@ describe("recalculateCheckedStates", () => {
             expect(numStore.getState().indeterminate.has(1)).toBe(true);
         });
     });
+
+    describe("given inconsistent nodeMap", () => {
+        it("when a parent node in nodeMap has no children, then the guard skips it during recalculation", () => {
+            // Inject a node into nodeMap that claims to be a parent but has no children
+            const nodeMap = new Map(store.getState().nodeMap);
+            nodeMap.set("orphan", { id: "orphan", name: "Orphan" } as TreeNode<string>);
+            act(() => {
+                store.getState().updateNodeMap(nodeMap);
+            });
+
+            // Recalculate — the guard `if (!node?.children?.length) continue` should skip "orphan"
+            act(() => {
+                recalculateCheckedStates<string>(STORE_ID);
+            });
+
+            // Should not crash, existing states should be intact
+            expect(store.getState().checked.size).toBe(0);
+            expect(store.getState().indeterminate.size).toBe(0);
+        });
+    });
 });

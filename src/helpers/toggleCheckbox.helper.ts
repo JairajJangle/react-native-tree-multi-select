@@ -157,7 +157,6 @@ export function toggleCheckboxes<ID>(
         while (stack.length > 0) {
             const nodeId = stack.pop()!;
             const node = nodeMap.get(nodeId);
-            /* istanbul ignore next -- defensive: nodeMap is always consistent */
             if (!node) continue;
 
             if (childrenChecked) {
@@ -209,7 +208,6 @@ export function toggleCheckboxes<ID>(
      */
     function updateNodeState(nodeId: ID) {
         const node = nodeMap.get(nodeId);
-        /* istanbul ignore next -- defensive: nodesToUpdate only contains parent IDs */
         if (!node?.children?.length) return;
         updateParentCheckState(nodeId, node.children, tempChecked, tempIndeterminate);
     }
@@ -278,7 +276,7 @@ export function recalculateCheckedStates<ID>(storeId: string) {
     // Update each parent based on its children's current state
     for (const parentId of parentNodes) {
         const node = nodeMap.get(parentId);
-        /* istanbul ignore next -- defensive: parentNodes only contains nodes with children */
+        /* istanbul ignore next -- parentNodes is built from nodeMap entries with children above; same nodeMap, same iteration — unreachable unless nodeMap mutates between loops */
         if (!node?.children?.length) continue;
         updateParentCheckState(parentId, node.children, tempChecked, tempIndeterminate);
     }

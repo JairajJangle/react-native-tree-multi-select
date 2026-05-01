@@ -24,7 +24,9 @@ import {
 	collapseAll,
 	toggleCheckboxes,
 	expandNodes,
-	collapseNodes
+	collapseNodes,
+	recalculateCheckedStates,
+	moveTreeNode,
 } from "./helpers";
 import { getTreeViewStore, useTreeViewStore } from "./store/treeView.store";
 import usePreviousState from "./utils/usePreviousState";
@@ -35,7 +37,7 @@ import type {
 	ScrollToNodeHandlerRef,
 	ScrollToNodeParams
 } from "./hooks/useScrollToNode";
-import type { DragEndEvent } from "./types/dragDrop.types";
+import type { DragEndEvent, DropPosition } from "./types/dragDrop.types";
 import { fastIsEqual } from "fast-is-equal";
 
 function _innerTreeView<ID>(
@@ -133,7 +135,9 @@ function _innerTreeView<ID>(
 
 		scrollToNodeID,
 
-		getChildToParentMap
+		getChildToParentMap,
+
+		moveNode,
 	}));
 
 	const scrollToNodeHandlerRef = useRef<ScrollToNodeHandlerRef<ID>>(null);
@@ -193,6 +197,23 @@ function _innerTreeView<ID>(
 	function getChildToParentMap() {
 		const treeViewStore = getTreeViewStore<ID>(storeId);
 		return treeViewStore.getState().childToParentMap;
+	}
+
+	function moveNode(nodeId: ID, targetNodeId: ID, position: DropPosition) {
+		const store = getTreeViewStore<ID>(storeId);
+		const currentData = store.getState().initialTreeViewData;
+		const newData = moveTreeNode(currentData, nodeId, targetNodeId, position);
+
+		store.getState().updateInitialTreeViewData(newData);
+		initializeNodeMaps(storeId, newData);
+		recalculateCheckedStates<ID>(storeId);
+
+		if (position === "inside") {
+			expandNodes(storeId, [targetNodeId]);
+		}
+		expandNodes(storeId, [nodeId], true);
+
+		internalDataRef.current = newData;
 	}
 
 	const getIds = useCallback((node: TreeNode<ID>): ID[] => {

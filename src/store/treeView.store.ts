@@ -154,6 +154,10 @@ export function getTreeViewStore<ID>(id: string): UseBoundStore<StoreApi<TreeVie
     return typedStore<ID>().get(id)!;
 }
 
+export function deleteTreeViewStore(id: string) {
+    treeViewStores.delete(id);
+}
+
 export function useTreeViewStore<ID = string>(id: string) {
     return getTreeViewStore<ID>(id);
 }

@@ -27,6 +27,7 @@ import type {
 export * from "./TreeView";
 export * from "./components/CheckboxView";
 export { moveTreeNode } from "./helpers/moveTreeNode.helper";
+export { deleteTreeViewStore } from "./store/treeView.store";
 
 export type {
     TreeNode,

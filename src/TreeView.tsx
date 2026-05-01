@@ -28,7 +28,7 @@ import {
 	recalculateCheckedStates,
 	moveTreeNode,
 } from "./helpers";
-import { getTreeViewStore, useTreeViewStore } from "./store/treeView.store";
+import { deleteTreeViewStore, getTreeViewStore, useTreeViewStore } from "./store/treeView.store";
 import usePreviousState from "./utils/usePreviousState";
 import { useShallow } from "zustand/react/shallow";
 import useDeepCompareEffect from "./utils/useDeepCompareEffect";
@@ -258,8 +258,9 @@ function _innerTreeView<ID>(
 	useEffect(() => {
 		return () => {
 			cleanUpTreeViewStore();
+			deleteTreeViewStore(storeId);
 		};
-	}, [cleanUpTreeViewStore]);
+	}, [cleanUpTreeViewStore, storeId]);
 
 	return (
 		<NodeList

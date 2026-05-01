@@ -10,7 +10,7 @@ import {
   handleToggleExpand,
   initializeNodeMaps,
 } from "../helpers";
-import { act } from "react-test-renderer";
+import { act } from "@testing-library/react-native";
 import { testStoreId } from "../constants/tests.constants";
 
 describe("expand/collapse helpers", () => {

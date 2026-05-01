@@ -1,6 +1,6 @@
 jest.mock("zustand");
 
-import { act } from "react-test-renderer";
+import { act } from "@testing-library/react-native";
 import { getTreeViewStore } from "../store/treeView.store";
 import { initializeNodeMaps, toggleCheckboxes, recalculateCheckedStates } from "../helpers";
 import { moveTreeNode } from "../helpers/moveTreeNode.helper";

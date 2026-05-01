@@ -6,7 +6,7 @@ import {
     initializeNodeMaps,
     toggleCheckboxes
 } from "../helpers";
-import { act } from "react-test-renderer";
+import { act } from "@testing-library/react-native";
 import { tree3d2b } from "../__mocks__/generateTree.mock";
 import { testStoreId } from "../constants/tests.constants";
 

@@ -1,6 +1,6 @@
 jest.mock("zustand");
 
-import { act } from "react-test-renderer";
+import { act } from "@testing-library/react-native";
 import { deleteTreeViewStore, getTreeViewStore, useTreeViewStore } from "../store/treeView.store";
 import { createRandomNumberSet, generateTree } from "../__mocks__/generateTree.mock";
 import { type TreeNode } from "../types/treeView.types";

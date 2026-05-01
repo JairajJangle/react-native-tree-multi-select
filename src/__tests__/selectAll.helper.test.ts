@@ -11,7 +11,7 @@ import {
     unselectAllFiltered
 } from "../helpers";
 import { getTreeViewStore } from "../store/treeView.store";
-import { act } from "react-test-renderer";
+import { act } from "@testing-library/react-native";
 import { testStoreId } from "../constants/tests.constants";
 
 describe("given a tree initialized in the store", () => {

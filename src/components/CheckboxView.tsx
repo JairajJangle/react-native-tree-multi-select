@@ -13,6 +13,8 @@ import type {
 } from "../types/treeView.types";
 import { Checkbox } from "@futurejj/react-native-checkbox";
 
+// Intentionally narrow: only re-render when the checkbox value or label text changes.
+// Other props (callbacks, styles) are stable references from parent memoization.
 function arePropsEqual(
     prevProps: BuiltInCheckBoxViewProps,
     nextProps: BuiltInCheckBoxViewProps

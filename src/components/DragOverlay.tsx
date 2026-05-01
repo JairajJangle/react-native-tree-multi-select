@@ -1,4 +1,4 @@
-import { memo, type ComponentType } from "react";
+import { type ComponentType } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 
 import type {
@@ -12,6 +12,7 @@ import { CustomExpandCollapseIcon } from "./CustomExpandCollapseIcon";
 import { defaultIndentationMultiplier } from "../constants/treeView.constants";
 import { getTreeViewStore } from "../store/treeView.store";
 import { getCheckboxValue } from "../helpers";
+import { typedMemo } from "../utils/typedMemo";
 
 interface DragOverlayProps<ID> extends TreeItemCustomizations<ID> {
     storeId: string;
@@ -99,7 +100,7 @@ function _DragOverlay<ID>(props: DragOverlayProps<ID>) {
     );
 }
 
-export const DragOverlay = memo(_DragOverlay) as typeof _DragOverlay;
+export const DragOverlay = typedMemo(_DragOverlay);
 
 const styles = StyleSheet.create({
     overlay: {

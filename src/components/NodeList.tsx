@@ -35,7 +35,10 @@ import { CheckboxView } from "./CheckboxView";
 import { CustomExpandCollapseIcon } from "./CustomExpandCollapseIcon";
 import { DragOverlay } from "./DragOverlay";
 import type { DropPosition } from "../types/dragDrop.types";
-import { defaultIndentationMultiplier } from "../constants/treeView.constants";
+import {
+    defaultIndentationMultiplier,
+    listHeaderFooterPadding
+} from "../constants/treeView.constants";
 import { useShallow } from "zustand/react/shallow";
 import { typedMemo } from "../utils/typedMemo";
 import { useScrollToNode } from "../hooks/useScrollToNode";
@@ -290,7 +293,7 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
 
 function HeaderFooterView() {
     return (
-        <View style={styles.defaultHeaderFooter} />
+        <View style={{ padding: listHeaderFooterPadding }} />
     );
 }
 
@@ -535,9 +538,6 @@ function NodeDropIndicator({ position, level, indentationMultiplier, styleProps 
 }
 
 const styles = StyleSheet.create({
-    defaultHeaderFooter: {
-        padding: 5
-    },
     nodeExpandableArrowTouchable: {
         flex: 1
     },

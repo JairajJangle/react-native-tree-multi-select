@@ -64,15 +64,25 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
     } = props;
 
     const {
-        enabled: dragEnabled,
+        enabled: _dragEnabled,
+        onDragStart,
         onDragEnd,
+        onDragCancel,
         longPressDuration = 400,
         autoScrollThreshold = 60,
         autoScrollSpeed = 1.0,
         dragOverlayOffset = -4,
         autoExpandDelay = 800,
         customizations: dragDropCustomizations,
+        canDrop: canDropCallback,
+        maxDepth,
+        canNodeHaveChildren,
+        canDrag,
     } = dragAndDrop ?? {};
+
+    // When the dragAndDrop prop is provided, drag is enabled by default.
+    // Users can still toggle it off with enabled: false at runtime.
+    const dragEnabled = dragAndDrop ? (_dragEnabled ?? true) : false;
 
     const {
         expanded,
@@ -152,8 +162,10 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         flattenedNodes: flattenedFilteredNodes,
         flashListRef,
         containerRef,
-        dragEnabled: dragEnabled ?? false,
+        dragEnabled,
+        onDragStart,
         onDragEnd,
+        onDragCancel,
         longPressDuration,
         autoScrollThreshold,
         autoScrollSpeed,
@@ -162,6 +174,10 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         dragOverlayOffset,
         autoExpandDelay,
         indentationMultiplier: effectiveIndentationMultiplier,
+        canDrop: canDropCallback,
+        maxDepth,
+        canNodeHaveChildren,
+        canDrag,
     });
 
     // Combined onScroll handler
@@ -251,6 +267,7 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
                     {flashListElement}
                     {isDragging && draggedNode && (
                         <DragOverlay<ID>
+                            storeId={storeId}
                             overlayY={overlayY}
                             overlayX={overlayX}
                             node={draggedNode}
@@ -276,6 +293,7 @@ function HeaderFooterView() {
         <View style={styles.defaultHeaderFooter} />
     );
 }
+
 
 function getValue(
     isChecked: boolean,
@@ -375,11 +393,17 @@ function _Node<ID>(props: NodeProps<ID>) {
         onNodeTouchEnd?.();
     }, [onNodeTouchEnd]);
 
-    // Determine opacity for drag state
-    const dragOpacity = dragDropCustomizations?.draggedNodeOpacity ?? 0.3;
-    const nodeOpacity = (isDraggingGlobal && (isBeingDragged || isDragInvalid))
-        ? dragOpacity
-        : 1.0;
+    // Determine opacity for drag state (separate values for dragged node vs invalid targets).
+    // When CustomNodeRowComponent is used, hand off all visual control
+    // (including drag opacity) to the custom component — it receives
+    // isDraggedNode / isInvalidDropTarget / isDragging props.
+    const draggedOpacity = dragDropCustomizations?.draggedNodeOpacity ?? 0.3;
+    const invalidOpacity = dragDropCustomizations?.invalidTargetOpacity ?? 0.3;
+    const nodeOpacity = CustomNodeRowComponent
+        ? 1.0
+        : isDraggingGlobal
+            ? (isBeingDragged ? draggedOpacity : isDragInvalid ? invalidOpacity : 1.0)
+            : 1.0;
 
     const handleLayout = useCallback((e: any) => {
         onItemLayout?.(e.nativeEvent.layout.height);
@@ -435,7 +459,6 @@ function _Node<ID>(props: NodeProps<ID>) {
     else {
         return (
             <View
-                {...touchHandlers}
                 onLayout={onItemLayout ? handleLayout : undefined}
                 style={[
                     { opacity: nodeOpacity },
@@ -450,9 +473,12 @@ function _Node<ID>(props: NodeProps<ID>) {
                     isExpanded={isExpanded}
                     onCheck={_onCheck}
                     onExpand={_onToggleExpand}
-                    isDragTarget={isDragInvalid}
+                    isInvalidDropTarget={isDragInvalid}
+                    isDropTarget={isDropTarget}
+                    dropPosition={nodeDropPosition ?? undefined}
                     isDragging={isDraggingGlobal}
                     isDraggedNode={isBeingDragged}
+                    dragHandleProps={touchHandlers}
                 />
             </View>
         );

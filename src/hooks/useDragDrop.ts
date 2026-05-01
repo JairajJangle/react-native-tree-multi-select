@@ -14,7 +14,7 @@ import {
 import type { FlashList } from "@shopify/flash-list";
 
 import type { __FlattenedTreeNode__, TreeNode } from "../types/treeView.types";
-import type { DragEndEvent, DropTarget } from "../types/dragDrop.types";
+import type { DragCancelEvent, DragEndEvent, DragStartEvent, DropTarget } from "../types/dragDrop.types";
 import { getTreeViewStore } from "../store/treeView.store";
 import {
     collapseNodes,
@@ -31,7 +31,9 @@ interface UseDragDropParams<ID> {
     flashListRef: RefObject<FlashList<__FlattenedTreeNode__<ID>> | null>;
     containerRef: RefObject<{ measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => void; } | null>;
     dragEnabled: boolean;
+    onDragStart?: (event: DragStartEvent<ID>) => void;
     onDragEnd?: (event: DragEndEvent<ID>) => void;
+    onDragCancel?: (event: DragCancelEvent<ID>) => void;
     longPressDuration: number;
     autoScrollThreshold: number;
     autoScrollSpeed: number;
@@ -41,6 +43,14 @@ interface UseDragDropParams<ID> {
     autoExpandDelay: number;
     /** Pixels per nesting level, used for magnetic overlay shift. */
     indentationMultiplier: number;
+    /** Callback to determine if a drop is allowed on a specific target. */
+    canDrop?: (draggedNode: TreeNode<ID>, targetNode: TreeNode<ID>, position: "above" | "below" | "inside") => boolean;
+    /** Maximum nesting depth allowed. */
+    maxDepth?: number;
+    /** Callback to determine if a node can accept children. */
+    canNodeHaveChildren?: (node: TreeNode<ID>) => boolean;
+    /** Callback to determine if a node can be dragged. */
+    canDrag?: (node: TreeNode<ID>) => boolean;
 }
 
 interface UseDragDropReturn<ID> {
@@ -72,7 +82,9 @@ export function useDragDrop<ID>(
         flashListRef,
         containerRef,
         dragEnabled,
+        onDragStart,
         onDragEnd,
+        onDragCancel,
         longPressDuration,
         autoScrollThreshold,
         autoScrollSpeed,
@@ -81,6 +93,10 @@ export function useDragDrop<ID>(
         dragOverlayOffset,
         autoExpandDelay,
         indentationMultiplier,
+        canDrop: canDropCallback,
+        maxDepth,
+        canNodeHaveChildren,
+        canDrag,
     } = params;
 
     // --- Refs for mutable state (no stale closures in PanResponder) ---
@@ -122,13 +138,26 @@ export function useDragDrop<ID>(
     // Previous drop target for hysteresis (prevents flicker between "below N" / "above N+1")
     const prevDropTargetRef = useRef<{ targetIndex: number; position: "above" | "below" | "inside"; } | null>(null);
 
+    // Depth of the dragged subtree (computed once at drag start, used for maxDepth check)
+    const draggedSubtreeDepthRef = useRef(0);
+
     // Keep flattenedNodes ref current for PanResponder closures
     const flattenedNodesRef = useRef(flattenedNodes);
     flattenedNodesRef.current = flattenedNodes;
 
     // Keep callbacks current
+    const onDragStartRef = useRef(onDragStart);
+    onDragStartRef.current = onDragStart;
     const onDragEndRef = useRef(onDragEnd);
     onDragEndRef.current = onDragEnd;
+    const onDragCancelRef = useRef(onDragCancel);
+    onDragCancelRef.current = onDragCancel;
+    const canDropRef = useRef(canDropCallback);
+    canDropRef.current = canDropCallback;
+    const canNodeHaveChildrenRef = useRef(canNodeHaveChildren);
+    canNodeHaveChildrenRef.current = canNodeHaveChildren;
+    const canDragRef = useRef(canDrag);
+    canDragRef.current = canDrag;
 
     // --- React state (triggers re-renders only at drag start/end + indicator changes) ---
     const [isDragging, setIsDragging] = useState(false);
@@ -170,6 +199,22 @@ export function useDragDrop<ID>(
         [storeId]
     );
 
+    // --- Get the maximum depth of a subtree (0 for leaf nodes) ---
+    const getSubtreeDepth = useCallback(
+        (nodeId: ID): number => {
+            const store = getTreeViewStore<ID>(storeId);
+            const { nodeMap } = store.getState();
+            const node = nodeMap.get(nodeId);
+            if (!node?.children?.length) return 0;
+            let max = 0;
+            for (const child of node.children) {
+                max = Math.max(max, 1 + getSubtreeDepth(child.id));
+            }
+            return max;
+        },
+        [storeId]
+    );
+
     // --- Initiate drag ---
     const initiateDrag = useCallback(
         (nodeId: ID, pageY: number, locationY: number, nodeIndex: number) => {
@@ -200,6 +245,7 @@ export function useDragDrop<ID>(
                 draggedNodeRef.current = node;
                 draggedNodeIdRef.current = nodeId;
                 draggedNodeIndexRef.current = nodeIndex;
+                draggedSubtreeDepthRef.current = getSubtreeDepth(nodeId);
 
                 // Use measured item height if available, fall back to estimatedItemSize
                 const measured = measuredItemHeightRef.current;
@@ -251,6 +297,9 @@ export function useDragDrop<ID>(
                 setEffectiveDropLevel(node.level ?? 0);
                 setDropTarget(null);
 
+                // Notify consumer that drag has started
+                onDragStartRef.current?.({ draggedNodeId: nodeId });
+
                 // Start auto-scroll loop
                 startAutoScrollLoop();
             });
@@ -262,6 +311,7 @@ export function useDragDrop<ID>(
             containerRef,
             flashListRef,
             getDescendantIds,
+            getSubtreeDepth,
             overlayY,
         ]
     );
@@ -270,6 +320,12 @@ export function useDragDrop<ID>(
     const handleNodeTouchStart = useCallback(
         (nodeId: ID, pageY: number, locationY: number, nodeIndex: number) => {
             if (!dragEnabled) return;
+
+            // Check if this node can be dragged
+            if (canDragRef.current) {
+                const node = flattenedNodesRef.current[nodeIndex];
+                if (node && !canDragRef.current(node)) return;
+            }
 
             // Cancel any existing timer
             cancelLongPressTimer();
@@ -378,6 +434,26 @@ export function useDragDrop<ID>(
                 position = "inside";
             }
 
+            // --- Determine if "inside" drop is allowed for this target ---
+            const canDropInsideTarget = (() => {
+                // canNodeHaveChildren: structural constraint
+                if (canNodeHaveChildrenRef.current && !canNodeHaveChildrenRef.current(targetNode)) {
+                    return false;
+                }
+                // maxDepth: the dragged subtree at (targetLevel + 1) must not exceed maxDepth
+                if (maxDepth !== undefined) {
+                    const targetLevel = targetNode.level ?? 0;
+                    const deepest = targetLevel + 1 + draggedSubtreeDepthRef.current;
+                    if (deepest > maxDepth) return false;
+                }
+                return true;
+            })();
+
+            // If "inside" is not allowed, convert to nearest zone
+            if (position === "inside" && !canDropInsideTarget) {
+                position = positionInItem < 0.5 ? "above" : "below";
+            }
+
             // --- Horizontal control at level cliffs ---
             // At the boundary between nodes at different depths, the user's
             // horizontal finger position decides the drop level:
@@ -463,7 +539,8 @@ export function useDragDrop<ID>(
             // --- Suppress "below" when it's redundant or confusing ---
             // After horizontal control, any remaining "below" that isn't at a
             // cliff is redundant with "above" on the next node → show "inside".
-            if (position === "below") {
+            // Only convert to "inside" if inside drops are allowed for this target.
+            if (position === "below" && canDropInsideTarget) {
                 const expandedSet = getTreeViewStore<ID>(storeId).getState().expanded;
 
                 // (a) Expanded parent: "below" visually sits at the parent/child junction
@@ -513,9 +590,24 @@ export function useDragDrop<ID>(
             const store = getTreeViewStore<ID>(storeId);
             const { invalidDragTargetIds, draggedNodeId, expanded } =
                 store.getState();
+
+            // maxDepth check for above/below (sibling) positions
+            let maxDepthValid = true;
+            if (maxDepth !== undefined && (position === "above" || position === "below")) {
+                const targetLevel = targetNode.level ?? 0;
+                const deepest = targetLevel + draggedSubtreeDepthRef.current;
+                if (deepest > maxDepth) maxDepthValid = false;
+            }
+
             const isValid =
                 targetNode.id !== draggedNodeId &&
-                !invalidDragTargetIds.has(targetNode.id);
+                !invalidDragTargetIds.has(targetNode.id) &&
+                maxDepthValid &&
+                (!canDropRef.current || canDropRef.current(
+                    draggedNodeRef.current!,
+                    targetNode,
+                    position
+                ));
 
             // --- Auto-expand: if hovering "inside" a collapsed expandable node ---
             if (isValid && position === "inside" && targetNode.children?.length && !expanded.has(targetNode.id)) {
@@ -612,7 +704,7 @@ export function useDragDrop<ID>(
                 return newTarget;
             });
         },
-        [storeId, autoExpandDelay, cancelAutoExpandTimer, indentationMultiplier, overlayX]
+        [storeId, autoExpandDelay, cancelAutoExpandTimer, indentationMultiplier, maxDepth, overlayX]
     );
 
     // --- Handle drag end ---
@@ -712,6 +804,9 @@ export function useDragDrop<ID>(
                         viewPosition: 0.5,
                     });
                 }, 100);
+            } else if (droppedNodeId !== null) {
+                // Drag ended without a valid drop — notify consumer
+                onDragCancelRef.current?.({ draggedNodeId: droppedNodeId });
             }
 
             // Collapse auto-expanded nodes that aren't ancestors of the drop target

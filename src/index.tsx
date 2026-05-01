@@ -15,9 +15,12 @@ import type {
     DragOverlayComponentProps,
     DropIndicatorStyleProps,
     DropIndicatorComponentProps,
+    DragHandleProps,
 } from "./types/treeView.types";
 import type {
+    DragCancelEvent,
     DragEndEvent,
+    DragStartEvent,
     DropPosition
 } from "./types/dragDrop.types";
 
@@ -37,11 +40,14 @@ export type {
     BuiltInCheckBoxViewStyleProps,
     SelectionPropagation,
     DragAndDropOptions,
+    DragCancelEvent,
     DragEndEvent,
+    DragStartEvent,
     DropPosition,
     DragDropCustomizations,
     DragOverlayStyleProps,
     DragOverlayComponentProps,
     DropIndicatorStyleProps,
     DropIndicatorComponentProps,
+    DragHandleProps,
 };

@@ -200,6 +200,7 @@ For visual customizations (overlay styles, indicator colors, or fully custom com
 | `maxDepth`            | `number`                                                     | No       | Maximum nesting depth allowed. Drops exceeding this are suppressed |
 | `canNodeHaveChildren` | `(node: TreeNode<ID>) => boolean`                            | No       | Callback to determine if a node can accept children          |
 | `canDrag`             | `(node: TreeNode<ID>) => boolean`                            | No       | Callback to determine if a node can be dragged (default: all nodes) |
+| `autoScrollToDroppedNode` | `boolean \| DropAutoScrollOptions`                       | No       | Auto-scroll to the dropped node after a successful drop. Pass `false` to disable, `true` for defaults, or an object to customize. Default: `{ enabled: true, animated: true, viewPosition: 0.5 }` |
 
 ##### Notes
 
@@ -383,6 +384,19 @@ Type: `boolean` OR `"indeterminate"`
 #### DropPosition
 
 Type: `"above"` | `"below"` | `"inside"`
+
+---
+
+#### DropAutoScrollOptions
+
+*Options for auto-scrolling to the dropped node after a successful drop. Uses the same scroll parameters as [`scrollToNodeID`](#scrolltonodeparams).*
+
+| Property       | Type      | Required | Description                                                     |
+| -------------- | --------- | -------- | --------------------------------------------------------------- |
+| `enabled`      | `boolean` | No       | Enable auto-scroll to the dropped node (default: true)          |
+| `animated`     | `boolean` | No       | Whether the scroll should be animated (default: true)           |
+| `viewOffset`   | `number`  | No       | Fixed offset from the target position (in pixels)               |
+| `viewPosition` | `number`  | No       | Position in the viewport: 0 = top, 0.5 = center, 1 = bottom (default: 0.5) |
 
 ---
 

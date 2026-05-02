@@ -505,7 +505,9 @@ export function useDragDrop<ID>(
                 }
 
                 if (isCliff) {
-                    const threshold = containerWidthRef.current / 2;
+                    // Midpoint of the item's visible content area
+                    const itemLeftEdge = currentLevel * indentationMultiplierRef.current;
+                    const threshold = itemLeftEdge + (containerWidthRef.current - itemLeftEdge) * 0.3;
 
                     if (fingerLocalX < threshold) {
                         // User wants the shallow level
@@ -539,7 +541,8 @@ export function useDragDrop<ID>(
                 const prevLevel = prevNode?.level ?? 0;
                 const currentLevel = targetNode.level ?? 0;
                 if (prevNode && prevLevel > currentLevel) {
-                    const threshold = containerWidthRef.current / 2;
+                    const itemLeftEdge = prevLevel * indentationMultiplierRef.current;
+                    const threshold = itemLeftEdge + (containerWidthRef.current - itemLeftEdge) * 0.3;
 
                     if (fingerLocalX >= threshold) {
                         clampedIndex = clampedIndex - 1;

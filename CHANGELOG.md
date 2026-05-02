@@ -1,3 +1,16 @@
+# [3.0.0-beta.5](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.4...v3.0.0-beta.5) (2026-05-02)
+
+
+### Bug Fixes
+
+* tune drag-drop overlay offset and drop zone sensitivity ([24fc1e9](https://github.com/JairajJangle/react-native-tree-multi-select/commit/24fc1e917cabdf2adab42043daa16dabe58b2249))
+* use item indentation for horizontal cliff threshold ([ef98489](https://github.com/JairajJangle/react-native-tree-multi-select/commit/ef984893448e7087af991f25565e5d728b85c303))
+
+
+### Features
+
+* add autoScrollToDroppedNode option and reuse scrollToNodeID ([b129dcb](https://github.com/JairajJangle/react-native-tree-multi-select/commit/b129dcb587b54c6ce18af7109d8b0889cd175d5a))
+
 # [3.0.0-beta.4](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.3...v3.0.0-beta.4) (2026-05-01)
 
 

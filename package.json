@@ -1,6 +1,6 @@
 {
   "name": "react-native-tree-multi-select",
-  "version": "3.0.0-beta.3",
+  "version": "3.0.0-beta.4",
   "description": "Super-fast, customizable tree view component for React Native with drag-and-drop reordering, multi-selection, and search filtering.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",

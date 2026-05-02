@@ -9,6 +9,7 @@ import {
 import {
     Animated,
     PanResponder,
+    Platform,
     type PanResponderInstance,
 } from "react-native";
 import type { FlashList } from "@shopify/flash-list";
@@ -25,6 +26,10 @@ import {
 } from "../helpers";
 import { moveTreeNode } from "../helpers/moveTreeNode.helper";
 import { listHeaderFooterPadding } from "../constants/treeView.constants";
+
+// Android reports locationY slightly differently, causing the overlay
+// to appear ~1 item height closer to the finger than on iOS.
+const PLATFORM_OVERLAY_Y_CORRECTION = Platform.OS === "android" ? -2 : 0;
 
 interface UseDragDropParams<ID> {
     storeId: string;
@@ -110,6 +115,7 @@ export function useDragDrop<ID>(
 
     const containerPageXRef = useRef(0);
     const containerPageYRef = useRef(0);
+    const containerWidthRef = useRef(0);
     const containerHeightRef = useRef(0);
     const grabOffsetYRef = useRef(0);
     const scrollOffsetRef = useRef(0);
@@ -238,9 +244,10 @@ export function useDragDrop<ID>(
             const container = containerRef.current;
             if (!container) return;
 
-            container.measureInWindow((x, y, _w, h) => {
+            container.measureInWindow((x, y, w, h) => {
                 containerPageXRef.current = x;
                 containerPageYRef.current = y;
+                containerWidthRef.current = w;
                 containerHeightRef.current = h;
 
                 // Find the node in flattened list
@@ -294,7 +301,7 @@ export function useDragDrop<ID>(
                 store.getState().updateInvalidDragTargetIds(descendants);
 
                 // Set overlay initial position (with configurable offset)
-                const overlayLocalY = fingerLocalY - locationY + dragOverlayOffsetRef.current * itemHeightRef.current;
+                const overlayLocalY = fingerLocalY - locationY + (dragOverlayOffsetRef.current + PLATFORM_OVERLAY_Y_CORRECTION) * itemHeightRef.current;
                 overlayY.setValue(overlayLocalY);
 
                 // Reset magnetic overlay
@@ -438,9 +445,9 @@ export function useDragDrop<ID>(
             const positionInItem =
                 (adjustedContentY - clampedIndex * iH) / iH;
             let position: "above" | "below" | "inside";
-            if (positionInItem < 0.15) {
+            if (positionInItem < 0.25) {
                 position = "above";
-            } else if (positionInItem > 0.85) {
+            } else if (positionInItem > 0.75) {
                 position = "below";
             } else {
                 position = "inside";
@@ -479,7 +486,7 @@ export function useDragDrop<ID>(
             let logicalPosition: "above" | "below" | "inside" | null = null;
             let visualDropLevel: number | null = null;
 
-            if (position === "below" || position === "inside") {
+            if (position === "below") {
                 const currentLevel = targetNode.level ?? 0;
                 let isCliff = false;
                 let shallowLevel = 0;
@@ -498,11 +505,7 @@ export function useDragDrop<ID>(
                 }
 
                 if (isCliff) {
-                    // Generous threshold: midpoint of the two levels + 2× indent buffer
-                    const indent = indentationMultiplierRef.current;
-                    const threshold =
-                        ((currentLevel + shallowLevel) / 2) * indent
-                        + indent * 2;
+                    const threshold = containerWidthRef.current / 2;
 
                     if (fingerLocalX < threshold) {
                         // User wants the shallow level
@@ -536,11 +539,7 @@ export function useDragDrop<ID>(
                 const prevLevel = prevNode?.level ?? 0;
                 const currentLevel = targetNode.level ?? 0;
                 if (prevNode && prevLevel > currentLevel) {
-                    // Level cliff above - same generous threshold
-                    const indent = indentationMultiplierRef.current;
-                    const threshold =
-                        ((prevLevel + currentLevel) / 2) * indent
-                        + indent * 2;
+                    const threshold = containerWidthRef.current / 2;
 
                     if (fingerLocalX >= threshold) {
                         clampedIndex = clampedIndex - 1;
@@ -550,25 +549,14 @@ export function useDragDrop<ID>(
                 }
             }
 
-            // --- Suppress "below" when it's redundant or confusing ---
-            // After horizontal control, any remaining "below" that isn't at a
-            // cliff is redundant with "above" on the next node → show "inside".
-            // Only convert to "inside" if inside drops are allowed for this target.
+            // --- Suppress "below" when it's semantically confusing ---
+            // For expanded parents, "below" visually sits at the parent/child
+            // junction but semantically inserts as a sibling after the entire
+            // subtree. Convert to "inside" which is clearer.
             if (position === "below" && canDropInsideTarget) {
                 const expandedSet = getTreeViewStore<ID>(storeId).getState().expanded;
-
-                // (a) Expanded parent: "below" visually sits at the parent/child junction
-                // but semantically inserts as a sibling after the entire subtree.
                 if (targetNode.children?.length && expandedSet.has(targetNode.id)) {
                     position = "inside";
-                }
-                // (b) No level cliff below: convert to "inside" so the highlight
-                // covers the full bottom of the node.
-                else if (clampedIndex < nodes.length - 1) {
-                    const nextNode = nodes[clampedIndex + 1];
-                    if (nextNode && (nextNode.level ?? 0) >= (targetNode.level ?? 0)) {
-                        position = "inside";
-                    }
                 }
             }
 
@@ -819,7 +807,7 @@ export function useDragDrop<ID>(
                     });
                 }, 100);
             } else if (droppedNodeId !== null) {
-                // Drag ended without a valid drop — notify consumer
+                // Drag ended without a valid drop - notify consumer
                 onDragCancelRef.current?.({ draggedNodeId: droppedNodeId });
             }
 
@@ -913,7 +901,7 @@ export function useDragDrop<ID>(
 
                 // Update overlay position (with configurable offset)
                 const overlayLocalY =
-                    fingerLocalY - grabOffsetYRef.current + dragOverlayOffsetRef.current * itemHeightRef.current;
+                    fingerLocalY - grabOffsetYRef.current + (dragOverlayOffsetRef.current + PLATFORM_OVERLAY_Y_CORRECTION) * itemHeightRef.current;
                 overlayY.setValue(overlayLocalY);
 
                 // Calculate drop target (horizontal position used at level cliffs)

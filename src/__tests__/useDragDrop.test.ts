@@ -112,6 +112,7 @@ function createDefaultParams(overrides?: Partial<Parameters<typeof useDragDrop<s
         dragOverlayOffset: 0,
         autoExpandDelay: 800,
         indentationMultiplier: 15,
+        scrollToNodeHandlerRef: { current: null },
         ...overrides,
     };
 }
@@ -658,10 +659,11 @@ describe("useDragDrop", () => {
         // A1b (level 2, index 3) is followed by A2 (level 1, index 4).
         // When finger is in "below" zone of A1b, horizontal position decides
         // whether drop stays deep (level 2) or shifts shallow (level 1).
-        // indentationMultiplier=15, cliff between level 2 and level 1:
-        //   threshold = ((2+1)/2)*15 + 15*2 = 22.5 + 30 = 52.5
-        // So pageX < 52.5 → shallow (switch to "above" on A2)
-        // pageX >= 52.5 → stay deep
+        // indentationMultiplier=15, containerWidth=300, level 2:
+        //   itemLeftEdge = 2 * 15 = 30
+        //   threshold = 30 + (300 - 30) * 0.3 = 111
+        // So pageX < 111 - shallow (switch to "above" on A2)
+        // pageX >= 111 - stay deep
 
         it("when finger is left of threshold, then drop target switches to the shallower node", () => {
             const params = createDefaultParams();
@@ -674,7 +676,7 @@ describe("useDragDrop", () => {
                 handlers.onResponderGrant?.(mockGestureEvent(pageYForNode(8)));
             });
 
-            // Move to "below" zone of A1b (index 3) with pageX=10 (left of threshold 52.5)
+            // Move to "below" zone of A1b (index 3) with pageX=10 (left of threshold 111)
             act(() => {
                 handlers.onResponderMove?.(mockGestureEvent(pageYForNode(3, "below"), 10));
             });
@@ -695,9 +697,9 @@ describe("useDragDrop", () => {
                 handlers.onResponderGrant?.(mockGestureEvent(pageYForNode(8)));
             });
 
-            // Move to "below" zone of A1b (index 3) with pageX=100 (right of threshold)
+            // Move to "below" zone of A1b (index 3) with pageX=200 (right of threshold 111)
             act(() => {
-                handlers.onResponderMove?.(mockGestureEvent(pageYForNode(3, "below"), 100));
+                handlers.onResponderMove?.(mockGestureEvent(pageYForNode(3, "below"), 200));
             });
 
             expect(result.current.isDragging).toBe(true);
@@ -715,9 +717,9 @@ describe("useDragDrop", () => {
             });
 
             // A2 (index 4, level 1) is preceded by A1b (index 3, level 2).
-            // Move to "above" zone of A2 with pageX=100 (right of threshold → switch to "below" on A1b)
+            // Move to "above" zone of A2 with pageX=200 (right of threshold - switch to "below" on A1b)
             act(() => {
-                handlers.onResponderMove?.(mockGestureEvent(pageYForNode(4, "above"), 100));
+                handlers.onResponderMove?.(mockGestureEvent(pageYForNode(4, "above"), 200));
             });
 
             expect(result.current.isDragging).toBe(true);

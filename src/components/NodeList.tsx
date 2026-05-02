@@ -81,6 +81,7 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         maxDepth,
         canNodeHaveChildren,
         canDrag,
+        autoScrollToDroppedNode,
     } = dragAndDrop ?? {};
 
     // When the dragAndDrop prop is provided, drag is enabled by default.
@@ -181,6 +182,8 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         maxDepth,
         canNodeHaveChildren,
         canDrag,
+        scrollToNodeHandlerRef,
+        autoScrollToDroppedNode,
     });
 
     // Combined onScroll handler

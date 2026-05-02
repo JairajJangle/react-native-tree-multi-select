@@ -62,7 +62,7 @@ const initialData: TreeNode[] = [
     },
 ];
 
-/** A lightweight move command — stores only IDs and position, not the full tree. */
+/** A lightweight move command - stores only IDs and position, not the full tree. */
 interface MoveCommand {
     nodeId: string;
     targetId: string;
@@ -90,18 +90,18 @@ function findPosition(
         const node = siblings[i]!;
         if (node.id === nodeId) {
             if (i > 0) {
-                // Has a previous sibling — undo = move "below" it
+                // Has a previous sibling - undo = move "below" it
                 return { nodeId, targetId: siblings[i - 1]!.id, position: "below" };
             }
             if (parentId !== null) {
-                // First child — undo = move "inside" parent (inserts as first child)
+                // First child - undo = move "inside" parent (inserts as first child)
                 return { nodeId, targetId: parentId, position: "inside" };
             }
             if (i < siblings.length - 1) {
-                // First root node — undo = move "above" next root
+                // First root node - undo = move "above" next root
                 return { nodeId, targetId: siblings[i + 1]!.id, position: "above" };
             }
-            // Only node in the tree — nothing to undo
+            // Only node in the tree - nothing to undo
             return null;
         }
         if (node.children) {
@@ -229,8 +229,8 @@ export default function DragDropUndoScreen() {
                 <TreeView
                     ref={treeViewRef}
                     data={data}
-                    onCheck={() => {}}
-                    onExpand={() => {}}
+                    onCheck={() => { }}
+                    onExpand={() => { }}
                     dragAndDrop={{
                         onDragEnd: handleDragEnd,
                         onDragCancel: handleDragCancel,

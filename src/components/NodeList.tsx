@@ -74,13 +74,14 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         longPressDuration = 400,
         autoScrollThreshold = 60,
         autoScrollSpeed = 1.0,
-        dragOverlayOffset = -4,
+        dragOverlayOffset = -2,
         autoExpandDelay = 800,
         customizations: dragDropCustomizations,
         canDrop: canDropCallback,
         maxDepth,
         canNodeHaveChildren,
         canDrag,
+        autoScrollToDroppedNode,
     } = dragAndDrop ?? {};
 
     // When the dragAndDrop prop is provided, drag is enabled by default.
@@ -181,6 +182,8 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         maxDepth,
         canNodeHaveChildren,
         canDrag,
+        scrollToNodeHandlerRef,
+        autoScrollToDroppedNode,
     });
 
     // Combined onScroll handler
@@ -385,7 +388,7 @@ function _Node<ID>(props: NodeProps<ID>) {
 
     // Determine opacity for drag state (separate values for dragged node vs invalid targets).
     // When CustomNodeRowComponent is used, hand off all visual control
-    // (including drag opacity) to the custom component — it receives
+    // (including drag opacity) to the custom component - it receives
     // isDraggedNode / isInvalidDropTarget / isDragging props.
     const draggedOpacity = dragDropCustomizations?.draggedNodeOpacity ?? 0.3;
     const invalidOpacity = dragDropCustomizations?.invalidTargetOpacity ?? 0.3;

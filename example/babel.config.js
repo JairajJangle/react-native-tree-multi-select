@@ -10,7 +10,7 @@ module.exports = function (api) {
   return getConfig(
     {
       presets: ["babel-preset-expo"],
-      plugins: ["react-native-reanimated/plugin"]
+      plugins: []
     },
     { root, pkg }
   );

@@ -193,13 +193,14 @@ For visual customizations (overlay styles, indicator colors, or fully custom com
 | `longPressDuration`   | `number`                                                     | No       | Long press duration in ms to start drag (default: 400)       |
 | `autoScrollThreshold` | `number`                                                     | No       | Distance from edge (px) to trigger auto-scroll (default: 60) |
 | `autoScrollSpeed`     | `number`                                                     | No       | Speed multiplier for auto-scroll (default: 1.0)              |
-| `dragOverlayOffset`   | `number`                                                     | No       | Overlay offset from the finger, in item-height units (default: -4, i.e. four rows above finger) |
+| `dragOverlayOffset`   | `number`                                                     | No       | Overlay offset from the finger, in item-height units (default: -2, i.e. two rows above finger) |
 | `autoExpandDelay`     | `number`                                                     | No       | Delay in ms before auto-expanding a collapsed node during drag hover (default: 800) |
 | `customizations`      | [DragDropCustomizations](#dragdropcustomizationsid)`<ID>`    | No       | Customizations for drag-and-drop visuals (overlay, indicator, opacity) |
 | `canDrop`             | `(draggedNode, targetNode, position) => boolean`             | No       | Callback to determine if a node can be dropped on a specific target |
 | `maxDepth`            | `number`                                                     | No       | Maximum nesting depth allowed. Drops exceeding this are suppressed |
 | `canNodeHaveChildren` | `(node: TreeNode<ID>) => boolean`                            | No       | Callback to determine if a node can accept children          |
 | `canDrag`             | `(node: TreeNode<ID>) => boolean`                            | No       | Callback to determine if a node can be dragged (default: all nodes) |
+| `autoScrollToDroppedNode` | `boolean \| DropAutoScrollOptions`                       | No       | Auto-scroll to the dropped node after a successful drop. Pass `false` to disable, `true` for defaults, or an object to customize. Default: `{ enabled: true, animated: true, viewPosition: 0.5 }` |
 
 ##### Notes
 
@@ -211,7 +212,7 @@ For visual customizations (overlay styles, indicator colors, or fully custom com
   1. `BuiltInCheckBoxViewStyleProps`
   1. `ExpandCollapseIconComponent`
   1. `ExpandCollapseTouchableComponent`
-  1. `dragAndDrop.customizations.draggedNodeOpacity` / `invalidTargetOpacity` — the custom component receives `isDraggedNode`, `isInvalidDropTarget`, and `isDragging` props and is responsible for its own drag-state visuals.
+  1. `dragAndDrop.customizations.draggedNodeOpacity` / `invalidTargetOpacity` - the custom component receives `isDraggedNode`, `isInvalidDropTarget`, and `isDragging` props and is responsible for its own drag-state visuals.
   
 - ⚠️ If the tree view doesn't scroll if rendered in a complex nested scroll view/s then try setting the `renderScrollComponent` value in  `treeFlashListProps` to `ScrollView` from `react-native-gesture-handler`.
 
@@ -386,6 +387,19 @@ Type: `"above"` | `"below"` | `"inside"`
 
 ---
 
+#### DropAutoScrollOptions
+
+*Options for auto-scrolling to the dropped node after a successful drop. Uses the same scroll parameters as [`scrollToNodeID`](#scrolltonodeparams).*
+
+| Property       | Type      | Required | Description                                                     |
+| -------------- | --------- | -------- | --------------------------------------------------------------- |
+| `enabled`      | `boolean` | No       | Enable auto-scroll to the dropped node (default: true)          |
+| `animated`     | `boolean` | No       | Whether the scroll should be animated (default: true)           |
+| `viewOffset`   | `number`  | No       | Fixed offset from the target position (in pixels)               |
+| `viewPosition` | `number`  | No       | Position in the viewport: 0 = top, 0.5 = center, 1 = bottom (default: 0.5) |
+
+---
+
 #### DragDropCustomizations`<ID>`
 
 *Customizations for drag-and-drop visuals.*
@@ -504,20 +518,16 @@ MIT
 ## 🙏 Support the project
 
 <p align="center" valign="center">
-  <a href="https://liberapay.com/FutureJJ/donate">
-    <img src="https://liberapay.com/assets/widgets/donate.svg" alt="LiberPay_Donation_Button" height="50" > 
-  </a>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <a href=".github/assets/Jairaj_Jangle_Google_Pay_UPI_QR_Code.jpg">
-    <img src=".github/assets/upi.png" alt="Paypal_Donation_Button" height="50" >
-  </a>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://www.paypal.com/paypalme/jairajjangle001/usd">
     <img src=".github/assets/paypal_donate.png" alt="Paypal_Donation_Button" height="50" >
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://github.com/sponsors/JairajJangle">
     <img src=".github/assets/github_sponsor.svg" alt="GitHub_Sponsor_Button" height="50" >
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://liberapay.com/FutureJJ/donate">
+    <img src=".github/assets/liberapay_donate.svg" alt="Liberapay_Donation_Button" height="50" >
   </a>
 </p>
 

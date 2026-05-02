@@ -139,6 +139,13 @@ export interface NodeProps<ID> extends TreeItemCustomizations<ID> {
     dragDropCustomizations?: DragDropCustomizations<ID>;
 }
 
+/** Options for auto-scrolling to the dropped node after a successful drop.
+ *  Uses the same scroll parameters as `scrollToNodeID` (minus internally managed fields). */
+export interface DropAutoScrollOptions extends Omit<ScrollToNodeParams<never>, "nodeId" | "expandScrolledNode"> {
+    /** Enable auto-scroll to the dropped node. Default: true */
+    enabled?: boolean;
+}
+
 /** Configuration options for drag-and-drop reordering */
 export interface DragAndDropOptions<ID = string> {
     /** Enable drag-and-drop reordering. Default: true (when dragAndDrop is provided) */
@@ -155,7 +162,7 @@ export interface DragAndDropOptions<ID = string> {
     autoScrollThreshold?: number;
     /** Speed multiplier for auto-scroll during drag. Default: 1.0 */
     autoScrollSpeed?: number;
-    /** Offset of the dragged overlay from the finger, in item-height units. Default: -4 (four items above finger) */
+    /** Offset of the dragged overlay from the finger, in item-height units. Default: -2 (two items above finger) */
     dragOverlayOffset?: number;
     /** Delay in ms before auto-expanding a collapsed node during drag hover. Default: 800 */
     autoExpandDelay?: number;
@@ -173,6 +180,10 @@ export interface DragAndDropOptions<ID = string> {
     /** Callback to determine if a node can be dragged.
      *  Return false to prevent dragging this node. Default: all nodes are draggable. */
     canDrag?: (node: TreeNode<ID>) => boolean;
+    /** Auto-scroll to the dropped node after a successful drop.
+     *  Pass `false` to disable, `true` for defaults, or an object to customize.
+     *  Default: `{ enabled: true, animated: true, viewPosition: 0.5 }` */
+    autoScrollToDroppedNode?: boolean | DropAutoScrollOptions;
 }
 
 /** Props for the NodeList component that renders the flattened tree */

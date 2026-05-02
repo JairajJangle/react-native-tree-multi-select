@@ -109,12 +109,12 @@ function _TeamNodeRow<ID = string>(props: NodeRowProps<ID>) {
                 isChecked && rowStyles.rowChecked,
             ]}
         >
-            {/* Drag handle — only this area initiates drag */}
+            {/* Drag handle - only this area initiates drag */}
             <View {...dragHandleProps} style={rowStyles.dragHandle}>
                 <Text style={rowStyles.gripIcon}>⠿</Text>
             </View>
 
-            {/* Main content — tapping checks the node */}
+            {/* Main content - tapping checks the node */}
             <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={onCheck}

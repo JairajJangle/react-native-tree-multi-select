@@ -589,7 +589,7 @@ describe("recalculateCheckedStates", () => {
                 store.getState().updateNodeMap(nodeMap);
             });
 
-            // Recalculate — the guard `if (!node?.children?.length) continue` should skip "orphan"
+            // Recalculate - the guard `if (!node?.children?.length) continue` should skip "orphan"
             act(() => {
                 recalculateCheckedStates<string>(STORE_ID);
             });

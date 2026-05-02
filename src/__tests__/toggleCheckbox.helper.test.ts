@@ -509,7 +509,7 @@ describe("toggleCheckboxes", () => {
             store.getState().updateNodeMap(nodeMap as any);
         });
 
-        // Toggle the fake parent — updateChildrenIteratively will try to find "ghost" in nodeMap
+        // Toggle the fake parent - updateChildrenIteratively will try to find "ghost" in nodeMap
         act(() => {
             toggleCheckboxes(testStoreId, ["fake-parent" as any], true);
         });
@@ -528,7 +528,7 @@ describe("toggleCheckboxes", () => {
             store.getState().updateChildToParentMap(childToParentMap as any);
         });
 
-        // Toggle 1.1.1 — parent propagation walks up to "3" which has no children
+        // Toggle 1.1.1 - parent propagation walks up to "3" which has no children
         act(() => {
             toggleCheckboxes(testStoreId, ["1.1.1"], true);
         });

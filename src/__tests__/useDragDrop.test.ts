@@ -439,11 +439,11 @@ describe("useDragDrop", () => {
             defaultPrevented: false,
             eventPhase: 0,
             isTrusted: true,
-            preventDefault: () => {},
+            preventDefault: () => { },
             isDefaultPrevented: () => false,
-            stopPropagation: () => {},
+            stopPropagation: () => { },
             isPropagationStopped: () => false,
-            persist: () => {},
+            persist: () => { },
             timeStamp: ts,
             type: "responderMove",
         } as unknown as GestureResponderEvent;
@@ -741,7 +741,7 @@ describe("useDragDrop", () => {
                 handlers.onResponderMove?.(mockGestureEvent(pageYForNode(6, "below"), 50));
             });
 
-            // Second move: "above" zone of B2 (index 7, level 1) — same-level boundary
+            // Second move: "above" zone of B2 (index 7, level 1) - same-level boundary
             act(() => {
                 handlers.onResponderMove?.(mockGestureEvent(pageYForNode(7, "above"), 50));
             });

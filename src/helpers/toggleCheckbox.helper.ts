@@ -276,7 +276,7 @@ export function recalculateCheckedStates<ID>(storeId: string) {
     // Update each parent based on its children's current state
     for (const parentId of parentNodes) {
         const node = nodeMap.get(parentId);
-        /* istanbul ignore next -- parentNodes is built from nodeMap entries with children above; same nodeMap, same iteration — unreachable unless nodeMap mutates between loops */
+        /* istanbul ignore next -- parentNodes is built from nodeMap entries with children above; same nodeMap, same iteration - unreachable unless nodeMap mutates between loops */
         if (!node?.children?.length) continue;
         updateParentCheckState(parentId, node.children, tempChecked, tempIndeterminate);
     }

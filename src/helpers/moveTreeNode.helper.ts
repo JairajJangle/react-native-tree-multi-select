@@ -45,7 +45,7 @@ function isDescendant<ID>(
 ): boolean {
     for (const node of nodes) {
         if (node.id === ancestorId) {
-            // Found the ancestor — search its subtree for the candidate
+            // Found the ancestor - search its subtree for the candidate
             return containsNode(node.children ?? [], candidateDescendantId);
         }
         if (node.children && isDescendant(node.children, ancestorId, candidateDescendantId)) {

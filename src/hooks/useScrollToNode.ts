@@ -155,7 +155,7 @@ export function useScrollToNode<ID>(params: UseScrollToNodeParams<ID>) {
       }
 
       // Ensure if the parent is expanded before proceeding to scroll to the node.
-      // This fires transiently during the milestone system — the layout effect runs
+      // This fires transiently during the milestone system - the layout effect runs
       // before the expansion has propagated to the store, then retries on next render.
       /* istanbul ignore next -- async timing guard: expansion not yet propagated to store */
       if (parentId && !expanded.has(parentId))

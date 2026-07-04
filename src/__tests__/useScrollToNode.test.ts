@@ -212,6 +212,27 @@ describe("useScrollToNode", () => {
         expect(callArgs.animated).toBe(true);
     });
 
+
+    it("given an unmounted list ref, when scrollToNodeID resolves, then it is a safe no-op", () => {
+        const store = getTreeViewStore<string>(STORE_ID);
+        act(() => {
+            store.getState().updateExpanded(new Set(["A", "A1"]));
+        });
+        const flatNodes = buildFlatNodes(new Set(["A", "A1"]));
+        const props = makeProps({
+            flattenedFilteredNodes: flatNodes,
+            flashListRef: { current: null },
+        });
+
+        renderHook(() => useScrollToNode<string>(props));
+
+        expect(() => {
+            act(() => {
+                props.scrollToNodeHandlerRef.current!.scrollToNodeID({ nodeId: "A1a" });
+            });
+        }).not.toThrow();
+    });
+
     it("given a nonexistent node, when scrollToNodeID is called, then no crash occurs", () => {
         const props = makeProps();
 

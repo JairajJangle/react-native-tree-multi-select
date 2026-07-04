@@ -1,4 +1,4 @@
-import { moveTreeNode, findNodePosition } from "../helpers/moveTreeNode.helper";
+import { moveTreeNode, findNodePosition, findNodePositionFromMaps } from "../helpers/moveTreeNode.helper";
 import type { TreeNode } from "../types/treeView.types";
 
 /**
@@ -368,6 +368,69 @@ describe("moveTreeNode", () => {
             expect(moved.length).toBe(2);
             expect(moved[0]!.id).toBe("n0");
             expect(moved[1]!.id).toBe("n19999");
+        });
+    });
+
+    describe("findNodePosition edge cases", () => {
+        it("given a root-level node, when located, then parentId is null", () => {
+            const data: TreeNode<string>[] = [
+                { id: "r1", name: "R1" },
+                { id: "r2", name: "R2" },
+            ];
+            expect(findNodePosition(data, "r2")).toEqual({ parentId: null, index: 1 });
+        });
+    });
+
+    describe("findNodePositionFromMaps", () => {
+        const data: TreeNode<string>[] = [
+            {
+                id: "p", name: "P", children: [
+                    { id: "c1", name: "C1" },
+                    { id: "c2", name: "C2" },
+                ]
+            },
+            { id: "q", name: "Q" },
+        ];
+
+        function buildMaps() {
+            const nodeMap = new Map<string, TreeNode<string>>();
+            const childToParentMap = new Map<string, string>();
+            const walk = (nodes: TreeNode<string>[], parent: string | null) => {
+                for (const n of nodes) {
+                    nodeMap.set(n.id, n);
+                    if (parent !== null) childToParentMap.set(n.id, parent);
+                    if (n.children) walk(n.children, n.id);
+                }
+            };
+            walk(data, null);
+            return { nodeMap, childToParentMap };
+        }
+
+        it("given a nested node, when located via maps, then parent and index match the tree", () => {
+            const { nodeMap, childToParentMap } = buildMaps();
+            expect(findNodePositionFromMaps(data, nodeMap, childToParentMap, "c2"))
+                .toEqual({ parentId: "p", index: 1 });
+        });
+
+        it("given a root node, when located via maps, then parentId is null", () => {
+            const { nodeMap, childToParentMap } = buildMaps();
+            expect(findNodePositionFromMaps(data, nodeMap, childToParentMap, "q"))
+                .toEqual({ parentId: null, index: 1 });
+        });
+
+        it("given maps pointing at a parent without children, when located, then null is returned instead of crashing", () => {
+            const { childToParentMap } = buildMaps();
+            // Corrupted/stale maps: the parent entry lost its children array.
+            const staleNodeMap = new Map<string, TreeNode<string>>([
+                ["p", { id: "p", name: "P" }],
+            ]);
+            expect(findNodePositionFromMaps(data, staleNodeMap, childToParentMap, "c1")).toBeNull();
+        });
+
+        it("given a node id absent from its parent's children, when located, then null is returned", () => {
+            const { nodeMap, childToParentMap } = buildMaps();
+            childToParentMap.set("ghost", "p");
+            expect(findNodePositionFromMaps(data, nodeMap, childToParentMap, "ghost")).toBeNull();
         });
     });
 });

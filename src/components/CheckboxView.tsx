@@ -108,7 +108,7 @@ export const defaultCheckboxViewStyles = StyleSheet.create({
     },
     checkboxTextStyle: {
         color: "black",
-        /* istanbul ignore next -- Platform.OS is never "android" in jest */
-        marginTop: Platform.OS === "android" ? 2 : undefined,
+        marginTop: /* istanbul ignore next -- Platform.OS is never "android" in jest */
+            Platform.OS === "android" ? 2 : undefined,
     },
 });

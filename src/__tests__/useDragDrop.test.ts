@@ -1722,4 +1722,178 @@ describe("useDragDrop", () => {
             expect(scrollToNodeID.mock.calls[0]![0]).toMatchObject({ nodeId: "A2" });
         });
     });
+
+    // ──────────────────────────────────────────────
+    // Drag initiation guards
+    // ──────────────────────────────────────────────
+
+    describe("given drag initiation edge cases", () => {
+        it("when a second long-press fires during an active drag, then the first drag is kept", () => {
+            const params = createDefaultParams();
+            const { result } = renderHook(() => useDragDrop<string>(params));
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+            });
+            expect(result.current.draggedNode?.id).toBe("C");
+
+            // A competing long-press (e.g. second finger) must not restart or
+            // steal the drag.
+            act(() => {
+                simulateLongPress(result.current, "A2", 4, pageYForNode(4));
+            });
+            expect(result.current.isDragging).toBe(true);
+            expect(result.current.draggedNode?.id).toBe("C");
+        });
+
+        it("when the container ref is not mounted, then the long-press never starts a drag", () => {
+            const params = createDefaultParams({ containerRef: { current: null } as any });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+            });
+
+            expect(result.current.isDragging).toBe(false);
+        });
+
+        it("when the long-press index has no node, then no drag starts", () => {
+            const params = createDefaultParams();
+            const { result } = renderHook(() => useDragDrop<string>(params));
+
+            act(() => {
+                simulateLongPress(result.current, "GHOST", 99, pageYForNode(9));
+            });
+
+            expect(result.current.isDragging).toBe(false);
+        });
+
+        it("when a move event arrives without an active drag, then it is ignored", () => {
+            const params = createDefaultParams();
+            const store = getTreeViewStore<string>(STORE_ID);
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(pageYForNode(5, "inside")));
+            });
+
+            expect(store.getState().dropTargetNodeId).toBeNull();
+            expect(result.current.isDragging).toBe(false);
+        });
+
+        it("when the flattened list empties mid-drag, then drop calculation is a safe no-op", () => {
+            const params = createDefaultParams();
+            const { result, rerender } = renderHook(
+                (p) => useDragDrop<string>(p),
+                { initialProps: params }
+            );
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+                (result.current.panResponder.panHandlers as any)
+                    .onResponderGrant(mockGestureEvent(pageYForNode(8)));
+            });
+
+            act(() => {
+                rerender({ ...params, flattenedNodes: [] });
+            });
+
+            expect(() => {
+                act(() => {
+                    (result.current.panResponder.panHandlers as any)
+                        .onResponderMove(mockGestureEvent(pageYForNode(2, "inside")));
+                });
+            }).not.toThrow();
+        });
+    });
+
+    // ──────────────────────────────────────────────
+    // Auto-expand full lifecycle
+    // ──────────────────────────────────────────────
+
+    describe("given auto-expand fires during a drag", () => {
+        it("when the drop lands elsewhere, then the auto-expanded node collapses back after the drop", () => {
+            const params = createDefaultParams({ autoExpandDelay: 100 });
+            const store = getTreeViewStore<string>(STORE_ID);
+            // Collapse B: flattened prop keeps the all-expanded list, so B stays
+            // at index 5 while its children are merely hidden in the store.
+            act(() => {
+                store.getState().updateExpanded(new Set(["A", "A1"]));
+            });
+            const collapsedFlat = params.flattenedNodes.filter(
+                (n) => n.id !== "B1" && n.id !== "B2"
+            );
+            const { result } = renderHook(() =>
+                useDragDrop<string>({ ...params, flattenedNodes: collapsedFlat })
+            );
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            // Collapsed order: A(0) A1(1) A1a(2) A1b(3) A2(4) B(5) C(6). Drag C.
+            act(() => {
+                simulateLongPress(result.current, "C", 6, pageYForNode(6));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(6)));
+            });
+
+            // Hover "inside" collapsed B; re-hovering the same target must not
+            // restart the delay timer.
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(5, 0.4)));
+            });
+            act(() => {
+                jest.advanceTimersByTime(60);
+                handlers.onResponderMove(mockGestureEvent(dropY(5, 0.45)));
+            });
+            act(() => {
+                jest.advanceTimersByTime(60); // 120ms total > 100ms delay
+            });
+            expect(store.getState().expanded.has("B")).toBe(true);
+
+            // Drop somewhere unrelated (above A1a): B is not an ancestor of the
+            // target, so the courtesy expansion must be rolled back.
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(2, 0.1)));
+                handlers.onResponderRelease(mockGestureEvent(dropY(2, 0.1)));
+            });
+            expect(store.getState().expanded.has("B")).toBe(false);
+        });
+    });
+
+    // ──────────────────────────────────────────────
+    // Scroll bookkeeping during drag
+    // ──────────────────────────────────────────────
+
+    describe("given the list reports a scroll while a drag is active", () => {
+        it("when handleScroll fires mid-drag, then the drag's scroll offset stays under the drag loop's control", () => {
+            const params = createDefaultParams();
+            const store = getTreeViewStore<string>(STORE_ID);
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(8)));
+            });
+
+            // A stray onScroll (e.g. layout settling) mid-drag must NOT shift the
+            // drop math: the RAF loop is the single writer during a drag.
+            act(() => {
+                result.current.handleScroll({
+                    nativeEvent: { contentOffset: { y: 500 } },
+                } as any);
+            });
+
+            // If the 500px offset had been accepted, this finger position would
+            // resolve rows away from B1. It must still hit "above B1".
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(6, 0.05)));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("B1");
+            expect(store.getState().dropPosition).toBe("above");
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(dropY(6, 0.05)));
+            });
+        });
+    });
 });

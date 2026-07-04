@@ -978,4 +978,104 @@ describe("TreeView", () => {
             expect(screen.getByTestId("node_row_1")).toBeTruthy();
         });
     });
+
+    it("given initialScrollNodeID, when mounted, then the target's ancestors are pre-expanded", () => {
+        const onExpand = jest.fn();
+
+        render(<TreeView data={testData} onExpand={onExpand} initialScrollNodeID="1.1" />);
+
+        // Mount must reveal the initial scroll target: parent "1" expanded.
+        const lastCall = onExpand.mock.calls[onExpand.mock.calls.length - 1];
+        expect(lastCall[0] as string[]).toContain("1");
+        expect(screen.getByTestId("node_row_1.1")).toBeTruthy();
+    });
+
+    it("given validate, when moveNode targets an unknown node, then it returns null", () => {
+        const ref = createRef<TreeViewRef<string>>();
+        render(
+            <TreeView ref={ref} data={testData} dragAndDrop={{ canDrop: () => true }} />
+        );
+
+        let result: MoveResult<string> | null = {} as MoveResult<string>;
+        act(() => {
+            result = ref.current!.moveNode("2", "GHOST", "inside", { validate: true });
+        });
+
+        expect(result).toBeNull();
+    });
+
+    it("given validate with maxDepth, when moveNode inserts a sibling within the limit, then it succeeds", () => {
+        const ref = createRef<TreeViewRef<string>>();
+        render(<TreeView ref={ref} data={testData} dragAndDrop={{ maxDepth: 1 }} />);
+
+        // "Above 1.1" makes "2" a sibling at level 1 - within maxDepth 1.
+        let result: MoveResult<string> | null = null;
+        act(() => {
+            result = ref.current!.moveNode("2", "1.1", "above", { validate: true });
+        });
+
+        expect(result).not.toBeNull();
+        expect(result!).toMatchObject({ newParentId: "1", position: "above" });
+    });
+
+    it("given a CustomDropIndicatorComponent, when a drop target is set, then it renders with position and level", () => {
+        const storeModule = require("../store/treeView.store");
+        const spy = jest.spyOn(storeModule, "getTreeViewStore");
+        const CustomIndicator = jest.fn(({ position, level }: any) => (
+            <Text testID="custom-indicator">{`${position}:${level}`}</Text>
+        ));
+        render(
+            <TreeView
+                data={testData}
+                dragAndDrop={{ customizations: { CustomDropIndicatorComponent: CustomIndicator } }}
+            />
+        );
+        const storeId = spy.mock.calls[0]![0] as string;
+        const store = storeModule.getTreeViewStore(storeId);
+        spy.mockRestore();
+
+        act(() => {
+            store.getState().updateDraggedNodeId("2");
+            store.getState().updateDropTarget("1", "inside", 1);
+        });
+
+        expect(screen.getByTestId("custom-indicator")).toBeTruthy();
+        expect(screen.getByText("inside:1")).toBeTruthy();
+    });
+
+    it("given a CustomNodeRowComponent with drag enabled, when a drop target is set, then the row still renders with the indicator wrapper", () => {
+        const storeModule = require("../store/treeView.store");
+        const spy = jest.spyOn(storeModule, "getTreeViewStore");
+        render(
+            <TreeView
+                data={testData}
+                dragAndDrop={{}}
+                CustomNodeRowComponent={({ node, isDropTarget }: any) => (
+                    <Text testID={`custom-row-${node.id}`}>{`${node.name}:${isDropTarget}`}</Text>
+                )}
+            />
+        );
+        const storeId = spy.mock.calls[0]![0] as string;
+        const store = storeModule.getTreeViewStore(storeId);
+        spy.mockRestore();
+
+        act(() => {
+            store.getState().updateDraggedNodeId("2");
+            store.getState().updateDropTarget("1", "above", 0);
+        });
+
+        expect(screen.getByText("Node 1:true")).toBeTruthy();
+    });
+
+    it("given zero-height layout reports, when a node lays out, then the measurement is discarded", () => {
+        render(<TreeView data={testData} dragAndDrop={{}} />);
+
+        const nodeRow = screen.getByTestId("node_row_1");
+        // Zero heights (unmounted/clipped rows) must not poison drop-target math.
+        expect(() => {
+            fireEvent(nodeRow, "layout", { nativeEvent: { layout: { height: 0 } } });
+            fireEvent(nodeRow, "layout", { nativeEvent: { layout: { height: 48 } } });
+            fireEvent(nodeRow, "layout", { nativeEvent: { layout: { height: 52 } } });
+        }).not.toThrow();
+    });
 });

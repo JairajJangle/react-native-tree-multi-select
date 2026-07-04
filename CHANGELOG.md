@@ -1,3 +1,15 @@
+# [3.0.0-beta.7](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.6...v3.0.0-beta.7) (2026-07-04)
+
+
+### Bug Fixes
+
+* keep nodeIndex stable when drag disabled to preserve node memoization ([5462ff8](https://github.com/JairajJangle/react-native-tree-multi-select/commit/5462ff8eb55d572e0ce457a7f8dcb5a786e14b4f))
+
+
+### Contributors
+
+* @Claude Fable 5
+
 # [3.0.0-beta.6](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.5...v3.0.0-beta.6) (2026-07-04)
 
 

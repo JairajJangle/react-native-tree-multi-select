@@ -69,4 +69,39 @@ describe("useDeepCompareEffect", () => {
 
         expect(cleanup).toHaveBeenCalledTimes(1);
     });
+
+    it("given two consecutive deep changes, when re-rendered each time, then the effect runs for BOTH changes", () => {
+        const effect = jest.fn();
+
+        const { rerender } = renderHook(
+            ({ deps }) => useDeepCompareEffect(effect, deps),
+            { initialProps: { deps: [{ a: 1 }] } }
+        );
+        expect(effect).toHaveBeenCalledTimes(1);
+
+        // Two different values back-to-back: each one must trigger the effect.
+        // (Regression: a boolean changed-flag stays true across consecutive
+        // changes, silently dropping the second update.)
+        rerender({ deps: [{ a: 2 }] });
+        expect(effect).toHaveBeenCalledTimes(2);
+
+        rerender({ deps: [{ a: 3 }] });
+        expect(effect).toHaveBeenCalledTimes(3);
+    });
+
+    it("given an equal re-render after a change, when re-rendered, then the effect does NOT run again", () => {
+        const effect = jest.fn();
+
+        const { rerender } = renderHook(
+            ({ deps }) => useDeepCompareEffect(effect, deps),
+            { initialProps: { deps: [{ a: 1 }] } }
+        );
+        rerender({ deps: [{ a: 2 }] });
+        expect(effect).toHaveBeenCalledTimes(2);
+
+        // Deeply-equal deps after a change must not re-fire the effect.
+        rerender({ deps: [{ a: 2 }] });
+        rerender({ deps: [{ a: 2 }] });
+        expect(effect).toHaveBeenCalledTimes(2);
+    });
 });

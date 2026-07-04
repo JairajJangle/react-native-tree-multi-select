@@ -1,6 +1,5 @@
 import {
   useEffect,
-  useMemo,
   useRef,
   type DependencyList,
   type EffectCallback,
@@ -18,30 +17,21 @@ export default function useDeepCompareEffect(
   effect: EffectCallback,
   deps: DependencyList
 ) {
-  // Ref to track if it's the first render
-  const firstRenderRef = useRef<boolean>(true);
-
-  // Memoized dependencies to avoid redundant `isEqual` checks
-  const memoizedDependencies = useMemo(() => deps, [deps]);
-
   // Ref to store the previous dependencies
-  const dependenciesRef = useRef<DependencyList>(memoizedDependencies);
+  const dependenciesRef = useRef<DependencyList>(deps);
 
-  // Check for dependency changes
-  const dependenciesChanged = !fastIsEqual(
-    dependenciesRef.current,
-    memoizedDependencies
-  );
-  if (dependenciesChanged) {
-    dependenciesRef.current = memoizedDependencies;
+  // Monotonic change counter: a boolean flag would stay `true` across two
+  // consecutive deep changes and useEffect would miss the second one.
+  const changeSignalRef = useRef(0);
+
+  if (!fastIsEqual(dependenciesRef.current, deps)) {
+    dependenciesRef.current = deps;
+    changeSignalRef.current += 1;
   }
 
-  useEffect(() => {
-    if (firstRenderRef.current) {
-      firstRenderRef.current = false;
-    }
-
-    return effect();
+  useEffect(
+    () => effect(),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dependenciesChanged]); // exclude the effect function from the dependencies
+    [changeSignalRef.current] // exclude the effect function from the dependencies
+  );
 }

@@ -1,3 +1,26 @@
+# [3.0.0-beta.6](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.5...v3.0.0-beta.6) (2026-07-04)
+
+
+* feat(drag-drop)!: move-delta events, moveNode options, and drag engine hardening ([da3d067](https://github.com/JairajJangle/react-native-tree-multi-select/commit/da3d067b30fc3891d53e0f16993555f8157440df))
+
+
+### Bug Fixes
+
+* **drag-drop:** stop overlay flash when tree re-renders mid-drag ([7542919](https://github.com/JairajJangle/react-native-tree-multi-select/commit/7542919174402e700be4fe943766912cd587da89))
+* **drag-drop:** stop overlay indent flicker when dropping into an expanded parent ([29f39cb](https://github.com/JairajJangle/react-native-tree-multi-select/commit/29f39cb86a4e1c35a21c4e1aced27587fac64acb))
+
+
+### Features
+
+* **example:** add selection-interplay and physics playground drag-drop demos ([748b121](https://github.com/JairajJangle/react-native-tree-multi-select/commit/748b121fc205e2248a1e2103a4987f9514dd4135))
+* **example:** update drag-drop demos and add bottom padding to tree lists ([2ceee61](https://github.com/JairajJangle/react-native-tree-multi-select/commit/2ceee613667cdda2702834bf8b192cf7d78880c7))
+
+
+### BREAKING CHANGES
+
+* DragEndEvent no longer carries newTreeData; consume the move
+delta or read the reordered tree via ref.getTreeData().
+
 # [3.0.0-beta.5](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.4...v3.0.0-beta.5) (2026-05-02)
 
 

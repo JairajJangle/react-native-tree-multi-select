@@ -255,7 +255,9 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
                 ExpandCollapseTouchableComponent={ExpandCollapseTouchableComponent}
                 CustomNodeRowComponent={CustomNodeRowComponent}
 
-                nodeIndex={index}
+                // Index only matters for drag touch bookkeeping; keep it stable
+                // when drag is off so memoized nodes skip index-shift re-renders
+                nodeIndex={dragEnabled ? index : 0}
                 dragEnabled={dragEnabled}
                 isDragging={isDragging}
                 onNodeTouchStart={dragEnabled ? handleNodeTouchStart : undefined}

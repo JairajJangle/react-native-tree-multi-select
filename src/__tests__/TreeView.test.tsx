@@ -56,6 +56,23 @@ const testData: TreeNode<string>[] = [
 // All node IDs in the test data
 const ALL_IDS = ["1", "1.1", "1.2", "2"];
 
+// The jest react-native preset stubs host measurement as a no-op (the callback
+// never fires) and the FlashList mock's host View has no scrollToIndex. Patch
+// the shared host View prototype so container measurement and imperative
+// scrolling behave; returns an undo function.
+function patchHostViewMethods() {
+    const proto = (View as any).prototype;
+    const measureSpy = jest.spyOn(proto, "measureInWindow").mockImplementation(
+        // Container viewport at x=0, y=0, 300x600.
+        (cb: any) => cb(0, 0, 300, 600)
+    );
+    proto.scrollToIndex = jest.fn();
+    return () => {
+        measureSpy.mockRestore();
+        delete proto.scrollToIndex;
+    };
+}
+
 describe("TreeView", () => {
     it("given tree data, when mounted, then nodes are rendered", () => {
         render(<TreeView data={testData} />);
@@ -605,5 +622,360 @@ describe("TreeView", () => {
         const { unmount } = render(<TreeView data={testData} />);
 
         expect(() => unmount()).not.toThrow();
+    });
+
+    it("given a parent node, when its expand arrow is pressed, then the node expands and children render", () => {
+        const onExpand = jest.fn();
+        render(<TreeView data={testData} onExpand={onExpand} />);
+        onExpand.mockClear();
+
+        expect(screen.queryByTestId("node_row_1.1")).toBeNull();
+
+        fireEvent.press(screen.getByTestId("expandable_arrow_1"));
+
+        expect(onExpand).toHaveBeenCalled();
+        const lastCall = onExpand.mock.calls[onExpand.mock.calls.length - 1];
+        expect(lastCall[0] as string[]).toContain("1");
+        expect(screen.getByTestId("node_row_1.1")).toBeTruthy();
+    });
+
+    it("given drag enabled, when the drag container lays out, then the layout handler records the height without crashing", () => {
+        render(<TreeView data={testData} dragAndDrop={{}} />);
+
+        // The wrapper View that owns the pan handlers also tracks its height for
+        // auto-scroll clamping; firing layout on it must be handled.
+        let inst: any = screen.getByTestId("flash-list");
+        while (inst && !(inst.props && inst.props.onResponderMove)) {
+            inst = inst.parent;
+        }
+        expect(inst).toBeTruthy();
+
+        expect(() =>
+            inst.props.onLayout({ nativeEvent: { layout: { height: 480 } } })
+        ).not.toThrow();
+    });
+
+    it("given treeFlashListProps callbacks, when list scroll and content-size events fire, then they are forwarded to the consumer", () => {
+        const onScroll = jest.fn();
+        const onContentSizeChange = jest.fn();
+
+        render(
+            <TreeView
+                data={testData}
+                dragAndDrop={{}}
+                treeFlashListProps={{ onScroll, onContentSizeChange } as any}
+            />
+        );
+
+        const flashList = screen.getByTestId("flash-list");
+        const scrollEvent = { nativeEvent: { contentOffset: { y: 42 } } };
+        fireEvent.scroll(flashList, scrollEvent);
+        flashList.props.onContentSizeChange(300, 800);
+
+        // The library wraps both callbacks for its own drag bookkeeping but the
+        // consumer contract is that they still receive every event unchanged.
+        expect(onScroll).toHaveBeenCalledTimes(1);
+        expect(onScroll.mock.calls[0]![0].nativeEvent.contentOffset.y).toBe(42);
+        expect(onContentSizeChange).toHaveBeenCalledWith(300, 800);
+    });
+
+    it("given no treeFlashListProps, when scroll and content-size events fire, then nothing crashes", () => {
+        render(<TreeView data={testData} dragAndDrop={{}} />);
+
+        const flashList = screen.getByTestId("flash-list");
+        fireEvent.scroll(flashList, { nativeEvent: { contentOffset: { y: 10 } } });
+
+        expect(() => flashList.props.onContentSizeChange(300, 800)).not.toThrow();
+    });
+
+    it("given a ref, when calling scrollToNodeID for a nested node, then its ancestors get expanded", () => {
+        const undoPatch = patchHostViewMethods();
+        try {
+            const onExpand = jest.fn();
+            const ref = createRef<TreeViewRef<string>>();
+
+            render(<TreeView ref={ref} data={testData} onExpand={onExpand} />);
+            onExpand.mockClear();
+
+            act(() => {
+                ref.current!.scrollToNodeID({ nodeId: "1.1" });
+            });
+
+            // Scrolling to a hidden nested node must reveal it: parent "1" expands.
+            expect(onExpand).toHaveBeenCalled();
+            const lastCall = onExpand.mock.calls[onExpand.mock.calls.length - 1];
+            expect(lastCall[0] as string[]).toContain("1");
+        } finally {
+            undoPatch();
+        }
+    });
+
+    it("given moveNode with scrollToNode, when the deferred scroll fires, then the moved node is revealed via expansion", () => {
+        const undoPatch = patchHostViewMethods();
+        jest.useFakeTimers();
+        try {
+            const onExpand = jest.fn();
+            const ref = createRef<TreeViewRef<string>>();
+
+            render(<TreeView ref={ref} data={testData} onExpand={onExpand} />);
+            onExpand.mockClear();
+
+            let result: MoveResult<string> | null = null;
+            act(() => {
+                result = ref.current!.moveNode("2", "1.1", "inside", { scrollToNode: true });
+            });
+            expect(result).not.toBeNull();
+
+            act(() => {
+                jest.runAllTimers();
+            });
+
+            // The moved node ended up nested under 1 > 1.1; the opt-in scroll must
+            // expand that chain so the node is actually visible.
+            const lastCall = onExpand.mock.calls[onExpand.mock.calls.length - 1];
+            const expandedIds = lastCall[0] as string[];
+            expect(expandedIds).toEqual(expect.arrayContaining(["1", "1.1"]));
+        } finally {
+            jest.useRealTimers();
+            undoPatch();
+        }
+    });
+
+    it("given a controlled consumer, when the post-move tree is fed back into data, then the store is not reinitialized", () => {
+        const ref = createRef<TreeViewRef<string>>();
+        const { rerender } = render(<TreeView ref={ref} data={testData} />);
+
+        // Select something so a destructive reinit would be observable.
+        act(() => { ref.current!.selectNodes(["1.1"]); });
+        act(() => { ref.current!.moveNode("2", "1", "inside"); });
+
+        const movedTree = ref.current!.getTreeData();
+        const checkedBefore = ref.current!.getChildToParentMap();
+        expect(checkedBefore.get("2")).toBe("1");
+
+        // Controlled flow: consumer echoes the reordered tree back via `data`.
+        // An equal tree must be recognized and skipped - reinitializing would
+        // wipe selection and expansion out from under the user.
+        const echoedData = JSON.parse(JSON.stringify(movedTree));
+        rerender(<TreeView ref={ref} data={echoedData} />);
+
+        expect(ref.current!.getTreeData()).toBe(movedTree);
+
+        // A later, genuinely different data prop must still reinitialize.
+        const differentData: TreeNode<string>[] = [{ id: "Z", name: "Node Z" }];
+        rerender(<TreeView ref={ref} data={differentData} />);
+        expect(ref.current!.getTreeData().map(n => n.id)).toEqual(["Z"]);
+    });
+
+    it("given the dragAndDrop prop changes by value, when re-rendered, then the new rules take effect", () => {
+        const ref = createRef<TreeViewRef<string>>();
+        const { rerender } = render(
+            <TreeView ref={ref} data={testData} dragAndDrop={{ maxDepth: 1 }} />
+        );
+
+        // maxDepth 1 blocks nesting "2" under "1.1" (would land at level 2).
+        let result: MoveResult<string> | null = null;
+        act(() => {
+            result = ref.current!.moveNode("2", "1.1", "inside", { validate: true });
+        });
+        expect(result).toBeNull();
+
+        // Passing a NEW object with different content must not be swallowed by
+        // the identity-stabilizing ref - the relaxed rule has to apply.
+        rerender(<TreeView ref={ref} data={testData} dragAndDrop={{ maxDepth: 5 }} />);
+
+        act(() => {
+            result = ref.current!.moveNode("2", "1.1", "inside", { validate: true });
+        });
+        expect(result).not.toBeNull();
+    });
+
+    describe("interactive drag (component level)", () => {
+        // PanResponder gesture events need a touch history record to compute
+        // gesture state (same shape as the hook-level tests).
+        function mockGestureEvent(pageY: number, pageX = 50) {
+            return {
+                nativeEvent: {
+                    pageY, pageX, locationY: 10, locationX: 10,
+                    touches: [{ pageY, pageX }],
+                    changedTouches: [], identifier: 1, target: 1, timestamp: 0,
+                },
+                touchHistory: {
+                    mostRecentTimeStamp: 1,
+                    numberActiveTouches: 1,
+                    indexOfSingleActiveTouch: 0,
+                    touchBank: [{
+                        touchActive: true,
+                        currentPageX: pageX, currentPageY: pageY,
+                        currentTimeStamp: 1,
+                        previousPageX: pageX, previousPageY: pageY - 1,
+                        previousTimeStamp: 0,
+                        startPageX: pageX, startPageY: pageY - 1,
+                        startTimeStamp: 0,
+                    }],
+                } as any,
+            } as any;
+        }
+
+        function findDragContainer() {
+            let inst: any = screen.getByTestId("flash-list");
+            while (inst && !(inst.props && inst.props.onResponderMove)) {
+                inst = inst.parent;
+            }
+            expect(inst).toBeTruthy();
+            return inst;
+        }
+
+        // Node rows sit under a 5px list header at item height 36 (defaults):
+        // row i spans local Y [5 + i*36, 5 + (i+1)*36).
+        const rowPageY = (index: number, fraction: number) => 5 + index * 36 + 36 * fraction;
+
+        let undoPatch: () => void;
+
+        beforeEach(() => {
+            undoPatch = patchHostViewMethods();
+            jest.useFakeTimers();
+        });
+
+        afterEach(() => {
+            act(() => { jest.runOnlyPendingTimers(); });
+            jest.useRealTimers();
+            undoPatch();
+        });
+
+        it("given a long-press drag dropped inside another node, when released, then onDragEnd fires and the tree is reordered", () => {
+            const onDragEnd = jest.fn();
+            render(<TreeView data={testData} dragAndDrop={{ onDragEnd }} />);
+
+            // Long-press node "2" (index 1) to start the drag.
+            fireEvent(screen.getByTestId("node_row_2"), "touchStart", {
+                nativeEvent: { pageY: rowPageY(1, 0.3), locationY: 10 },
+            });
+            act(() => { jest.advanceTimersByTime(500); });
+
+            const container = findDragContainer();
+
+            // Drag over the middle ("inside" zone) of node "1" (index 0) and release.
+            act(() => { container.props.onResponderGrant(mockGestureEvent(rowPageY(1, 0.3))); });
+            act(() => { container.props.onResponderMove(mockGestureEvent(rowPageY(0, 0.5))); });
+            act(() => { container.props.onResponderRelease(mockGestureEvent(rowPageY(0, 0.5))); });
+
+            expect(onDragEnd).toHaveBeenCalledTimes(1);
+            expect(onDragEnd.mock.calls[0]![0]).toMatchObject({
+                draggedNodeId: "2",
+                targetNodeId: "1",
+                position: "inside",
+            });
+        });
+
+        it("given a node was being dragged, when its checkbox or expand arrow is pressed mid-drag, then the press is swallowed", () => {
+            const onCheck = jest.fn();
+            const onExpand = jest.fn();
+            const utils = render(
+                <TreeView data={testData} onCheck={onCheck} onExpand={onExpand} dragAndDrop={{}} />
+            );
+
+            // Long-press node "1" (index 0, has children) to start dragging it.
+            fireEvent(screen.getByTestId("node_row_1"), "touchStart", {
+                nativeEvent: { pageY: rowPageY(0, 0.3), locationY: 10 },
+            });
+            act(() => { jest.advanceTimersByTime(500); });
+
+            onCheck.mockClear();
+            onExpand.mockClear();
+
+            // A finger-lift after a long-press drag also fires press events; the
+            // node must swallow them so a drag never toggles check/expand state.
+            fireEvent.press(screen.getByTestId("checkbox_1"));
+            fireEvent.press(screen.getByTestId("expandable_arrow_1"));
+
+            expect(onCheck).not.toHaveBeenCalled();
+            expect(onExpand).not.toHaveBeenCalled();
+
+            // Cancel the drag; a FRESH touch must clear the flag and presses work again.
+            const container = findDragContainer();
+            act(() => { container.props.onResponderTerminate(mockGestureEvent(rowPageY(0, 0.3))); });
+            fireEvent(screen.getByTestId("node_row_1"), "touchStart", {
+                nativeEvent: { pageY: rowPageY(0, 0.3), locationY: 10 },
+            });
+            fireEvent(screen.getByTestId("node_row_1"), "touchEnd");
+            fireEvent.press(screen.getByTestId("checkbox_1"));
+
+            expect(onCheck).toHaveBeenCalled();
+            const lastCall = onCheck.mock.calls[onCheck.mock.calls.length - 1];
+            expect((lastCall[0] as string[]).sort()).toEqual(["1", "1.1", "1.2"]);
+
+            utils.unmount();
+        });
+    });
+
+    describe("drop indicator rendering", () => {
+        function getStore() {
+            const storeModule = require("../store/treeView.store");
+            const spy = jest.spyOn(storeModule, "getTreeViewStore");
+            const utils = render(<TreeView data={testData} dragAndDrop={{}} />);
+            const storeId = spy.mock.calls[0]![0] as string;
+            const store = storeModule.getTreeViewStore(storeId);
+            spy.mockRestore();
+            return { store, utils };
+        }
+
+        it.each(["inside", "above", "below"] as const)(
+            "given a drop target with position %s, when rendered, then the built-in indicator appears without crashing",
+            (position) => {
+                const { store } = getStore();
+
+                act(() => {
+                    store.getState().updateDraggedNodeId("2");
+                    store.getState().updateDropTarget("1", position, 0);
+                });
+
+                // The target row renders its indicator overlay; the row itself stays.
+                expect(screen.getByTestId("node_row_1")).toBeTruthy();
+
+                act(() => {
+                    store.getState().updateDropTarget(null, null, null);
+                    store.getState().updateDraggedNodeId(null);
+                });
+            }
+        );
+
+        it("given custom dropIndicatorStyleProps, when an above-drop is targeted at root level, then the styled indicator renders", () => {
+            const storeModule = require("../store/treeView.store");
+            const spy = jest.spyOn(storeModule, "getTreeViewStore");
+            render(
+                <TreeView
+                    data={testData}
+                    dragAndDrop={{
+                        customizations: {
+                            dropIndicatorStyleProps: {
+                                lineColor: "#FF0000",
+                                lineThickness: 2,
+                                circleSize: 8,
+                                highlightColor: "rgba(255,0,0,0.1)",
+                                highlightBorderColor: "rgba(255,0,0,0.4)",
+                                highlightBorderWidth: 1,
+                                highlightBorderRadius: 2,
+                            },
+                        },
+                    }}
+                />
+            );
+            const storeId = spy.mock.calls[0]![0] as string;
+            const store = storeModule.getTreeViewStore(storeId);
+            spy.mockRestore();
+
+            act(() => {
+                store.getState().updateDraggedNodeId("2");
+                // Root level: the circle clamp (safeLeftOffset) branch is exercised.
+                store.getState().updateDropTarget("1", "above", 0);
+            });
+            expect(screen.getByTestId("node_row_1")).toBeTruthy();
+
+            act(() => {
+                store.getState().updateDropTarget("1", "inside", 0);
+            });
+            expect(screen.getByTestId("node_row_1")).toBeTruthy();
+        });
     });
 });

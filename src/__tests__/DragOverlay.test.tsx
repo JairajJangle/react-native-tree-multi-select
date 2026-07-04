@@ -16,9 +16,9 @@ jest.mock("@expo/vector-icons/FontAwesome", () => {
     return { default: ({ name }: any) => <Text>{name}</Text> };
 });
 
-import { Text } from "react-native";
+import { Text, TouchableOpacity } from "react-native";
 import { Animated } from "react-native";
-import { render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { DragOverlay } from "../components/DragOverlay";
 import { getTreeViewStore } from "../store/treeView.store";
 import { initializeNodeMaps } from "../helpers";
@@ -177,5 +177,154 @@ describe("DragOverlay", () => {
         const el = screen.getByTestId("custom-row");
         expect(el).toBeTruthy();
         expect(screen.getByText("row:Leaf Node:0:true:false")).toBeTruthy();
+    });
+
+    it("given display-only overlay, when the built-in checkbox is pressed, then store checked state is untouched", () => {
+        const store = setupStore();
+
+        const node: __FlattenedTreeNode__<string> = {
+            id: "2", name: "Leaf Node", level: 0,
+        };
+
+        render(<DragOverlay {...makeOverlayProps(node)} />);
+
+        // The overlay is display-only: pointerEvents="none" blocks real presses,
+        // so exercise the handler prop directly to prove it is inert.
+        const checkboxTouchable = screen.getByText("unchecked").parent;
+        fireEvent.press(checkboxTouchable!);
+        act(() => {
+            screen.UNSAFE_getAllByType(TouchableOpacity)[0]!.props.onPress();
+        });
+
+        expect(store.getState().checked.size).toBe(0);
+        expect(screen.getByText("unchecked")).toBeTruthy();
+    });
+
+    it("given CustomNodeRowComponent, when its onCheck/onExpand are invoked, then they are inert no-ops", () => {
+        const store = setupStore();
+
+        const node: __FlattenedTreeNode__<string> = {
+            id: "1", name: "Parent Node",
+            children: [{ id: "1.1", name: "Child 1" }],
+            level: 0,
+        };
+
+        // pointerEvents="none" blocks real presses on the overlay, so invoke the
+        // injected handlers directly: the display-only contract is they do nothing.
+        const CustomRow = ({ onCheck, onExpand }: any) => {
+            onCheck();
+            onExpand();
+            return <Text testID="custom-row">row</Text>;
+        };
+
+        render(
+            <DragOverlay
+                {...makeOverlayProps(node)}
+                CustomNodeRowComponent={CustomRow}
+            />
+        );
+
+        expect(screen.getByTestId("custom-row")).toBeTruthy();
+        expect(store.getState().checked.size).toBe(0);
+        expect(store.getState().expanded.size).toBe(0);
+    });
+
+    it("given partial overlay style props, when rendered, then only the provided fields are overridden", () => {
+        setupStore();
+
+        const node: __FlattenedTreeNode__<string> = {
+            id: "2", name: "Leaf Node", level: 0,
+        };
+
+        render(
+            <DragOverlay
+                {...makeOverlayProps(node)}
+                dragDropCustomizations={{
+                    dragOverlayStyleProps: {
+                        shadowOffset: { width: 1, height: 1 },
+                        zIndex: 42,
+                    },
+                }}
+            />
+        );
+
+        // Renders fine with the unset fields falling back to the built-in style
+        expect(screen.getByText("unchecked")).toBeTruthy();
+    });
+
+    describe("memoization (overlayPropsAreEqual)", () => {
+        const node: __FlattenedTreeNode__<string> = {
+            id: "1", name: "Parent Node",
+            children: [{ id: "1.1", name: "Child 1" }],
+            level: 0,
+        };
+
+        function renderCountingOverlay() {
+            let renders = 0;
+            const CountingOverlay = () => {
+                renders += 1;
+                return <Text testID="counting-overlay">overlay</Text>;
+            };
+            return { CountingOverlay, getRenders: () => renders };
+        }
+
+        it("given fresh-but-equal style and customization literals, when re-rendered, then the overlay does not re-render", () => {
+            setupStore();
+            const { CountingOverlay, getRenders } = renderCountingOverlay();
+
+            // Consumers routinely pass fresh (but deep-equal) literals per render;
+            // the overlay must compare them by value and skip the re-render,
+            // otherwise the Animated transform re-binds and flashes mid-drag.
+            const sharedY = new Animated.Value(0);
+            const sharedX = new Animated.Value(0);
+            const makeProps = () => ({
+                ...makeOverlayProps(node),
+                overlayY: sharedY,
+                overlayX: sharedX,
+                checkBoxViewStyleProps: { outermostParentViewStyle: { margin: 1 } },
+                dragDropCustomizations: { CustomDragOverlayComponent: CountingOverlay },
+            });
+
+            const { rerender } = render(<DragOverlay {...makeProps()} />);
+            expect(getRenders()).toBe(1);
+
+            rerender(<DragOverlay {...makeProps()} />);
+
+            expect(getRenders()).toBe(1);
+        });
+
+        it("given a meaningfully changed prop, when re-rendered, then the overlay re-renders", () => {
+            setupStore();
+            const { CountingOverlay, getRenders } = renderCountingOverlay();
+
+            const sharedY = new Animated.Value(0);
+            const sharedX = new Animated.Value(0);
+            const baseProps = () => ({
+                ...makeOverlayProps(node),
+                overlayY: sharedY,
+                overlayX: sharedX,
+                dragDropCustomizations: { CustomDragOverlayComponent: CountingOverlay },
+            });
+
+            const { rerender } = render(<DragOverlay {...baseProps()} />);
+            expect(getRenders()).toBe(1);
+
+            // A different dragged node must re-render the overlay
+            const otherNode: __FlattenedTreeNode__<string> = { id: "2", name: "Leaf Node", level: 0 };
+            rerender(<DragOverlay {...baseProps()} node={otherNode} />);
+            expect(getRenders()).toBe(2);
+
+            // A different level must re-render the overlay
+            rerender(<DragOverlay {...baseProps()} node={otherNode} level={3} />);
+            expect(getRenders()).toBe(3);
+
+            // A different Animated position ref must re-render the overlay
+            rerender(<DragOverlay {...baseProps()} node={otherNode} level={3} overlayY={new Animated.Value(5)} />);
+            expect(getRenders()).toBe(4);
+
+            // A different indentationMultiplier must re-render the overlay
+            rerender(<DragOverlay {...baseProps()} node={otherNode} level={3} overlayY={new Animated.Value(5)} indentationMultiplier={30} />);
+            expect(getRenders()).toBe(5);
+        });
     });
 });

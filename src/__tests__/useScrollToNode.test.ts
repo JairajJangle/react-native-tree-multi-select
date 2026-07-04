@@ -5,7 +5,7 @@ jest.mock("fast-is-equal", () => ({
 }));
 
 import { renderHook, act } from "@testing-library/react-native";
-import { useScrollToNode } from "../hooks/useScrollToNode";
+import { scrollMovedNodeIntoView, useScrollToNode } from "../hooks/useScrollToNode";
 import { getTreeViewStore } from "../store/treeView.store";
 import { initializeNodeMaps } from "../helpers";
 import type { __FlattenedTreeNode__, TreeNode } from "../types/treeView.types";
@@ -226,5 +226,82 @@ describe("useScrollToNode", () => {
                 });
             });
         }).not.toThrow();
+    });
+});
+
+describe("scrollMovedNodeIntoView", () => {
+    beforeEach(() => {
+        jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
+    function makeHandlerRef() {
+        const scrollToNodeID = jest.fn();
+        const ref: MutableRefObject<ScrollToNodeHandlerRef<string> | null> = {
+            current: { scrollToNodeID },
+        };
+        return { ref, scrollToNodeID };
+    }
+
+    it("given no options, when invoked, then scrolls after a tick with animated centered defaults", () => {
+        const { ref, scrollToNodeID } = makeHandlerRef();
+
+        scrollMovedNodeIntoView(ref, "A1a", undefined);
+
+        // Deferred a tick so the post-move expand/render settles first
+        expect(scrollToNodeID).not.toHaveBeenCalled();
+        jest.runAllTimers();
+
+        expect(scrollToNodeID).toHaveBeenCalledWith({
+            nodeId: "A1a",
+            animated: true,
+            viewPosition: 0.5,
+            viewOffset: undefined,
+        });
+    });
+
+    it("given boolean options, when invoked, then falls back to the same defaults", () => {
+        const { ref, scrollToNodeID } = makeHandlerRef();
+
+        scrollMovedNodeIntoView(ref, "B", true);
+        jest.runAllTimers();
+
+        expect(scrollToNodeID).toHaveBeenCalledWith({
+            nodeId: "B",
+            animated: true,
+            viewPosition: 0.5,
+            viewOffset: undefined,
+        });
+    });
+
+    it("given custom scroll options, when invoked, then forwards them over the defaults", () => {
+        const { ref, scrollToNodeID } = makeHandlerRef();
+
+        scrollMovedNodeIntoView(ref, "A2", {
+            animated: false,
+            viewPosition: 0,
+            viewOffset: 12,
+        });
+        jest.runAllTimers();
+
+        expect(scrollToNodeID).toHaveBeenCalledWith({
+            nodeId: "A2",
+            animated: false,
+            viewPosition: 0,
+            viewOffset: 12,
+        });
+    });
+
+    it("given an unmounted handler ref, when the deferred scroll fires, then it is a safe no-op", () => {
+        const ref: MutableRefObject<ScrollToNodeHandlerRef<string> | null> = {
+            current: null,
+        };
+
+        scrollMovedNodeIntoView(ref, "A", undefined);
+
+        expect(() => jest.runAllTimers()).not.toThrow();
     });
 });

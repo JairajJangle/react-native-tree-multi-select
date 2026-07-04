@@ -6,6 +6,7 @@ import { getTreeViewStore } from "../store/treeView.store";
 import { initializeNodeMaps } from "../helpers";
 import type { __FlattenedTreeNode__, TreeNode } from "../types/treeView.types";
 import type { DragStartEvent, DragEndEvent, DragCancelEvent } from "../types/dragDrop.types";
+import { Animated } from "react-native";
 import type { GestureResponderEvent } from "react-native";
 import { createRef } from "react";
 
@@ -411,9 +412,14 @@ describe("useDragDrop", () => {
     // PanResponder-driven tests (full gesture pipeline)
     // ──────────────────────────────────────────────
 
-    /** Create a mock GestureResponderEvent with touchHistory for PanResponder */
+    /** Create a mock GestureResponderEvent with touchHistory for PanResponder.
+     *  Timestamps must be strictly increasing: PanResponder skips gesture events
+     *  whose mostRecentTimeStamp it has already accounted for, and Date.now() is
+     *  frozen under fake timers - a fixed timestamp silently drops every move
+     *  after the first. */
+    let gestureEventSeq = 0;
     function mockGestureEvent(pageY: number, pageX = 50): GestureResponderEvent {
-        const ts = Date.now();
+        const ts = ++gestureEventSeq * 20;
         const touchRecord = {
             touchActive: true,
             startPageX: pageX,
@@ -1206,6 +1212,514 @@ describe("useDragDrop", () => {
             expect(
                 handlers.onResponderTerminationRequest?.(mockGestureEvent(pageYForNode(8)))
             ).toBe(false);
+        });
+    });
+
+    // ──────────────────────────────────────────────
+    // Gesture-routing predicates
+    // ──────────────────────────────────────────────
+
+    describe("given the PanResponder should-set predicates", () => {
+        it("when no drag is active, then the responder never captures (list scrolling stays untouched)", () => {
+            const params = createDefaultParams();
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+            const evt = mockGestureEvent(pageYForNode(0));
+
+            expect(handlers.onStartShouldSetResponder?.(evt)).toBe(false);
+            expect(handlers.onMoveShouldSetResponder?.(evt)).toBe(false);
+            expect(handlers.onStartShouldSetResponderCapture?.(evt)).toBe(false);
+            expect(handlers.onMoveShouldSetResponderCapture?.(evt)).toBe(false);
+        });
+
+        it("when a drag is active, then move/capture predicates claim the gesture and termination is refused", () => {
+            const params = createDefaultParams();
+            const { result } = renderHook(() => useDragDrop<string>(params));
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+            });
+            expect(result.current.isDragging).toBe(true);
+
+            const handlers = result.current.panResponder.panHandlers as any;
+            const evt = mockGestureEvent(pageYForNode(8));
+
+            // Taps never start a pan (long-press owns drag initiation) ...
+            expect(handlers.onStartShouldSetResponder?.(evt)).toBe(false);
+            // ... but once dragging, moves must be captured by this responder
+            expect(handlers.onMoveShouldSetResponder?.(evt)).toBe(true);
+            expect(handlers.onStartShouldSetResponderCapture?.(evt)).toBe(true);
+            expect(handlers.onMoveShouldSetResponderCapture?.(evt)).toBe(true);
+            // ... and an ancestor responder must not steal the gesture mid-drag
+            expect(handlers.onResponderTerminationRequest?.(evt)).toBe(false);
+        });
+    });
+
+    // ──────────────────────────────────────────────
+    // Auto-scroll loop lifecycle
+    // ──────────────────────────────────────────────
+
+    describe("given the finger hovers in the edge auto-scroll zone", () => {
+        it("when the finger keeps moving inside the zone, then a single scroll loop keeps scrolling monotonically", () => {
+            const scrollToOffset = jest.fn();
+            const params = createDefaultParams({
+                flashListRef: { current: { scrollToOffset } } as any,
+                contentHeightRef: { current: 2000 },
+            });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(8)));
+            });
+
+            // Bottom edge zone: fingerInContainer > containerHeight - threshold (400-60).
+            const bottomEdgeY = CONTAINER_Y + 380;
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(bottomEdgeY));
+                jest.advanceTimersByTime(100);
+            });
+            const callsAfterFirstEntry = scrollToOffset.mock.calls.length;
+            expect(callsAfterFirstEntry).toBeGreaterThan(0);
+
+            // Re-entering the zone must restart cleanly (no orphaned second loop):
+            // scrolling continues and every commanded offset is monotonically increasing.
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(bottomEdgeY + 5));
+                jest.advanceTimersByTime(100);
+            });
+            expect(scrollToOffset.mock.calls.length).toBeGreaterThan(callsAfterFirstEntry);
+            const offsets = scrollToOffset.mock.calls.map((c) => c[0].offset);
+            for (let i = 1; i < offsets.length; i++) {
+                expect(offsets[i]).toBeGreaterThan(offsets[i - 1]!);
+            }
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(bottomEdgeY));
+            });
+        });
+    });
+
+    // ──────────────────────────────────────────────
+    // Auto-expand cancellation
+    // ──────────────────────────────────────────────
+
+    describe("given a hover over a collapsed expandable node", () => {
+        it("when the finger leaves before the delay elapses, then the node is NOT auto-expanded", () => {
+            // Collapse B so it is an expandable, collapsed drop target.
+            const params = createDefaultParams();
+            const store = getTreeViewStore<string>(STORE_ID);
+            act(() => {
+                store.getState().updateExpanded(new Set(["A", "A1"]));
+            });
+            const collapsedFlat = params.flattenedNodes.filter(
+                (n) => n.id !== "B1" && n.id !== "B2"
+            );
+            const { result } = renderHook(() =>
+                useDragDrop<string>({ ...params, flattenedNodes: collapsedFlat })
+            );
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            // Order: A(0) A1(1) A1a(2) A1b(3) A2(4) B(5) C(6). Drag C (index 6).
+            act(() => {
+                simulateLongPress(result.current, "C", 6, pageYForNode(6));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(6)));
+            });
+
+            // Hover "inside" collapsed B - the auto-expand timer starts.
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(pageYForNode(5, "inside")));
+                jest.advanceTimersByTime(300); // less than the 800ms delay
+            });
+            expect(store.getState().expanded.has("B")).toBe(false);
+
+            // Move away to A2 - the pending expand must be cancelled ...
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(pageYForNode(4, "inside")));
+            });
+            // ... so even after the full delay elapses, B stays collapsed.
+            act(() => {
+                jest.advanceTimersByTime(1000);
+            });
+            expect(store.getState().expanded.has("B")).toBe(false);
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(pageYForNode(4, "inside")));
+            });
+        });
+    });
+
+    // ──────────────────────────────────────────────
+    // Drop-zone geometry: stickiness, fallbacks, hysteresis
+    // ──────────────────────────────────────────────
+
+    // All drags below are initiated via simulateLongPress with a grab at the
+    // "inside" zone offset and locationY 10, which resolves the hook's internal
+    // headerOffset to 20. A finger at pageY = CONTAINER_Y + 20 + (index+fraction)*40
+    // therefore lands at exactly `fraction` inside row `index`.
+    const DRAG_HEADER_OFFSET = 20;
+    const dropY = (index: number, fraction: number) =>
+        CONTAINER_Y + DRAG_HEADER_OFFSET + (index + fraction) * ITEM_HEIGHT;
+
+    describe("given sticky drop zones on a single row", () => {
+        it("when the finger trembles just past the above-zone edge, then the position stays 'above'", () => {
+            const params = createDefaultParams();
+            const store = getTreeViewStore<string>(STORE_ID);
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(8)));
+            });
+
+            // Land in the above zone of B1 (fraction 0.05 < 0.25).
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(6, 0.05)));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("B1");
+            expect(store.getState().dropPosition).toBe("above");
+
+            // Drift to 0.28: past the normal 0.25 boundary but inside the sticky
+            // extension (0.25 + 0.08). Finger tremor must not flip the indicator.
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(6, 0.28)));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("B1");
+            expect(store.getState().dropPosition).toBe("above");
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(dropY(6, 0.28)));
+            });
+        });
+    });
+
+    describe("given canNodeHaveChildren forbids a target", () => {
+        it("when hovering the middle of that row, then the drop falls back to above/below by midpoint", () => {
+            const params = createDefaultParams({
+                canNodeHaveChildren: (node) => node.id !== "C",
+            });
+            const store = getTreeViewStore<string>(STORE_ID);
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                simulateLongPress(result.current, "B2", 7, pageYForNode(7));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(7)));
+            });
+
+            // Lower middle (0.6): "inside" is forbidden, nearest zone is "below".
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(8, 0.6)));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("C");
+            expect(store.getState().dropPosition).toBe("below");
+
+            // Upper middle (0.4): nearest zone is "above".
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(8, 0.4)));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("C");
+            expect(store.getState().dropPosition).toBe("above");
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(dropY(8, 0.4)));
+            });
+        });
+    });
+
+    describe("given a maxDepth constraint", () => {
+        it("when nesting the dragged subtree inside would exceed maxDepth, then the drop falls back to a sibling position", () => {
+            // A1 carries a subtree of depth 1 (its children). maxDepth 1 forbids
+            // nesting it inside ANY node: level 1 + subtree 1 = 2 > 1.
+            const params = createDefaultParams({ maxDepth: 1 });
+            const store = getTreeViewStore<string>(STORE_ID);
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                simulateLongPress(result.current, "A1", 1, pageYForNode(1));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(1)));
+            });
+
+            // Hover the upper-middle of B (index 5 in the flattened prop list):
+            // "inside" would nest A1's subtree at level 2 > maxDepth 1, so the
+            // drop must fall back to the nearest sibling zone ("above").
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(5, 0.4)));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("B");
+            expect(store.getState().dropPosition).toBe("above");
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(dropY(5, 0.4)));
+            });
+        });
+
+        it("when inserting the dragged subtree as a sibling would exceed maxDepth, then the target is invalid", () => {
+            const params = createDefaultParams({ maxDepth: 1 });
+            const store = getTreeViewStore<string>(STORE_ID);
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                simulateLongPress(result.current, "A1", 1, pageYForNode(1));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(1)));
+            });
+
+            // "Above B2" (index 7) would make A1 a sibling at level 1; its subtree
+            // then reaches level 2 > maxDepth 1, so no drop target may be offered.
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(7, 0.05)));
+            });
+            expect(store.getState().dropTargetNodeId).toBeNull();
+            expect(store.getState().dropPosition).toBeNull();
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(dropY(7, 0.05)));
+            });
+        });
+    });
+
+    describe("given the last list item is nested and the finger is at the shallow edge", () => {
+        it("when dropping below it, then the move logically targets the shallow ancestor (drop at root level)", () => {
+            // Tree without C: the LAST flattened row is B2 (level 1).
+            const tree: TreeNode<string>[] = [
+                {
+                    id: "A", name: "A", children: [
+                        { id: "A1", name: "A1", children: [{ id: "A1a", name: "A1a" }] },
+                        { id: "A2", name: "A2" },
+                    ]
+                },
+                { id: "B", name: "B", children: [{ id: "B1", name: "B1" }, { id: "B2", name: "B2" }] },
+            ];
+            const store = getTreeViewStore<string>(STORE_ID);
+            act(() => {
+                store.getState().updateInitialTreeViewData(tree);
+                initializeNodeMaps(STORE_ID, tree);
+                store.getState().updateExpanded(new Set(["A", "A1", "B"]));
+            });
+            // Order: A(0) A1(1) A1a(2) A2(3) B(4) B1(5) B2(6).
+            const flattened = flattenTree(tree);
+            const onDragEnd = jest.fn<void, [DragEndEvent<string>]>();
+            const params = createDefaultParams({ flattenedNodes: flattened, onDragEnd });
+            act(() => {
+                // createDefaultParams re-seeded the store with the default tree; restore ours.
+                store.getState().updateInitialTreeViewData(tree);
+                initializeNodeMaps(STORE_ID, tree);
+                store.getState().updateExpanded(new Set(["A", "A1", "B"]));
+            });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                simulateLongPress(result.current, "A2", 3, pageYForNode(3));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(3)));
+            });
+
+            // Below-zone of B2 (last row, index 6, level 1) with the finger at the
+            // far left (x=10, well left of the level-1 threshold): the user is
+            // asking for the ROOT level, so the logical target walks up to ancestor B.
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(6, 0.95), 10));
+            });
+            // The indicator stays on the visual row (B2) but at the shallow level.
+            expect(store.getState().dropTargetNodeId).toBe("B2");
+            expect(store.getState().dropLevel).toBe(0);
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(dropY(6, 0.95), 10));
+            });
+
+            // The committed move must use the LOGICAL target: below B at root level.
+            expect(onDragEnd).toHaveBeenCalledTimes(1);
+            expect(onDragEnd.mock.calls[0]![0]).toMatchObject({
+                draggedNodeId: "A2",
+                targetNodeId: "B",
+                position: "below",
+                newParentId: null,
+            });
+            expect(store.getState().initialTreeViewData.map((n) => n.id)).toEqual(["A", "B", "A2"]);
+        });
+    });
+
+    describe("given the row above the finger is deeper than the hovered row", () => {
+        it("when the finger stays to the right, then 'above' remaps to 'below' the deeper predecessor", () => {
+            const params = createDefaultParams();
+            const store = getTreeViewStore<string>(STORE_ID);
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(8)));
+            });
+
+            // Above-zone of A2 (index 4, level 1); its predecessor A1b is level 2.
+            // With the finger right of the level-2 threshold (x=200), the user
+            // means the DEEP position: directly below A1b.
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(4, 0.05), 200));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("A1b");
+            expect(store.getState().dropPosition).toBe("below");
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(dropY(4, 0.05), 200));
+            });
+        });
+    });
+
+    describe("given a 'below' hover on an expanded parent", () => {
+        it("when the parent has visible children, then the position converts to the unambiguous 'inside'", () => {
+            const params = createDefaultParams();
+            const store = getTreeViewStore<string>(STORE_ID);
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(8)));
+            });
+
+            // Below-zone of expanded parent A1 (index 1): visually the parent/child
+            // junction, semantically "as sibling after the whole subtree" -
+            // ambiguous, so the UX contract is to convert it to "inside".
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(1, 0.95), 200));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("A1");
+            expect(store.getState().dropPosition).toBe("inside");
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(dropY(1, 0.95), 200));
+            });
+        });
+    });
+
+    describe("given the finger oscillates across a same-level row boundary", () => {
+        it("when flipping between 'below B1' and 'above B2', then hysteresis keeps the previous target", () => {
+            const params = createDefaultParams();
+            const store = getTreeViewStore<string>(STORE_ID);
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(8)));
+            });
+
+            // Settle on "below B1" (index 6; B1 and B2 share level 1).
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(6, 0.95)));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("B1");
+            expect(store.getState().dropPosition).toBe("below");
+
+            // Nudge into "above B2" (index 7) - the same visual gap. The indicator
+            // must NOT flicker to a new target; the previous one is kept.
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(7, 0.05)));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("B1");
+            expect(store.getState().dropPosition).toBe("below");
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(dropY(7, 0.05)));
+            });
+        });
+    });
+
+    // ──────────────────────────────────────────────
+    // Overlay indent without magnetic snap
+    // ──────────────────────────────────────────────
+
+    describe("given magneticSnap is disabled", () => {
+        it("when the effective drop level settles, then the overlay indent jumps instantly instead of springing", () => {
+            const params = createDefaultParams({ magneticSnap: false });
+            const store = getTreeViewStore<string>(STORE_ID);
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(8)));
+            });
+
+            const springSpy = jest.spyOn(Animated, "spring");
+            const setValueSpy = jest.spyOn(result.current.overlayX, "setValue");
+
+            // Hover "inside" B1 (level 1): effective level 2, dragged level 0.
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(pageYForNode(6, "inside"), 200));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("B1");
+            // The indent shift only applies after the level holds for the settle delay.
+            act(() => {
+                jest.advanceTimersByTime(200);
+            });
+
+            // (level 2 - level 0) * indentation 15 = 30, applied via setValue, no spring.
+            expect(setValueSpy).toHaveBeenCalledWith(30);
+            expect(springSpy).not.toHaveBeenCalled();
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(pageYForNode(6, "inside"), 200));
+            });
+        });
+    });
+
+    // ──────────────────────────────────────────────
+    // Post-drop auto-scroll
+    // ──────────────────────────────────────────────
+
+    describe("given a drop whose landing row is inside the viewport", () => {
+        it("when the node moved down the list, then no post-drop scroll is issued (no list yank)", () => {
+            const scrollToNodeID = jest.fn();
+            const params = createDefaultParams({
+                scrollToNodeHandlerRef: { current: { scrollToNodeID } } as any,
+            });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+
+            // Drag A1a (index 2) below B1 (index 6): dragged index < target index,
+            // so the landing row shifts up by one - still fully on-screen.
+            act(() => {
+                simulateFullDragDrop(result.current, "A1a", 2, pageYForNode(6, "below"), 200);
+            });
+
+            act(() => {
+                jest.runOnlyPendingTimers();
+            });
+            expect(scrollToNodeID).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("given a drop whose landing row sits outside the viewport", () => {
+        it("when the drop commits, then the moved node is scrolled into view", () => {
+            const scrollToNodeID = jest.fn();
+            const params = createDefaultParams({
+                // Tiny viewport: only the first two rows are visible.
+                containerRef: {
+                    current: {
+                        measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) =>
+                            cb(CONTAINER_X, CONTAINER_Y, 300, 80),
+                    },
+                } as any,
+                scrollToNodeHandlerRef: { current: { scrollToNodeID } } as any,
+            });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+
+            // Drop A2 below C (last row, far outside the 80px viewport).
+            act(() => {
+                simulateFullDragDrop(result.current, "A2", 4, pageYForNode(8, "below"), 200);
+            });
+
+            act(() => {
+                jest.runOnlyPendingTimers();
+            });
+            expect(scrollToNodeID).toHaveBeenCalledTimes(1);
+            expect(scrollToNodeID.mock.calls[0]![0]).toMatchObject({ nodeId: "A2" });
         });
     });
 });

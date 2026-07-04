@@ -53,6 +53,10 @@ const AUTO_SCROLL_RECALC_INTERVAL_MS = 100;
 // its indentation. Prevents the indent from chasing every row the finger merely
 // passes through while dragging vertically.
 const LEVEL_SETTLE_MS = 120;
+// How far (fraction of row height) the active zone's boundaries extend outward
+// while the finger stays on the same row. Finger tremor at a zone edge would
+// otherwise flip above/inside/below (and the overlay indent) every few frames.
+const ZONE_STICKINESS = 0.08;
 
 interface UseDragDropParams<ID> {
     storeId: string;
@@ -217,6 +221,9 @@ export function useDragDrop<ID>(
 
     // Previous drop target for hysteresis (prevents flicker between "below N" / "above N+1")
     const prevDropTargetRef = useRef<{ targetIndex: number; position: DropPosition; } | null>(null);
+    // Flattened-list identity seen by the last calculateDropTarget call; when it
+    // changes mid-drag the index-based hysteresis state above is invalidated.
+    const lastCalcNodesRef = useRef<unknown>(null);
 
     // Depth of the dragged subtree (computed once at drag start, used for maxDepth check)
     const draggedSubtreeDepthRef = useRef(0);
@@ -586,6 +593,15 @@ export function useDragDrop<ID>(
             const nodes = flattenedNodesRef.current;
             if (nodes.length === 0) return;
 
+            // The flattened list changed mid-drag (e.g. auto-expand inserted the
+            // hovered parent's children). Index-based hysteresis/stickiness state
+            // refers to rows of the OLD list - drop it so it can't stick the zone
+            // or gap decision to whatever row now happens to hold that index.
+            if (lastCalcNodesRef.current !== nodes) {
+                lastCalcNodesRef.current = nodes;
+                prevDropTargetRef.current = null;
+            }
+
             // Single store snapshot per frame (the store can't change within this
             // synchronous pass) - avoids re-reading getState() several times.
             const store = getTreeViewStore<ID>(storeId);
@@ -647,13 +663,29 @@ export function useDragDrop<ID>(
             let targetNode = nodes[clampedIndex];
             if (!targetNode) return;
 
-            // Determine zone within item
+            // Determine zone within item. Sticky zones: while a zone is active for
+            // this same row, its boundaries shift outward so natural finger tremor
+            // at a zone edge can't flip the position (and with it the indicator
+            // and the overlay's indent) back and forth every few frames.
             const positionInItem =
                 (adjustedContentY - itemTop) / itemHeight;
+            let aboveBound = 0.25;
+            let belowBound = 0.75;
+            const prevZone = prevDropTargetRef.current;
+            if (prevZone && prevZone.targetIndex === clampedIndex) {
+                if (prevZone.position === "above") {
+                    aboveBound += ZONE_STICKINESS;
+                } else if (prevZone.position === "below") {
+                    belowBound -= ZONE_STICKINESS;
+                } else {
+                    aboveBound -= ZONE_STICKINESS;
+                    belowBound += ZONE_STICKINESS;
+                }
+            }
             let position: DropPosition;
-            if (positionInItem < 0.25) {
+            if (positionInItem < aboveBound) {
                 position = "above";
-            } else if (positionInItem > 0.75) {
+            } else if (positionInItem > belowBound) {
                 position = "below";
             } else {
                 position = "inside";

@@ -2,7 +2,7 @@ import { getFlattenedTreeData } from "../helpers";
 import { generateExpectedFlatTree, tree3d2b } from "../__mocks__/generateTree.mock";
 import { type TreeNode } from "../types/treeView.types";
 
-describe("getFlattenedTreeData", () => {
+describe("given a nested tree", () => {
     let nodes: TreeNode[];
     let expandedIds: Set<string>;
 
@@ -11,8 +11,7 @@ describe("getFlattenedTreeData", () => {
         expandedIds = new Set<string>();
     });
 
-    // Hardcoded test
-    test("should correctly flatten a simple tree", () => {
+    test("when all parent nodes are expanded, then children appear in DFS order with correct levels", () => {
         const simpleNodes: TreeNode[] = [{
             id: "1",
             name: "node1",
@@ -59,8 +58,7 @@ describe("getFlattenedTreeData", () => {
         ]);
     });
 
-    // Dynamic test
-    test("should return a flat array of nodes with correct level property", () => {
+    test("when specific nodes are expanded, then only their children are included", () => {
         expandedIds.add("1");
         expandedIds.add("1.1");
         expandedIds.add("1.2");
@@ -70,8 +68,7 @@ describe("getFlattenedTreeData", () => {
         expect(result).toEqual(expected);
     });
 
-    // Edge case: tree with no expanded nodes
-    test("should return a flat array of root nodes when no nodes are expanded", () => {
+    test("when no nodes are expanded, then only root nodes appear at level 0", () => {
         const result = getFlattenedTreeData(nodes, new Set());
         expect(result).toEqual(nodes.map(node => ({ ...node, level: 0 })));
     });

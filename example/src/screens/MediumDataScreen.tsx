@@ -13,7 +13,7 @@ import {
     type TreeViewRef
 } from "react-native-tree-multi-select";
 
-import { styles } from "./screens.styles";
+import { styles, treeFlashListProps } from "./screens.styles";
 import { defaultID, generateTreeList } from "../utils/sampleDataGenerator";
 import { useCallback, useRef } from "react";
 
@@ -87,6 +87,7 @@ export default function MediumDataScreen() {
             <View
                 style={styles.treeViewParent}>
                 <TreeView
+                    treeFlashListProps={treeFlashListProps}
                     ref={treeViewRef}
                     data={sampleData.current}
                     onCheck={handleSelectionChange}

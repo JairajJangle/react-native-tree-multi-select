@@ -2,7 +2,7 @@ import { getFilteredTreeData } from "../helpers";
 import { generateTree } from "../__mocks__/generateTree.mock";
 import { TreeNode } from "../types/treeView.types";
 
-describe("getFilteredTreeData", () => {
+describe("given a tree with searchable nodes", () => {
     let nodes: TreeNode[];
     let trimmedSearchTerm: string;
     let searchKeys: string[];
@@ -14,12 +14,12 @@ describe("getFilteredTreeData", () => {
         searchKeys = ["name"];
     });
 
-    test("should return all nodes when search term is empty", () => {
+    test("when search term is empty, then all nodes are returned", () => {
         const result = getFilteredTreeData(nodes, trimmedSearchTerm, searchKeys);
         expect(result).toEqual(nodes);
     });
 
-    test("should return nodes that match the search term", () => {
+    test("when search term matches nodes, then only matching nodes are returned", () => {
         trimmedSearchTerm = "node1";
         const result = getFilteredTreeData(nodes, trimmedSearchTerm, searchKeys);
         expect(result.length).toBeGreaterThan(0);
@@ -28,7 +28,7 @@ describe("getFilteredTreeData", () => {
         });
     });
 
-    test("should return parent nodes whose children match the search term", () => {
+    test("when search term matches a child, then parent node is included in results", () => {
         trimmedSearchTerm = "node1.1";
         const result = getFilteredTreeData(nodes, trimmedSearchTerm, searchKeys);
         expect(result.length).toBeGreaterThan(0);
@@ -39,7 +39,7 @@ describe("getFilteredTreeData", () => {
         });
     });
 
-    test("should return an empty array when no nodes match the search term", () => {
+    test("when search term matches nothing, then empty array is returned", () => {
         trimmedSearchTerm = "nonexistent";
         const result = getFilteredTreeData(nodes, trimmedSearchTerm, searchKeys);
         expect(result).toEqual([]);

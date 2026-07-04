@@ -1,5 +1,7 @@
-import type { SelectionPropagation, TreeNode } from "../types/treeView.types";
 import { create, type StoreApi, type UseBoundStore } from "zustand";
+
+import type { SelectionPropagation, TreeNode } from "../types/treeView.types";
+import type { DropPosition } from "../types/dragDrop.types";
 
 export type TreeViewState<ID> = {
     // Store ids of checked tree nodes
@@ -42,6 +44,19 @@ export type TreeViewState<ID> = {
     setSelectionPropagation: (
         selectionPropagation: SelectionPropagation
     ) => void;
+
+    // Drag-and-drop state
+    draggedNodeId: ID | null;
+    updateDraggedNodeId: (draggedNodeId: ID | null) => void;
+
+    invalidDragTargetIds: Set<ID>;
+    updateInvalidDragTargetIds: (invalidDragTargetIds: Set<ID>) => void;
+
+    // Drop target state (used by nodes to render their own indicator)
+    dropTargetNodeId: ID | null;
+    dropPosition: DropPosition | null;
+    dropLevel: number | null;
+    updateDropTarget: (nodeId: ID | null, position: DropPosition | null, level?: number | null) => void;
 
     // Cleanup all states in this store
     cleanUpTreeViewStore: () => void;
@@ -97,6 +112,23 @@ export function getTreeViewStore<ID>(id: string): UseBoundStore<StoreApi<TreeVie
                 }
             }),
 
+            draggedNodeId: null,
+            updateDraggedNodeId: (draggedNodeId) => set({ draggedNodeId }),
+
+            invalidDragTargetIds: new Set<ID>(),
+            updateInvalidDragTargetIds: (invalidDragTargetIds) => set({
+                invalidDragTargetIds
+            }),
+
+            dropTargetNodeId: null,
+            dropPosition: null,
+            dropLevel: null,
+            updateDropTarget: (nodeId, position, level) => set({
+                dropTargetNodeId: nodeId,
+                dropPosition: position,
+                dropLevel: level ?? null,
+            }),
+
             cleanUpTreeViewStore: () =>
                 set({
                     checked: new Set(),
@@ -109,6 +141,11 @@ export function getTreeViewStore<ID>(id: string): UseBoundStore<StoreApi<TreeVie
                     searchKeys: [""],
                     innerMostChildrenIds: [],
                     selectionPropagation: { toChildren: true, toParents: true },
+                    draggedNodeId: null,
+                    invalidDragTargetIds: new Set<ID>(),
+                    dropTargetNodeId: null,
+                    dropPosition: null,
+                    dropLevel: null,
                 }),
         }));
 
@@ -117,6 +154,16 @@ export function getTreeViewStore<ID>(id: string): UseBoundStore<StoreApi<TreeVie
     return typedStore<ID>().get(id)!;
 }
 
+export function deleteTreeViewStore(id: string) {
+    treeViewStores.delete(id);
+}
+
+/**
+ * Returns the per-instance bound Zustand store for the given id. The returned
+ * store is itself callable as a hook with a selector - e.g.
+ * `useTreeViewStore(id)(useShallow(state => ...))` - which is why it keeps the
+ * `use` prefix. Internal helper; not part of the public API.
+ */
 export function useTreeViewStore<ID = string>(id: string) {
     return getTreeViewStore<ID>(id);
 }

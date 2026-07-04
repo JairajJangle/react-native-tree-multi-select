@@ -1,3 +1,99 @@
+# [3.0.0-beta.8](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.7...v3.0.0-beta.8) (2026-07-04)
+
+# [3.0.0-beta.7](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.6...v3.0.0-beta.7) (2026-07-04)
+
+
+### Bug Fixes
+
+* keep nodeIndex stable when drag disabled to preserve node memoization ([5462ff8](https://github.com/JairajJangle/react-native-tree-multi-select/commit/5462ff8eb55d572e0ce457a7f8dcb5a786e14b4f))
+
+
+### Contributors
+
+* @Claude Fable 5
+
+# [3.0.0-beta.6](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.5...v3.0.0-beta.6) (2026-07-04)
+
+
+* feat(drag-drop)!: move-delta events, moveNode options, and drag engine hardening ([da3d067](https://github.com/JairajJangle/react-native-tree-multi-select/commit/da3d067b30fc3891d53e0f16993555f8157440df))
+
+
+### Bug Fixes
+
+* **drag-drop:** stop overlay flash when tree re-renders mid-drag ([7542919](https://github.com/JairajJangle/react-native-tree-multi-select/commit/7542919174402e700be4fe943766912cd587da89))
+* **drag-drop:** stop overlay indent flicker when dropping into an expanded parent ([29f39cb](https://github.com/JairajJangle/react-native-tree-multi-select/commit/29f39cb86a4e1c35a21c4e1aced27587fac64acb))
+
+
+### Features
+
+* **example:** add selection-interplay and physics playground drag-drop demos ([748b121](https://github.com/JairajJangle/react-native-tree-multi-select/commit/748b121fc205e2248a1e2103a4987f9514dd4135))
+* **example:** update drag-drop demos and add bottom padding to tree lists ([2ceee61](https://github.com/JairajJangle/react-native-tree-multi-select/commit/2ceee613667cdda2702834bf8b192cf7d78880c7))
+
+
+### BREAKING CHANGES
+
+* DragEndEvent no longer carries newTreeData; consume the move
+delta or read the reordered tree via ref.getTreeData().
+
+# [3.0.0-beta.5](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.4...v3.0.0-beta.5) (2026-05-02)
+
+
+### Bug Fixes
+
+* tune drag-drop overlay offset and drop zone sensitivity ([24fc1e9](https://github.com/JairajJangle/react-native-tree-multi-select/commit/24fc1e917cabdf2adab42043daa16dabe58b2249))
+* use item indentation for horizontal cliff threshold ([ef98489](https://github.com/JairajJangle/react-native-tree-multi-select/commit/ef984893448e7087af991f25565e5d728b85c303))
+
+
+### Features
+
+* add autoScrollToDroppedNode option and reuse scrollToNodeID ([b129dcb](https://github.com/JairajJangle/react-native-tree-multi-select/commit/b129dcb587b54c6ce18af7109d8b0889cd175d5a))
+
+# [3.0.0-beta.4](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.3...v3.0.0-beta.4) (2026-05-01)
+
+
+### Bug Fixes
+
+* add descendant validation and JSDoc to moveTreeNode helper ([d519d39](https://github.com/JairajJangle/react-native-tree-multi-select/commit/d519d3987bfb9ef93a1701c174df07ddc625270c))
+* add missing generic type params to helper functions ([9c9836f](https://github.com/JairajJangle/react-native-tree-multi-select/commit/9c9836faa07a07f4e40a4c5a81677bb64714bba9))
+* drag-drop API fixes - opacity, enabled default, onDragCancel ([6fb6575](https://github.com/JairajJangle/react-native-tree-multi-select/commit/6fb65752e6cfe36231ee78cb5c2cf73d1cd4e3f4))
+* prevent store memory leak by deleting map entry on unmount ([b7b1037](https://github.com/JairajJangle/react-native-tree-multi-select/commit/b7b10374d48e46bc0dc0f6f799d1f43b8f5cce3a))
+
+
+### Features
+
+* add moveNode ref method for programmatic tree reordering ([9d220d2](https://github.com/JairajJangle/react-native-tree-multi-select/commit/9d220d2dd1e763b05e9260b1be3b4101d407b8da))
+* update drag-drop examples and add undo/redo demo ([90ddd60](https://github.com/JairajJangle/react-native-tree-multi-select/commit/90ddd607d60691b4d9bcf9bb7ba3ca5ea02370a2))
+
+
+### Contributors
+
+* @Claude Opus 4.6 (1M context)
+
+# [3.0.0-beta.3](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.2...v3.0.0-beta.3) (2026-03-29)
+
+
+### Features
+
+* **drag-drop:** refine drag-and-drop implementation and tests ([b554dd7](https://github.com/JairajJangle/react-native-tree-multi-select/commit/b554dd7b4cee11fcf191fe91be4bc824efb9221a))
+
+
+### Contributors
+
+* @Claude Opus 4.6
+
+# [3.0.0-beta.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.1...v3.0.0-beta.2) (2026-03-28)
+
+
+### Bug Fixes
+
+* **ci:** enable Corepack before setup-node to fix yarn detection ([6be37d6](https://github.com/JairajJangle/react-native-tree-multi-select/commit/6be37d647090f82e8e6e0745a80e8c15c32eeb18))
+* **drag-drop:** multiple UX fixes for drag-and-drop interactions ([4b5220d](https://github.com/JairajJangle/react-native-tree-multi-select/commit/4b5220dabf7f41955e785266d510feaa18d310df))
+* **lint:** remove unused eslint-disable comment in calculateDropTarget ([46747e3](https://github.com/JairajJangle/react-native-tree-multi-select/commit/46747e395b09aeb2a0316f3c91e37e6b3627f1d8))
+
+
+### Contributors
+
+* @Claude Opus 4.6
 ## [2.0.22](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.21...v2.0.22) (2026-07-03)
 
 ## [2.0.21](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.20...v2.0.21) (2026-06-13)
@@ -17,6 +113,38 @@
 ## [2.0.14](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.13...v2.0.14) (2026-04-04)
 
 ## [2.0.13](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.12...v2.0.13) (2026-03-28)
+
+# [3.0.0-beta.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.11...v3.0.0-beta.1) (2026-03-22)
+
+
+* feat!: add drag-and-drop types, move helper, and public API exports ([0033033](https://github.com/JairajJangle/react-native-tree-multi-select/commit/00330331a69a5d788db4cb329f4a879a137b5024)), closes [#41](https://github.com/JairajJangle/react-native-tree-multi-select/issues/41) [#99](https://github.com/JairajJangle/react-native-tree-multi-select/issues/99)
+
+
+### Bug Fixes
+
+* add default type parameter to DragDropCustomizations ([ba4dc61](https://github.com/JairajJangle/react-native-tree-multi-select/commit/ba4dc61c11535ff57e51fc0a1778bac98eb5827a)), closes [#41](https://github.com/JairajJangle/react-native-tree-multi-select/issues/41) [#99](https://github.com/JairajJangle/react-native-tree-multi-select/issues/99)
+* **lint:** move inline styles to StyleSheet in NodeList drop indicator ([bc1123e](https://github.com/JairajJangle/react-native-tree-multi-select/commit/bc1123e9102d9107c57be874e6c78ad34736dfcd)), closes [#41](https://github.com/JairajJangle/react-native-tree-multi-select/issues/41) [#99](https://github.com/JairajJangle/react-native-tree-multi-select/issues/99)
+* **lint:** resolve lint warnings in example drag-drop screens ([081f030](https://github.com/JairajJangle/react-native-tree-multi-select/commit/081f0305cba9a7ce0c5c101e0742f8f5e183c2bd)), closes [#41](https://github.com/JairajJangle/react-native-tree-multi-select/issues/41) [#99](https://github.com/JairajJangle/react-native-tree-multi-select/issues/99)
+
+
+### Features
+
+* add drag overlay and drop indicator components ([39870dd](https://github.com/JairajJangle/react-native-tree-multi-select/commit/39870dd6af77a31d71485d58b48b438ecb120f91)), closes [#41](https://github.com/JairajJangle/react-native-tree-multi-select/issues/41) [#99](https://github.com/JairajJangle/react-native-tree-multi-select/issues/99)
+* add drag state management and checked state recalculation ([365a873](https://github.com/JairajJangle/react-native-tree-multi-select/commit/365a8734cd669d51231c1f4d743153681237eb34)), closes [#41](https://github.com/JairajJangle/react-native-tree-multi-select/issues/41) [#99](https://github.com/JairajJangle/react-native-tree-multi-select/issues/99)
+* add drag-and-drop example screens ([62a2cbf](https://github.com/JairajJangle/react-native-tree-multi-select/commit/62a2cbf9781940d7bbb9100148d8e2ae3e2a2f57)), closes [#41](https://github.com/JairajJangle/react-native-tree-multi-select/issues/41) [#99](https://github.com/JairajJangle/react-native-tree-multi-select/issues/99)
+* implement drag-and-drop gesture handling and tree view integration ([591497b](https://github.com/JairajJangle/react-native-tree-multi-select/commit/591497b467a716857200de2b67515f4a3a628ace)), closes [#41](https://github.com/JairajJangle/react-native-tree-multi-select/issues/41) [#99](https://github.com/JairajJangle/react-native-tree-multi-select/issues/99)
+
+
+### BREAKING CHANGES
+
+* TreeViewProps now accepts dragEnabled, onDragEnd,
+and related drag-and-drop configuration props. NodeRowProps extended
+with isDragTarget, isDragging, isDraggedNode for custom row components.
+
+
+### Contributors
+
+* **Claude Opus 4.6**
 
 ## [2.0.12](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.11...v2.0.12) (2026-03-28)
 

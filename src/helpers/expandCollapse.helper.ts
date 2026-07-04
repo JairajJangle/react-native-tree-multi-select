@@ -49,8 +49,8 @@ export function handleToggleExpand<ID>(storeId: string, id: ID) {
 /**
  * Expand all nodes in the tree.
  */
-export function expandAll(storeId: string) {
-    const treeViewStore = getTreeViewStore(storeId);
+export function expandAll<ID>(storeId: string) {
+    const treeViewStore = getTreeViewStore<ID>(storeId);
     const { nodeMap, updateExpanded } = treeViewStore.getState();
     // Create a new Set containing the IDs of all nodes
     const newExpanded = new Set(nodeMap.keys());
@@ -60,11 +60,11 @@ export function expandAll(storeId: string) {
 /**
  * Collapse all nodes in the tree.
  */
-export function collapseAll(storeId: string) {
-    const treeViewStore = getTreeViewStore(storeId);
+export function collapseAll<ID>(storeId: string) {
+    const treeViewStore = getTreeViewStore<ID>(storeId);
     const { updateExpanded } = treeViewStore.getState();
     // Clear the expanded state
-    updateExpanded(new Set<string>());
+    updateExpanded(new Set());
 }
 
 /**

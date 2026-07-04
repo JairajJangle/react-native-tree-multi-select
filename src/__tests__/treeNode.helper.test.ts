@@ -1,19 +1,24 @@
 jest.mock("zustand");
 
-import { act } from "react-test-renderer";
+import { act } from "@testing-library/react-native";
 import { getTreeViewStore } from "../store/treeView.store";
 import { type TreeNode } from "../types/treeView.types";
-import { initializeNodeMaps } from "../helpers";
+import {
+    getNodeDepthFromParentMap,
+    getSubtreeDepthFromMap,
+    initializeNodeMaps,
+} from "../helpers";
 import { testStoreId } from "../constants/tests.constants";
 
-describe("initNodeMap helper", () => {
-    const useTreeViewStore = getTreeViewStore(testStoreId);
-
+describe("initializeNodeMaps", () => {
     beforeEach(() => {
-        useTreeViewStore.setState(useTreeViewStore.getState(), true);
+        const store = getTreeViewStore(testStoreId);
+        store.setState(store.getState(), true);
     });
 
-    test("initializeNodeMaps correctly initializes the node maps", () => {
+    it("given a tree with string IDs, when initializing, then nodeMap and childToParentMap are built correctly", () => {
+        const useTreeViewStore = getTreeViewStore(testStoreId);
+
         const initialData: TreeNode[] = [
             {
                 id: "1",
@@ -46,15 +51,10 @@ describe("initNodeMap helper", () => {
         expect(childToParentMap.get("1.2.1")).toEqual("1.2");
         expect(childToParentMap.has("2")).toBeFalsy(); // Root node
     });
-});
-describe("initNodeMap helper [number id]", () => {
-    const useTreeViewStore = getTreeViewStore<number>(testStoreId);
 
-    beforeEach(() => {
-        useTreeViewStore.setState(useTreeViewStore.getState(), true);
-    });
+    it("given a tree with numeric IDs, when initializing, then nodeMap and childToParentMap are built correctly", () => {
+        const useTreeViewStore = getTreeViewStore<number>(testStoreId);
 
-    test("initializeNodeMaps correctly initializes the node maps", () => {
         const initialData: TreeNode<number>[] = [
             {
                 id: 1,
@@ -86,5 +86,74 @@ describe("initNodeMap helper [number id]", () => {
         expect(childToParentMap.get(3)).toEqual(1);
         expect(childToParentMap.get(4)).toEqual(3);
         expect(childToParentMap.has(5)).toBeFalsy(); // Root node
+    });
+});
+
+// tree used by the depth helpers:
+//   A
+//   ├── A1
+//   │   └── A1a
+//   └── A2
+const depthTree: TreeNode<string>[] = [
+    {
+        id: "A", name: "A", children: [
+            { id: "A1", name: "A1", children: [{ id: "A1a", name: "A1a" }] },
+            { id: "A2", name: "A2" },
+        ],
+    },
+];
+
+function buildMaps() {
+    act(() => {
+        initializeNodeMaps(testStoreId, depthTree);
+    });
+    return getTreeViewStore<string>(testStoreId).getState();
+}
+
+describe("getSubtreeDepthFromMap", () => {
+    beforeEach(() => {
+        const store = getTreeViewStore(testStoreId);
+        store.setState(store.getState(), true);
+    });
+
+    it("given a leaf node, when measuring, then it returns 0", () => {
+        const { nodeMap } = buildMaps();
+        expect(getSubtreeDepthFromMap(nodeMap, "A1a")).toBe(0);
+        expect(getSubtreeDepthFromMap(nodeMap, "A2")).toBe(0);
+    });
+
+    it("given an inner node, when measuring, then it returns the deepest descendant distance", () => {
+        const { nodeMap } = buildMaps();
+        expect(getSubtreeDepthFromMap(nodeMap, "A")).toBe(2);  // A -> A1 -> A1a
+        expect(getSubtreeDepthFromMap(nodeMap, "A1")).toBe(1); // A1 -> A1a
+    });
+
+    it("given an unknown id, when measuring, then it returns 0", () => {
+        const { nodeMap } = buildMaps();
+        expect(getSubtreeDepthFromMap(nodeMap, "ghost")).toBe(0);
+    });
+});
+
+describe("getNodeDepthFromParentMap", () => {
+    beforeEach(() => {
+        const store = getTreeViewStore(testStoreId);
+        store.setState(store.getState(), true);
+    });
+
+    it("given a root node, when measuring depth, then it returns 0", () => {
+        const { childToParentMap } = buildMaps();
+        expect(getNodeDepthFromParentMap(childToParentMap, "A")).toBe(0);
+    });
+
+    it("given nested nodes, when measuring depth, then it counts the parent chain", () => {
+        const { childToParentMap } = buildMaps();
+        expect(getNodeDepthFromParentMap(childToParentMap, "A1")).toBe(1);
+        expect(getNodeDepthFromParentMap(childToParentMap, "A1a")).toBe(2);
+        expect(getNodeDepthFromParentMap(childToParentMap, "A2")).toBe(1);
+    });
+
+    it("given an unknown id, when measuring depth, then it returns 0", () => {
+        const { childToParentMap } = buildMaps();
+        expect(getNodeDepthFromParentMap(childToParentMap, "ghost")).toBe(0);
     });
 });

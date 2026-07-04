@@ -1,4 +1,4 @@
-import React from "react";
+import { memo } from "react";
 import { type ExpandIconProps } from "../types/treeView.types";
 
 // Function to dynamically load FontAwesomeIcon from either Expo or React Native
@@ -20,7 +20,7 @@ function loadFontAwesomeIcon() {
 // Load the FontAwesomeIcon component
 const FontAwesomeIcon = loadFontAwesomeIcon();
 
-export const CustomExpandCollapseIcon = React.memo(
+export const CustomExpandCollapseIcon = memo(
     _CustomExpandCollapseIcon
 );
 

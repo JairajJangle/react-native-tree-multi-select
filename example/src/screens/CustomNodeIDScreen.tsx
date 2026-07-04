@@ -8,7 +8,7 @@ import {
 } from "react-native-tree-multi-select";
 import SearchInput from "../components/SearchInput";
 import { generateTreeList, type TreeNode } from "../utils/sampleDataGenerator";
-import { styles } from "./screens.styles";
+import { styles, treeFlashListProps } from "./screens.styles";
 import { CustomNodeRowView } from "../components/CustomNodeRowView";
 
 interface Props {
@@ -115,6 +115,7 @@ export default function CustomNodeID(props: Props) {
             <View
                 style={styles.treeViewParent}>
                 <TreeView<number>
+                    treeFlashListProps={treeFlashListProps}
                     ref={treeViewRef}
                     data={sampleData}
                     onCheck={handleSelectionChange}

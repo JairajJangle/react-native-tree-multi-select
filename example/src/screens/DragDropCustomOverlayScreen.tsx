@@ -9,6 +9,7 @@ import {
 
 import {
     TreeView,
+    moveTreeNode,
     type TreeViewRef,
     type TreeNode,
     type DragEndEvent,
@@ -16,7 +17,7 @@ import {
     type DropIndicatorComponentProps,
 } from "react-native-tree-multi-select";
 
-import { styles as screenStyles } from "./screens.styles";
+import { styles as screenStyles, treeFlashListProps } from "./screens.styles";
 
 const initialData: TreeNode[] = [
     {
@@ -121,7 +122,7 @@ export default function DragDropCustomOverlayScreen() {
     const [lastDrop, setLastDrop] = useState("");
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
-        setData(event.newTreeData);
+        setData(prev => moveTreeNode(prev, event.draggedNodeId, event.targetNodeId, event.position));
         setLastDrop(
             `Moved "${event.draggedNodeId}" ${event.position} "${event.targetNodeId}"`
         );
@@ -143,6 +144,7 @@ export default function DragDropCustomOverlayScreen() {
 
             <View style={screenStyles.treeViewParent}>
                 <TreeView
+                    treeFlashListProps={treeFlashListProps}
                     ref={treeViewRef}
                     data={data}
                     onCheck={() => {}}

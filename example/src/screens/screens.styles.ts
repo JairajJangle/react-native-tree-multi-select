@@ -78,3 +78,8 @@ export const styles = StyleSheet.create({
         marginEnd: 20
     }
 });
+// Shared FlashList props for the demo screens: keeps the last tree row clear of
+// the screen's bottom edge.
+export const treeFlashListProps = {
+    contentContainerStyle: { paddingBottom: 48 },
+};

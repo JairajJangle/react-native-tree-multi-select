@@ -21,6 +21,7 @@ import {
 import {
     TreeView,
     CheckboxView,
+    moveTreeNode,
     type TreeViewRef,
     type TreeNode,
     type DragEndEvent,
@@ -29,7 +30,7 @@ import {
     type NodeRowProps,
 } from "react-native-tree-multi-select";
 
-import { styles as screenStyles } from "./screens.styles";
+import { styles as screenStyles, treeFlashListProps } from "./screens.styles";
 
 // Rainbow palette for the color-cycling effect
 const RAINBOW = ["#a855f7", "#ec4899", "#f59e0b", "#10b981", "#3b82f6"];
@@ -500,7 +501,7 @@ export default function DragDropStyledScreen() {
     const blinkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
-        setData(event.newTreeData);
+        setData(prev => moveTreeNode(prev, event.draggedNodeId, event.targetNodeId, event.position));
         setLastDrop(
             `"${event.draggedNodeId}" \u2192 ${event.position} "${event.targetNodeId}"`
         );
@@ -532,6 +533,7 @@ export default function DragDropStyledScreen() {
 
                 <View style={screenStyles.treeViewParent}>
                     <TreeView
+                        treeFlashListProps={treeFlashListProps}
                         ref={treeViewRef}
                         data={data}
                         onCheck={() => {}}

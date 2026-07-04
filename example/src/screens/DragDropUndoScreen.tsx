@@ -17,7 +17,7 @@ import {
     type DropPosition,
 } from "react-native-tree-multi-select";
 
-import { styles as screenStyles } from "./screens.styles";
+import { styles as screenStyles, treeFlashListProps } from "./screens.styles";
 
 const initialData: TreeNode[] = [
     {
@@ -133,7 +133,9 @@ export default function DragDropUndoScreen() {
         // New action breaks the redo chain
         setRedoStack([]);
 
-        setData(event.newTreeData);
+        // onDragEnd delivers a lightweight move delta; read the reordered tree
+        // straight from the component to mirror it into our controlled state.
+        setData(treeViewRef.current?.getTreeData() ?? data);
         setStatus(`Moved "${event.draggedNodeId}" ${event.position} "${event.targetNodeId}"`);
     }, [data]);
 
@@ -151,15 +153,14 @@ export default function DragDropUndoScreen() {
             setRedoStack(prev => [forwardMove, ...prev]);
         }
 
-        // Apply the inverse move via the ref
-        treeViewRef.current?.moveNode(inverseMove!.nodeId, inverseMove!.targetId, inverseMove!.position);
+        // Apply the inverse move via the ref, then mirror the resulting tree into
+        // our controlled state by reading it back with getTreeData().
+        const result = treeViewRef.current?.moveNode(
+            inverseMove!.nodeId, inverseMove!.targetId, inverseMove!.position
+        );
+        if (!result) return;
         setUndoStack(rest);
-        setData(prev => {
-            // Re-read from ref isn't possible, so we apply moveTreeNode locally too
-            // to keep our state in sync. The ref already updated the internal state.
-            const { moveTreeNode } = require("react-native-tree-multi-select");
-            return moveTreeNode(prev, inverseMove!.nodeId, inverseMove!.targetId, inverseMove!.position);
-        });
+        setData(treeViewRef.current!.getTreeData());
         setStatus("Undid last move");
     }, [undoStack, data]);
 
@@ -173,12 +174,12 @@ export default function DragDropUndoScreen() {
             setUndoStack(prev => [inverse, ...prev]);
         }
 
-        treeViewRef.current?.moveNode(forwardMove!.nodeId, forwardMove!.targetId, forwardMove!.position);
+        const result = treeViewRef.current?.moveNode(
+            forwardMove!.nodeId, forwardMove!.targetId, forwardMove!.position
+        );
+        if (!result) return;
         setRedoStack(rest);
-        setData(prev => {
-            const { moveTreeNode } = require("react-native-tree-multi-select");
-            return moveTreeNode(prev, forwardMove!.nodeId, forwardMove!.targetId, forwardMove!.position);
-        });
+        setData(treeViewRef.current!.getTreeData());
         setStatus("Redid move");
     }, [redoStack, data]);
 
@@ -227,6 +228,7 @@ export default function DragDropUndoScreen() {
 
             <View style={screenStyles.treeViewParent}>
                 <TreeView
+                    treeFlashListProps={treeFlashListProps}
                     ref={treeViewRef}
                     data={data}
                     onCheck={() => { }}

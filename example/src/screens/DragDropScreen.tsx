@@ -10,13 +10,14 @@ import {
 
 import {
     TreeView,
+    moveTreeNode,
     type TreeViewRef,
     type TreeNode,
     type DragEndEvent,
     type DropPosition,
 } from "react-native-tree-multi-select";
 
-import { styles as screenStyles } from "./screens.styles";
+import { styles as screenStyles, treeFlashListProps } from "./screens.styles";
 
 const initialData: TreeNode[] = [
     {
@@ -91,7 +92,9 @@ export default function DragDropScreen() {
     const [canDropEnabled, setCanDropEnabled] = useState(false);
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
-        setData(event.newTreeData);
+        // onDragEnd now delivers a lightweight move delta (not the full tree).
+        // Reconstruct the controlled tree with the exported moveTreeNode helper.
+        setData(prev => moveTreeNode(prev, event.draggedNodeId, event.targetNodeId, event.position));
         setLastDrop(
             `Moved "${event.draggedNodeId}" ${event.position} "${event.targetNodeId}"`
         );
@@ -154,6 +157,7 @@ export default function DragDropScreen() {
 
             <View style={screenStyles.treeViewParent}>
                 <TreeView
+                    treeFlashListProps={treeFlashListProps}
                     ref={treeViewRef}
                     data={data}
                     onCheck={() => {}}

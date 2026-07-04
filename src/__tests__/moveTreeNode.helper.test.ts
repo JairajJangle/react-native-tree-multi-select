@@ -1,4 +1,4 @@
-import { moveTreeNode } from "../helpers/moveTreeNode.helper";
+import { moveTreeNode, findNodePosition } from "../helpers/moveTreeNode.helper";
 import type { TreeNode } from "../types/treeView.types";
 
 /**
@@ -309,6 +309,65 @@ describe("moveTreeNode", () => {
 
             const finalIds = new Set(collectIds(tree3));
             expect(finalIds).toEqual(originalIds);
+        });
+    });
+
+    describe("findNodePosition", () => {
+        const tree: TreeNode<string>[] = [
+            { id: "A", name: "A", children: [
+                { id: "A1", name: "A1" },
+                { id: "A2", name: "A2" },
+            ] },
+            { id: "B", name: "B" },
+            { id: "C", name: "C" },
+        ];
+
+        it("given a root-level node, then parentId is null and index is its position", () => {
+            expect(findNodePosition(tree, "A")).toEqual({ parentId: null, index: 0 });
+            expect(findNodePosition(tree, "B")).toEqual({ parentId: null, index: 1 });
+            expect(findNodePosition(tree, "C")).toEqual({ parentId: null, index: 2 });
+        });
+
+        it("given a nested node, then parentId and child index are returned", () => {
+            expect(findNodePosition(tree, "A1")).toEqual({ parentId: "A", index: 0 });
+            expect(findNodePosition(tree, "A2")).toEqual({ parentId: "A", index: 1 });
+        });
+
+        it("given a missing node, then it returns null", () => {
+            expect(findNodePosition(tree, "ghost")).toBeNull();
+        });
+    });
+
+    describe("deep trees (iterative traversal)", () => {
+        function makeChain(depth: number): TreeNode<string> {
+            let node: TreeNode<string> = { id: "n0", name: "n0" };
+            const root = node;
+            for (let i = 1; i < depth; i++) {
+                const child: TreeNode<string> = { id: `n${i}`, name: `n${i}` };
+                node.children = [child];
+                node = child;
+            }
+            return root;
+        }
+
+        it("findNodePosition handles a very deep tree without stack overflow", () => {
+            const root = makeChain(20000);
+            expect(() => findNodePosition([root], "n19999")).not.toThrow();
+            expect(findNodePosition([root], "n19999")).toEqual({
+                parentId: "n19998",
+                index: 0,
+            });
+        });
+
+        it("moveTreeNode handles a very deep tree without throwing", () => {
+            // Depth chosen to overflow recursive remove/insert/clone (the prior
+            // implementation), proving every traversal in moveTreeNode is iterative.
+            const root = makeChain(20000);
+            const moved = moveTreeNode([root], "n19999", "n0", "below");
+            // The deepest node is lifted out of the chain to sit beside the root.
+            expect(moved.length).toBe(2);
+            expect(moved[0]!.id).toBe("n0");
+            expect(moved[1]!.id).toBe("n19999");
         });
     });
 });

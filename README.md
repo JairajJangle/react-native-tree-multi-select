@@ -47,7 +47,7 @@ Make sure to follow the native-related installation instructions for these depen
 - 🔀 **Drag-and-Drop**: Long-press to drag nodes and reorder or nest them anywhere in the tree.
 - 💻 **Cross-Platform**: Works seamlessly across iOS, Android, and web (with React Native Web).
 
-> **Note**: Drag-and-drop is currently supported on iOS and Android only. Web support for drag-and-drop is a work in progress.
+> **Note**: Drag-and-drop is fully supported on iOS and Android. Web support is a work in progress, so drag-and-drop is **disabled by default on web** - pass `dragAndDrop={{ enabled: true }}` to opt in there.
 
 ## Usage
 
@@ -120,6 +120,7 @@ export function TreeViewUsageExample(){
 ```tsx
 import {
   TreeView,
+  moveTreeNode,
   type TreeNode,
   type TreeViewRef,
   type DragEndEvent
@@ -132,8 +133,12 @@ export function DragDropExample(){
   const treeViewRef = React.useRef<TreeViewRef | null>(null);
 
   const handleDragEnd = (event: DragEndEvent) => {
-    // event.newTreeData contains the reordered tree - just set it
-    setData(event.newTreeData);
+    // `event` is a lightweight move delta (draggedNodeId, targetNodeId, position,
+    // previous/new parent + index) - not the whole tree. For a controlled tree,
+    // reconstruct it with the exported `moveTreeNode` helper:
+    setData(prev => moveTreeNode(prev, event.draggedNodeId, event.targetNodeId, event.position));
+    // Or, if you keep the tree inside the component, read it on demand:
+    // setData(treeViewRef.current?.getTreeData() ?? prev);
   };
 
   return(
@@ -152,7 +157,9 @@ export function DragDropExample(){
 
 Long-press a node to start dragging. Drag over other nodes to see drop indicators. Drop above/below to reorder as siblings, or drop inside a parent node to nest it. The tree auto-scrolls when dragging near the edges.
 
-**Search + drag**: Drag-and-drop works while a search filter is active. You can drag visible (filtered) nodes and drop them onto other visible nodes. The move is applied to the full tree, so nodes hidden by the filter are not affected. After the drop, the search filter remains active and the view updates to reflect the new tree structure.
+**Search + drag**: Drag-and-drop is disabled while a search filter is active (long-press does not initiate a drag). The filtered view hides nodes that still exist in the full tree, so a drop position that looks unambiguous on screen could land the node next to hidden siblings. Clear the search to reorder interactively, or use the imperative [`moveNode`](#treeviewrefid) ref method, which works regardless of the active filter.
+
+**Accessibility**: When a screen reader is active, picking up, moving, and cancelling a drag are announced (via `AccessibilityInfo`). For a fully assistive-tech-driven reorder (without the long-press gesture), wire your own accessibility actions to the imperative [`moveNode`](#treeviewrefid) ref method.
 
 For visual customizations (overlay styles, indicator colors, or fully custom components), see the [`dragAndDrop.customizations`](#dragdropcustomizationsid) option.
 
@@ -186,7 +193,7 @@ For visual customizations (overlay styles, indicator colors, or fully custom com
 
 | Property              | Type                                                         | Required | Description                                                  |
 | --------------------- | ------------------------------------------------------------ | -------- | ------------------------------------------------------------ |
-| `enabled`             | `boolean`                                                    | No       | Enable drag-and-drop reordering (default: true when `dragAndDrop` is provided). Set to `false` to temporarily disable at runtime. |
+| `enabled`             | `boolean`                                                    | No       | Enable drag-and-drop reordering. Default: `true` on iOS/Android when `dragAndDrop` is provided, `false` on web (WIP). Set explicitly to override per platform. |
 | `onDragStart`         | `(event: `[DragStartEvent](#dragstarteventid--string)`<ID>) => void` | No       | Callback fired when a drag operation begins                  |
 | `onDragEnd`           | `(event: `[DragEndEvent](#dragendeventid--string)`<ID>) => void` | No       | Callback fired after a node is successfully dropped at a new position |
 | `onDragCancel`        | `(event: `[DragCancelEvent](#dragcanceleventid--string)`<ID>) => void` | No       | Callback fired when a drag is cancelled without a successful drop |
@@ -194,13 +201,16 @@ For visual customizations (overlay styles, indicator colors, or fully custom com
 | `autoScrollThreshold` | `number`                                                     | No       | Distance from edge (px) to trigger auto-scroll (default: 60) |
 | `autoScrollSpeed`     | `number`                                                     | No       | Speed multiplier for auto-scroll (default: 1.0)              |
 | `dragOverlayOffset`   | `number`                                                     | No       | Overlay offset from the finger, in item-height units (default: -2, i.e. two rows above finger) |
+| `overlayYCorrection`  | `number`                                                     | No       | Advanced: extra vertical correction for the overlay, in item-height units, added on top of `dragOverlayOffset`. Compensates for Android reporting touch `locationY` differently from iOS. Default: -2 on Android, 0 elsewhere. |
 | `autoExpandDelay`     | `number`                                                     | No       | Delay in ms before auto-expanding a collapsed node during drag hover (default: 800) |
+| `autoExpand`          | `boolean`                                                    | No       | Auto-expand a collapsed node while hovering "inside" it during a drag (default: `true`). Set `false` to disable hover-to-expand. |
+| `magneticSnap`        | `boolean`                                                    | No       | Animate the overlay with a magnetic "snap" spring when the drop level changes (default: `true`). Set `false` to keep the overlay tracking the level without the spring (e.g. for reduced-motion). |
 | `customizations`      | [DragDropCustomizations](#dragdropcustomizationsid)`<ID>`    | No       | Customizations for drag-and-drop visuals (overlay, indicator, opacity) |
 | `canDrop`             | `(draggedNode, targetNode, position) => boolean`             | No       | Callback to determine if a node can be dropped on a specific target |
-| `maxDepth`            | `number`                                                     | No       | Maximum nesting depth allowed. Drops exceeding this are suppressed |
+| `maxDepth`            | `number`                                                     | No       | Maximum nesting depth allowed, as a 0-based level index (e.g. `maxDepth: 2` permits levels 0, 1, and 2 - three visible depths). Drops that would exceed it are suppressed. |
 | `canNodeHaveChildren` | `(node: TreeNode<ID>) => boolean`                            | No       | Callback to determine if a node can accept children          |
 | `canDrag`             | `(node: TreeNode<ID>) => boolean`                            | No       | Callback to determine if a node can be dragged (default: all nodes) |
-| `autoScrollToDroppedNode` | `boolean \| DropAutoScrollOptions`                       | No       | Auto-scroll to the dropped node after a successful drop. Pass `false` to disable, `true` for defaults, or an object to customize. Default: `{ enabled: true, animated: true, viewPosition: 0.5 }` |
+| `autoScrollToDroppedNode` | `boolean \| DropAutoScrollOptions`                       | No       | Auto-scroll to the dropped node after a successful drop, if it ended up outside the viewport (no scroll happens when the node is already visible). Pass `false` to disable, `true` for defaults, or an object to customize. Default: `{ enabled: true, animated: true, viewPosition: 0.5 }` |
 
 ##### Notes
 
@@ -250,7 +260,8 @@ For visual customizations (overlay styles, indicator colors, or fully custom com
 | `setSearchText`       | `(searchText: string, searchKeys?: string[]) => void` | Set the search text and optionally the search keys. Default search key is "name"<br /><br />Recommended to call this inside a debounced function if you find any performance issue otherwise. |
 | `scrollToNodeID` | `(params: `[ScrollToNodeParams](#scrolltonodeparams)`<ID>) => void;` | Scrolls the tree view to the node of the specified ID. |
 | `getChildToParentMap` | `() => Map<ID, ID>` | Get the child to parent tree view map. |
-| `moveNode`            | `(nodeId: ID, targetNodeId: ID, position: `[DropPosition](#dropposition)`) => void` | Programmatically move a node to a new position. Works like drag-and-drop without user interaction. Useful for undo/redo or external state management. |
+| `getTreeData`         | `() => `[TreeNode](#treenodeid--string)`<ID>[]` | Get the current (live, reordered) tree data held by the component. Handy after a drag or `moveNode` to read the full tree without it being pushed through a move event. **Returns a live internal reference - treat it as read-only; clone it (e.g. via the exported `moveTreeNode` or `structuredClone`) before mutating, or you will desync the internal maps.** |
+| `moveNode`            | `(nodeId: ID, targetNodeId: ID, position: `[DropPosition](#dropposition)`, options?: { validate?: boolean; scrollToNode?: boolean \| DropAutoScrollOptions }) => `[MoveResult](#moveresultid--string)`<ID> \| null` | Programmatically move a node. Returns a lightweight `MoveResult` delta, or `null` if the move was a no-op / invalid (e.g. onto itself or, with `{ validate: true }`, blocked by `canDrop` / `maxDepth` / `canNodeHaveChildren`). `{ validate: true }` only enforces those rules when a `dragAndDrop` prop is configured (they live on it); without one, `validate` is ignored (a dev warning is logged) and the move proceeds. Pass `{ scrollToNode: true }` to scroll the moved node into view. Does **not** fire `onDragEnd`. Useful for undo/redo or external state management. |
 
 #### ScrollToNodeParams
 | Property             | Type      | Required | Description                                                  |
@@ -344,11 +355,11 @@ Type: `boolean` OR `"indeterminate"`
 
 *Touch handlers to spread on a drag handle element within a custom node row.*
 
-| Property       | Type                | Required | Description                    |
-| -------------- | ------------------- | -------- | ------------------------------ |
-| `onTouchStart` | `(e: any) => void`  | Yes      | Touch start handler for drag   |
-| `onTouchEnd`   | `() => void`        | Yes      | Touch end handler              |
-| `onTouchCancel`| `() => void`        | Yes      | Touch cancel handler           |
+| Property       | Type                                 | Required | Description                    |
+| -------------- | ------------------------------------ | -------- | ------------------------------ |
+| `onTouchStart` | `(e: GestureResponderEvent) => void` | Yes      | Touch start handler for drag   |
+| `onTouchEnd`   | `() => void`                         | Yes      | Touch end handler              |
+| `onTouchCancel`| `() => void`                         | Yes      | Touch cancel handler           |
 
 ---
 
@@ -362,16 +373,25 @@ Type: `boolean` OR `"indeterminate"`
 
 ---
 
+#### MoveResult`<ID = string>`
+
+*A lightweight description of a completed move. Returned by the `moveNode` ref method and passed to the `onDragEnd` callback (i.e. `DragEndEvent` is an alias of `MoveResult`). It carries only the move delta - not a full tree copy - so you can update external state or persist the change cheaply. To get the full reordered tree, call the `getTreeData` ref method or reconstruct it with the exported `moveTreeNode` helper.*
+
+| Property           | Type                          | Description                                                  |
+| ------------------ | ----------------------------- | ------------------------------------------------------------ |
+| `draggedNodeId`    | `ID`                          | The id of the node that was moved                            |
+| `targetNodeId`     | `ID`                          | The id of the target node the move was relative to           |
+| `position`         | [DropPosition](#dropposition) | Where relative to the target: `above`/`below` = sibling, `inside` = child |
+| `previousParentId` | `ID \| null`                  | Parent id before the move (`null` if it was a root-level node) |
+| `newParentId`      | `ID \| null`                  | Parent id after the move (`null` if it is now a root-level node) |
+| `previousIndex`    | `number`                      | Index within the previous parent's children (or the root array) |
+| `newIndex`         | `number`                      | Index within the new parent's children (or the root array)   |
+
+---
+
 #### DragEndEvent`<ID = string>`
 
-*The event object passed to the `onDragEnd` callback after a successful drop.*
-
-| Property        | Type                                    | Description                                                  |
-| --------------- | --------------------------------------- | ------------------------------------------------------------ |
-| `draggedNodeId` | `ID`                                    | The id of the node that was dragged                          |
-| `targetNodeId`  | `ID`                                    | The id of the target node where the dragged node was dropped |
-| `position`      | [DropPosition](#dropposition)           | Where relative to the target: `above`/`below` = sibling, `inside` = child |
-| `newTreeData`   | `TreeNode<ID>[]`                        | The reordered tree data after the move                       |
+*The event object passed to the `onDragEnd` callback after a successful drop. This is an alias of [`MoveResult`](#moveresultid--string)`<ID>` - see its fields above.*
 
 #### DragCancelEvent`<ID = string>`
 
@@ -426,6 +446,8 @@ Type: `"above"` | `"below"` | `"inside"`
 | `circleSize`          | `number` | No       | Diameter of the circle at the line's start (default: 10)       |
 | `highlightColor`      | `string` | No       | Background color of the "inside" highlight (default: `"rgba(0, 120, 255, 0.15)"`) |
 | `highlightBorderColor`| `string` | No       | Border color of the "inside" highlight (default: `"rgba(0, 120, 255, 0.5)"`) |
+| `highlightBorderWidth`| `number` | No       | Border width of the "inside" highlight box (default: 2) |
+| `highlightBorderRadius`| `number`| No       | Corner radius of the "inside" highlight box (default: 4) |
 
 ---
 
@@ -437,9 +459,11 @@ Type: `"above"` | `"below"` | `"inside"`
 | --------------- | ---------------------- | -------- | ------------------------------------------------ |
 | `backgroundColor`| `string`              | No       | Background color (default: `"rgba(255, 255, 255, 0.95)"`) |
 | `shadowColor`   | `string`               | No       | Shadow color (default: `"#000"`)                 |
+| `shadowOffset`  | `{ width: number; height: number }` | No | Shadow offset, iOS (default: `{ width: 0, height: 2 }`) |
 | `shadowOpacity` | `number`               | No       | Shadow opacity (default: 0.25)                   |
 | `shadowRadius`  | `number`               | No       | Shadow radius (default: 4)                       |
 | `elevation`     | `number`               | No       | Android elevation (default: 10)                  |
+| `zIndex`        | `number`               | No       | Stacking order of the overlay (default: 9999)    |
 | `style`         | `StyleProp<ViewStyle>` | No       | Custom style applied to the overlay container    |
 
 ---

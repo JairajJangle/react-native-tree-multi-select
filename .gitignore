@@ -80,3 +80,16 @@ lib/
 
 # Test coverage report
 coverage/
+# AI agent files (do not commit)
+CLAUDE.md
+CLAUDE.local.md
+AGENTS.md
+GEMINI.md
+.claude/
+.cursor/
+.cursorrules
+.windsurfrules
+.aider*
+.mcp.json
+copilot-instructions.md
+DRAG_DROP_IMPLEMENTATION_PLAN.md

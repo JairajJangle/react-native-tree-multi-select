@@ -1,5 +1,9 @@
 import type { TreeNode } from "../types/treeView.types";
 import type { DropPosition } from "../types/dragDrop.types";
+import { getTreeViewStore } from "../store/treeView.store";
+import { initializeNodeMaps } from "./treeNode.helper";
+import { recalculateCheckedStates } from "./toggleCheckbox.helper";
+import { expandNodes } from "./expandCollapse.helper";
 
 /**
  * Move a node within a tree structure. Returns a new tree (no mutation).
@@ -36,6 +40,32 @@ export function moveTreeNode<ID>(
 }
 
 /**
+ * Commit the result of a `moveTreeNode` to the store: swap in the new tree,
+ * rebuild the node maps, recalculate parent checked/indeterminate states, and
+ * expand whatever is needed to make the moved node visible ("inside" drops
+ * expand the target; ancestors of the moved node are always expanded).
+ *
+ * Shared by the interactive drag commit (useDragDrop.handleDragEnd) and the
+ * programmatic `TreeViewRef.moveNode` so the two paths cannot drift.
+ */
+export function applyMoveToStore<ID>(
+    storeId: string,
+    newData: TreeNode<ID>[],
+    movedNodeId: ID,
+    targetNodeId: ID,
+    position: DropPosition
+): void {
+    const store = getTreeViewStore<ID>(storeId);
+    store.getState().updateInitialTreeViewData(newData);
+    initializeNodeMaps(storeId, newData);
+    recalculateCheckedStates<ID>(storeId);
+    if (position === "inside") {
+        expandNodes(storeId, [targetNodeId]);
+    }
+    expandNodes(storeId, [movedNodeId], true);
+}
+
+/**
  * Locate a node within a tree, returning its parent id (null at root) and its
  * index within that parent's children (or the root array). Returns null if the
  * node is not found. Iterative (stack-based) DFS.
@@ -61,6 +91,27 @@ export function findNodePosition<ID>(
         }
     }
     return null;
+}
+
+/**
+ * `findNodePosition` for a node that is still in the store's CURRENT tree:
+ * uses the already-built childToParentMap/nodeMap for O(depth + siblings)
+ * instead of a full-tree DFS. Only valid while the maps match `data` (i.e.
+ * before the move mutates the tree).
+ */
+export function findNodePositionFromMaps<ID>(
+    data: TreeNode<ID>[],
+    nodeMap: Map<ID, TreeNode<ID>>,
+    childToParentMap: Map<ID, ID>,
+    nodeId: ID
+): { parentId: ID | null; index: number; } | null {
+    const parentId = childToParentMap.get(nodeId);
+    const siblings = parentId !== undefined
+        ? nodeMap.get(parentId)?.children
+        : data;
+    if (!siblings) return null;
+    const index = siblings.findIndex((n) => n.id === nodeId);
+    return index === -1 ? null : { parentId: parentId ?? null, index };
 }
 
 /**

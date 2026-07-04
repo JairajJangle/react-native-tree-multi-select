@@ -27,9 +27,10 @@ import {
 	toggleCheckboxes,
 	expandNodes,
 	collapseNodes,
-	recalculateCheckedStates,
 	moveTreeNode,
+	applyMoveToStore,
 	findNodePosition,
+	findNodePositionFromMaps,
 	getSubtreeDepthFromMap,
 	getNodeDepthFromParentMap,
 } from "./helpers";
@@ -38,9 +39,10 @@ import usePreviousState from "./utils/usePreviousState";
 import { useShallow } from "zustand/react/shallow";
 import useDeepCompareEffect from "./utils/useDeepCompareEffect";
 import { typedMemo } from "./utils/typedMemo";
-import type {
-	ScrollToNodeHandlerRef,
-	ScrollToNodeParams
+import {
+	scrollMovedNodeIntoView,
+	type ScrollToNodeHandlerRef,
+	type ScrollToNodeParams
 } from "./hooks/useScrollToNode";
 import type { DragEndEvent, DropPosition, MoveResult } from "./types/dragDrop.types";
 import { fastIsEqual } from "fast-is-equal";
@@ -301,36 +303,23 @@ function _innerTreeView<ID>(
 			}
 		}
 
-		const previousPosition = findNodePosition(currentData, nodeId);
+		// The maps still describe the pre-move tree here, so the O(depth) lookup applies.
+		const previousPosition =
+			findNodePositionFromMaps(currentData, nodeMap, childToParentMap, nodeId);
 		const newData = moveTreeNode(currentData, nodeId, targetNodeId, position);
 		// moveTreeNode returns the original array reference on a no-op / invalid move
 		// (same node, dropping into own descendant, or node/target not found).
 		if (newData === currentData) return null;
 
-		store.getState().updateInitialTreeViewData(newData);
-		initializeNodeMaps(storeId, newData);
-		recalculateCheckedStates<ID>(storeId);
-
-		if (position === "inside") {
-			expandNodes(storeId, [targetNodeId]);
-		}
-		expandNodes(storeId, [nodeId], true);
+		// Same commit pipeline as the interactive drag path.
+		applyMoveToStore(storeId, newData, nodeId, targetNodeId, position);
 
 		internalDataRef.current = newData;
 
 		// Optionally scroll the moved node into view (the interactive drag does this
 		// automatically; programmatic moves opt in). Deferred so the expand/render settles.
-		const scroll = options?.scrollToNode;
-		if (scroll) {
-			const custom = typeof scroll === "object" ? scroll : {};
-			setTimeout(() => {
-				scrollToNodeHandlerRef.current?.scrollToNodeID({
-					nodeId,
-					animated: custom.animated ?? true,
-					viewPosition: custom.viewPosition ?? 0.5,
-					viewOffset: custom.viewOffset,
-				});
-			}, 0);
+		if (options?.scrollToNode) {
+			scrollMovedNodeIntoView(scrollToNodeHandlerRef, nodeId, options.scrollToNode);
 		}
 
 		const newPosition = findNodePosition(newData, nodeId);

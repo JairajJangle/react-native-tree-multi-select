@@ -11,6 +11,8 @@ import {
     Animated,
     PanResponder,
     Platform,
+    type NativeScrollEvent,
+    type NativeSyntheticEvent,
     type PanResponderInstance,
 } from "react-native";
 import type { FlashList } from "@shopify/flash-list";
@@ -24,11 +26,15 @@ import {
     expandNodes,
     getSubtreeDepthFromMap,
     handleToggleExpand,
-    initializeNodeMaps,
-    recalculateCheckedStates
 } from "../helpers";
-import { findNodePosition, moveTreeNode } from "../helpers/moveTreeNode.helper";
-import { defaultItemHeight, listHeaderFooterPadding } from "../constants/treeView.constants";
+import {
+    applyMoveToStore,
+    findNodePosition,
+    findNodePositionFromMaps,
+    moveTreeNode,
+} from "../helpers/moveTreeNode.helper";
+import { scrollMovedNodeIntoView } from "./useScrollToNode";
+import { defaultItemHeight } from "../constants/treeView.constants";
 
 // Android reports touch `locationY` slightly differently from iOS, which makes the
 // drag overlay sit ~2 item-heights closer to the finger. This empirical correction
@@ -40,10 +46,6 @@ const DEFAULT_OVERLAY_Y_CORRECTION = Platform.OS === "android" ? -2 : 0;
 // and the consumer's `autoScrollSpeed` multiplier are applied. Time-based (not
 // px/frame) so 60Hz and 120Hz displays scroll at the same real-world speed.
 const MAX_AUTO_SCROLL_SPEED = 1200;
-// Exponent on the edge-proximity ramp (0..1). Below 1 the speed climbs quickly
-// even for a shallow entry into the threshold zone, so scrolling stays fast when
-// the screen edge stops the finger before it reaches the very edge of the list.
-const AUTO_SCROLL_RAMP_EXPONENT = 0.5;
 // During auto-scroll, recompute the drop target at most this often. Every scroll
 // frame moves rows under the finger, but recomputing per frame costs store
 // writes + node re-renders on the JS thread (stuttering the scroll itself), and
@@ -115,6 +117,12 @@ interface UseDragDropReturn<ID> {
     ) => void;
     handleNodeTouchEnd: () => void;
     cancelLongPressTimer: () => void;
+    /** onScroll handler for the host list. Owns the scroll-offset bookkeeping:
+     *  real scroll events are ignored while a drag is active (the auto-scroll
+     *  RAF loop is the sole writer of the offset then - lagging events would
+     *  fight its accumulated value and make the offset oscillate), and any
+     *  scroll cancels a pending long-press. */
+    handleScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
     scrollOffsetRef: MutableRefObject<number>;
     headerOffsetRef: MutableRefObject<number>;
     /** Live container height; kept fresh via the container's onLayout so the
@@ -157,7 +165,6 @@ export function useDragDrop<ID>(
     // --- Refs for mutable state (no stale closures in PanResponder) ---
     const isDraggingRef = useRef(false);
     const draggedNodeRef = useRef<__FlattenedTreeNode__<ID> | null>(null);
-    const draggedNodeIdRef = useRef<ID | null>(null);
     // Whether the dragged node was expanded before drag start force-collapsed it,
     // so a cancelled drag can restore the expansion (a cancel must not mutate state).
     const wasDraggedNodeExpandedRef = useRef(false);
@@ -184,10 +191,6 @@ export function useDragDrop<ID>(
     const autoScrollRAFRef = useRef<number | null>(null);
     const autoScrollSpeedRef = useRef(0);
 
-    // Delta-based auto-scroll: avoids unreliable containerPageY
-    const initialFingerPageYRef = useRef(0);
-    const initialFingerContainerYRef = useRef(0);
-
     // Last known finger position, so the auto-scroll loop can recompute the drop
     // target for a stationary finger while rows scroll underneath it.
     const lastFingerPageYRef = useRef(0);
@@ -200,7 +203,6 @@ export function useDragDrop<ID>(
     // doesn't scan the full flattened list on every pan frame. Invalidated when
     // the flattened list identity or the measured-heights count changes.
     const allHeightsMeasuredRef = useRef<{
-        nodes: unknown;
         size: number;
         value: boolean;
     } | null>(null);
@@ -330,6 +332,28 @@ export function useDragDrop<ID>(
         [storeId]
     );
 
+    // --- Overlay Y for a container-local finger Y (grab point + offsets) ---
+    const computeOverlayLocalY = useCallback((fingerLocalY: number) =>
+        fingerLocalY
+        - grabOffsetYRef.current
+        + (dragOverlayOffsetRef.current + overlayYCorrectionRef.current)
+        * itemHeightRef.current,
+        []
+    );
+
+    // --- Level-cliff horizontal control: is the finger left of the threshold
+    //     that selects the shallower level? (30% into the visible content area
+    //     of a row indented at `level`.) ---
+    const fingerLeftOfLevelThreshold = useCallback(
+        (level: number, fingerLocalX: number) => {
+            const itemLeftEdge = level * indentationMultiplierRef.current;
+            const threshold =
+                itemLeftEdge + (containerWidthRef.current - itemLeftEdge) * 0.3;
+            return fingerLocalX < threshold;
+        },
+        []
+    );
+
     // --- Initiate drag ---
     const initiateDrag = useCallback(
         (nodeId: ID, pageY: number, locationY: number, nodeIndex: number) => {
@@ -370,7 +394,6 @@ export function useDragDrop<ID>(
                 // Store grab metadata
                 grabOffsetYRef.current = locationY;
                 draggedNodeRef.current = node;
-                draggedNodeIdRef.current = nodeId;
                 draggedSubtreeDepthRef.current = getSubtreeDepth(nodeId);
 
                 // Use measured item height if available, fall back to default
@@ -388,14 +411,7 @@ export function useDragDrop<ID>(
                     locationY -
                     nodeIndex * itemHeightRef.current;
 
-                // Delta-based auto-scroll: compute finger's position in the container
-                // from the node's known index (avoids unreliable containerPageY).
-                const iH = itemHeightRef.current;
-                const listHeaderHeight = listHeaderFooterPadding * 2;
-                initialFingerPageYRef.current = pageY;
                 lastFingerPageYRef.current = pageY;
-                initialFingerContainerYRef.current =
-                    listHeaderHeight + nodeIndex * iH - scrollOffsetRef.current + locationY;
 
                 // Compute invalid targets (self + descendants)
                 const descendants = getDescendantIds(nodeId);
@@ -406,17 +422,12 @@ export function useDragDrop<ID>(
                 store.getState().updateInvalidDragTargetIds(descendants);
 
                 // Set overlay initial position (with configurable offset)
-                const overlayLocalY = fingerLocalY - locationY + (dragOverlayOffsetRef.current + overlayYCorrectionRef.current) * itemHeightRef.current;
-                overlayY.setValue(overlayLocalY);
+                overlayY.setValue(computeOverlayLocalY(fingerLocalY));
 
                 // Reset magnetic overlay
                 overlayX.setValue(0);
                 prevEffectiveLevelRef.current = node.level ?? 0;
-                pendingLevelRef.current = null;
-                if (levelSettleTimerRef.current) {
-                    clearTimeout(levelSettleTimerRef.current);
-                    levelSettleTimerRef.current = null;
-                }
+                cancelLevelSettleTimer();
 
                 // Set React state
                 isDraggingRef.current = true;
@@ -560,17 +571,18 @@ export function useDragDrop<ID>(
             const maxSpeed = MAX_AUTO_SCROLL_SPEED * autoScrollSpeedParamRef.current;
             const containerH = containerHeightRef.current;
 
-            // Ease the proximity ramp so speed builds up fast as the finger nears
-            // the edge, rather than climbing purely linearly.
+            // Ease the proximity ramp (sqrt) so speed builds up fast even for a
+            // shallow entry into the threshold zone - the screen edge often stops
+            // the finger before it reaches the very edge of the list.
             if (fingerInContainer < threshold) {
                 // Scroll up
                 const ratio = 1 - Math.max(0, fingerInContainer) / threshold;
-                autoScrollSpeedRef.current = -maxSpeed * Math.pow(ratio, AUTO_SCROLL_RAMP_EXPONENT);
+                autoScrollSpeedRef.current = -maxSpeed * Math.sqrt(ratio);
             } else if (fingerInContainer > containerH - threshold) {
                 // Scroll down
                 const ratio =
                     1 - Math.max(0, containerH - fingerInContainer) / threshold;
-                autoScrollSpeedRef.current = maxSpeed * Math.pow(ratio, AUTO_SCROLL_RAMP_EXPONENT);
+                autoScrollSpeedRef.current = maxSpeed * Math.sqrt(ratio);
             } else {
                 autoScrollSpeedRef.current = 0;
             }
@@ -587,6 +599,23 @@ export function useDragDrop<ID>(
         autoExpandTargetRef.current = null;
     }, []);
 
+    // --- Cancel the overlay-indent settle timer + its pending level ---
+    const cancelLevelSettleTimer = useCallback(() => {
+        if (levelSettleTimerRef.current) {
+            clearTimeout(levelSettleTimerRef.current);
+            levelSettleTimerRef.current = null;
+        }
+        pendingLevelRef.current = null;
+    }, []);
+
+    // --- Clear the store's drag fields (shared by drag end and unmount) ---
+    const resetDragStoreState = useCallback(() => {
+        const state = getTreeViewStore<ID>(storeId).getState();
+        state.updateDraggedNodeId(null);
+        state.updateInvalidDragTargetIds(new Set());
+        state.updateDropTarget(null, null);
+    }, [storeId]);
+
     // --- Calculate drop target ---
     const calculateDropTarget = useCallback(
         (fingerPageY: number, fingerPageX: number) => {
@@ -596,22 +625,24 @@ export function useDragDrop<ID>(
             // The flattened list changed mid-drag (e.g. auto-expand inserted the
             // hovered parent's children). Index-based hysteresis/stickiness state
             // refers to rows of the OLD list - drop it so it can't stick the zone
-            // or gap decision to whatever row now happens to hold that index.
+            // or gap decision to whatever row now happens to hold that index. The
+            // measured-heights gate cache is keyed to the old list too.
             if (lastCalcNodesRef.current !== nodes) {
                 lastCalcNodesRef.current = nodes;
                 prevDropTargetRef.current = null;
+                allHeightsMeasuredRef.current = null;
             }
 
             // Single store snapshot per frame (the store can't change within this
             // synchronous pass) - avoids re-reading getState() several times.
-            const store = getTreeViewStore<ID>(storeId);
             const {
                 childToParentMap,
                 expanded,
                 invalidDragTargetIds,
                 draggedNodeId,
                 nodeMap,
-            } = store.getState();
+                updateDropTarget,
+            } = getTreeViewStore<ID>(storeId).getState();
 
             const fingerLocalY =
                 fingerPageY - containerPageYRef.current;
@@ -629,15 +660,15 @@ export function useDragDrop<ID>(
             // virtualization can't measure off-screen rows, so large lists fall back
             // to the uniform estimate.
             const heights = itemHeightsRef.current;
-            // The full-list scan is cached per (flattened list identity, measured
-            // count) so it doesn't run on every pan frame.
+            // The full-list scan is cached per measured count (and invalidated on
+            // list-identity change above) so it doesn't run on every pan frame.
             const cachedGate = allHeightsMeasuredRef.current;
             let allMeasured: boolean;
-            if (cachedGate && cachedGate.nodes === nodes && cachedGate.size === heights.size) {
+            if (cachedGate && cachedGate.size === heights.size) {
                 allMeasured = cachedGate.value;
             } else {
                 allMeasured = nodes.every((n) => heights.has(n.id));
-                allHeightsMeasuredRef.current = { nodes, size: heights.size, value: allMeasured };
+                allHeightsMeasuredRef.current = { size: heights.size, value: allMeasured };
             }
             let clampedIndex: number;
             let itemTop: number;
@@ -743,11 +774,7 @@ export function useDragDrop<ID>(
                 }
 
                 if (isCliff) {
-                    // Midpoint of the item's visible content area
-                    const itemLeftEdge = currentLevel * indentationMultiplierRef.current;
-                    const threshold = itemLeftEdge + (containerWidthRef.current - itemLeftEdge) * 0.3;
-
-                    if (fingerLocalX < threshold) {
+                    if (fingerLeftOfLevelThreshold(currentLevel, fingerLocalX)) {
                         // User wants the shallow level
                         if (clampedIndex < nodes.length - 1) {
                             // Non-last item: switch to "above" on the next (shallower) node
@@ -778,10 +805,7 @@ export function useDragDrop<ID>(
                 const prevLevel = prevNode?.level ?? 0;
                 const currentLevel = targetNode.level ?? 0;
                 if (prevNode && prevLevel > currentLevel) {
-                    const itemLeftEdge = prevLevel * indentationMultiplierRef.current;
-                    const threshold = itemLeftEdge + (containerWidthRef.current - itemLeftEdge) * 0.3;
-
-                    if (fingerLocalX >= threshold) {
+                    if (!fingerLeftOfLevelThreshold(prevLevel, fingerLocalX)) {
                         clampedIndex = clampedIndex - 1;
                         targetNode = prevNode;
                         position = "below";
@@ -923,23 +947,15 @@ export function useDragDrop<ID>(
                 // sideways and back. Hold the current indent (and drop any pending
                 // shift) until the scroll settles - the drop indicator itself
                 // keeps tracking via the store.
-                if (levelSettleTimerRef.current) {
-                    clearTimeout(levelSettleTimerRef.current);
-                    levelSettleTimerRef.current = null;
-                }
-                pendingLevelRef.current = null;
+                cancelLevelSettleTimer();
             } else if (effectiveLevel === prevEffectiveLevelRef.current) {
                 // Back at the settled level - drop any pending level the finger
                 // only transited through.
-                if (levelSettleTimerRef.current) {
-                    clearTimeout(levelSettleTimerRef.current);
-                    levelSettleTimerRef.current = null;
-                }
-                pendingLevelRef.current = null;
+                cancelLevelSettleTimer();
             } else if (pendingLevelRef.current !== effectiveLevel) {
                 // New candidate level - (re)start the settle timer.
+                cancelLevelSettleTimer();
                 pendingLevelRef.current = effectiveLevel;
-                if (levelSettleTimerRef.current) clearTimeout(levelSettleTimerRef.current);
                 levelSettleTimerRef.current = setTimeout(() => {
                     levelSettleTimerRef.current = null;
                     const settled = pendingLevelRef.current;
@@ -963,7 +979,7 @@ export function useDragDrop<ID>(
             // every mounted Node's selector.
             const nextDropNodeId = isValid ? targetNode.id : null;
             const nextDropPosition = isValid ? position : null;
-            const nextDropLevel = isValid ? (visualDropLevel ?? null) : null;
+            const nextDropLevel = isValid ? visualDropLevel : null;
             const lastStore = lastStoreDropTargetRef.current;
             if (
                 !lastStore ||
@@ -971,7 +987,7 @@ export function useDragDrop<ID>(
                 lastStore.position !== nextDropPosition ||
                 lastStore.level !== nextDropLevel
             ) {
-                store.getState().updateDropTarget(nextDropNodeId, nextDropPosition, nextDropLevel);
+                updateDropTarget(nextDropNodeId, nextDropPosition, nextDropLevel);
                 lastStoreDropTargetRef.current = {
                     nodeId: nextDropNodeId,
                     position: nextDropPosition,
@@ -992,7 +1008,14 @@ export function useDragDrop<ID>(
                 dropTargetRef.current = newTarget;
             }
         },
-        [storeId, cancelAutoExpandTimer, overlayX, itemHeightsRef]
+        [
+            storeId,
+            cancelAutoExpandTimer,
+            cancelLevelSettleTimer,
+            fingerLeftOfLevelThreshold,
+            overlayX,
+            itemHeightsRef,
+        ]
     );
     calculateDropTargetRef.current = calculateDropTarget;
 
@@ -1022,13 +1045,15 @@ export function useDragDrop<ID>(
             // Read the final drop target from the ref (the per-frame calculation
             // keeps it current; there is no React state to wait on).
             const currentTarget = dropTargetRef.current;
-            const droppedNodeId = draggedNodeIdRef.current;
+            const droppedNodeId = draggedNodeRef.current?.id ?? null;
 
             const store = getTreeViewStore<ID>(storeId);
-            const currentData = store.getState().initialTreeViewData;
-            // Capture the node's position before the move for the MoveResult delta.
+            const { initialTreeViewData: currentData, nodeMap, childToParentMap } =
+                store.getState();
+            // Capture the node's position before the move for the MoveResult delta
+            // (the maps still describe the pre-move tree here).
             const prevPosition = droppedNodeId !== null
-                ? findNodePosition(currentData, droppedNodeId)
+                ? findNodePositionFromMaps(currentData, nodeMap, childToParentMap, droppedNodeId)
                 : null;
             // Compute the move up front so an invalid move (moveTreeNode returns the
             // same reference) or a positional no-op (node re-dropped where it already
@@ -1052,23 +1077,12 @@ export function useDragDrop<ID>(
                 newData !== currentData &&
                 !isNoOpMove
             ) {
-                // Update store directly (preserves checked/expanded)
-                store
-                    .getState()
-                    .updateInitialTreeViewData(newData);
-                initializeNodeMaps(storeId, newData);
-
-                // Recalculate checked/indeterminate states for all parents
-                // since the tree structure changed
-                recalculateCheckedStates<ID>(storeId);
-
-                // If dropped "inside" a node, expand it so the dropped node is visible
-                if (currentTarget.position === "inside") {
-                    expandNodes(storeId, [currentTarget.targetNodeId]);
-                }
-
-                // Expand ancestors of the dropped node so it's visible
-                expandNodes(storeId, [droppedNodeId], true);
+                // Commit the move to the store (preserves checked/expanded;
+                // shared with the programmatic moveNode path).
+                applyMoveToStore(
+                    storeId, newData, droppedNodeId,
+                    currentTarget.targetNodeId, currentTarget.position
+                );
 
                 // Notify the consumer with a lightweight move delta. The reordered
                 // tree lives in the store; TreeView's wrapped onDragEnd captures it
@@ -1118,15 +1132,9 @@ export function useDragDrop<ID>(
                         rowTop >= 0 && rowTop + iH <= containerHeightRef.current;
 
                     if (!isOnScreen) {
-                        const custom = typeof scrollOpts === "object" ? scrollOpts : {};
-                        setTimeout(() => {
-                            scrollToNodeHandlerRef.current?.scrollToNodeID({
-                                nodeId: droppedNodeId,
-                                animated: custom.animated ?? true,
-                                viewPosition: custom.viewPosition ?? 0.5,
-                                viewOffset: custom.viewOffset,
-                            });
-                        }, 0);
+                        scrollMovedNodeIntoView(
+                            scrollToNodeHandlerRef, droppedNodeId, scrollOpts
+                        );
                     }
                 }
             } else if (droppedNodeId !== null) {
@@ -1143,8 +1151,8 @@ export function useDragDrop<ID>(
 
             // Collapse auto-expanded nodes that aren't ancestors of the drop target
             if (autoExpandedDuringDragRef.current.size > 0) {
-                const store3 = getTreeViewStore<ID>(storeId);
-                const { childToParentMap } = store3.getState();
+                // Re-read: the maps were rebuilt if a move committed above.
+                const { childToParentMap: postMoveParentMap } = store.getState();
 
                 // Collect ancestors of the drop target (keep these expanded).
                 // On cancel, retain none so every auto-expanded node collapses back.
@@ -1153,7 +1161,7 @@ export function useDragDrop<ID>(
                     let walkId: ID | undefined = currentTarget.targetNodeId;
                     while (walkId !== undefined) {
                         ancestorIds.add(walkId);
-                        walkId = childToParentMap.get(walkId);
+                        walkId = postMoveParentMap.get(walkId);
                     }
                 }
 
@@ -1171,24 +1179,16 @@ export function useDragDrop<ID>(
             }
 
             // Clear drag state
-            const store2 = getTreeViewStore<ID>(storeId);
-            store2.getState().updateDraggedNodeId(null);
-            store2.getState().updateInvalidDragTargetIds(new Set());
-            store2.getState().updateDropTarget(null, null);
+            resetDragStoreState();
 
             // Reset all refs
             overlayX.setValue(0);
             prevEffectiveLevelRef.current = null;
-            pendingLevelRef.current = null;
-            if (levelSettleTimerRef.current) {
-                clearTimeout(levelSettleTimerRef.current);
-                levelSettleTimerRef.current = null;
-            }
+            cancelLevelSettleTimer();
             prevDropTargetRef.current = null;
             dropTargetRef.current = null;
             lastStoreDropTargetRef.current = null;
             draggedNodeRef.current = null;
-            draggedNodeIdRef.current = null;
             wasDraggedNodeExpandedRef.current = false;
 
             setIsDragging(false);
@@ -1203,6 +1203,17 @@ export function useDragDrop<ID>(
             calculateDropTarget,
         ]
     );
+
+    // --- onScroll for the host list (see UseDragDropReturn.handleScroll) ---
+    const handleScroll = useCallback((
+        event: NativeSyntheticEvent<NativeScrollEvent>
+    ) => {
+        if (!isDraggingRef.current) {
+            scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
+        }
+        // Scrolling means this touch isn't a long-press
+        cancelLongPressTimer();
+    }, [cancelLongPressTimer]);
 
     // --- Handle node touch end ---
     // If the PanResponder never captured the gesture (no movement after long
@@ -1245,18 +1256,13 @@ export function useDragDrop<ID>(
                     fingerPageY - containerPageYRef.current;
 
                 // Update overlay position (with configurable offset)
-                const overlayLocalY =
-                    fingerLocalY - grabOffsetYRef.current + (dragOverlayOffsetRef.current + overlayYCorrectionRef.current) * itemHeightRef.current;
-                overlayY.setValue(overlayLocalY);
+                overlayY.setValue(computeOverlayLocalY(fingerLocalY));
 
                 // Calculate drop target (horizontal position used at level cliffs)
                 calculateDropTarget(fingerPageY, evt.nativeEvent.pageX);
 
-                // Auto-scroll at edges - use delta-based position relative to container
-                const fingerInContainer =
-                    initialFingerContainerYRef.current +
-                    (fingerPageY - initialFingerPageYRef.current);
-                updateAutoScroll(fingerInContainer);
+                // Auto-scroll at edges, from the finger's container-local position
+                updateAutoScroll(fingerLocalY);
             },
 
             onPanResponderRelease: (evt) => {
@@ -1278,22 +1284,22 @@ export function useDragDrop<ID>(
         return () => {
             cancelLongPressTimer();
             cancelAutoExpandTimer();
+            cancelLevelSettleTimer();
             stopAutoScroll();
-            if (levelSettleTimerRef.current) {
-                clearTimeout(levelSettleTimerRef.current);
-                levelSettleTimerRef.current = null;
-            }
             pendingDragRef.current = false;
             lastStoreDropTargetRef.current = null;
             if (isDraggingRef.current) {
                 isDraggingRef.current = false;
-                const store = getTreeViewStore<ID>(storeId);
-                store.getState().updateDraggedNodeId(null);
-                store.getState().updateInvalidDragTargetIds(new Set());
-                store.getState().updateDropTarget(null, null);
+                resetDragStoreState();
             }
         };
-    }, [storeId, cancelLongPressTimer, cancelAutoExpandTimer, stopAutoScroll]);
+    }, [
+        cancelLongPressTimer,
+        cancelAutoExpandTimer,
+        cancelLevelSettleTimer,
+        stopAutoScroll,
+        resetDragStoreState,
+    ]);
 
     return {
         panResponder,
@@ -1304,6 +1310,7 @@ export function useDragDrop<ID>(
         handleNodeTouchStart,
         handleNodeTouchEnd,
         cancelLongPressTimer,
+        handleScroll,
         scrollOffsetRef,
         headerOffsetRef,
         containerHeightRef,

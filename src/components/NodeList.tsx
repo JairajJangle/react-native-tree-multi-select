@@ -184,8 +184,7 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         draggedNode,
         handleNodeTouchStart,
         handleNodeTouchEnd,
-        cancelLongPressTimer,
-        scrollOffsetRef,
+        handleScroll: dragHandleScroll,
         containerHeightRef,
     } = useDragDrop<ID>({
         storeId,
@@ -216,23 +215,14 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         autoScrollToDroppedNode,
     });
 
-    // Combined onScroll handler
+    // The hook owns scroll-offset bookkeeping (single-writer during drag,
+    // long-press cancellation); this wrapper just forwards to the user's onScroll.
     const handleScroll = useCallback((
         event: NativeSyntheticEvent<NativeScrollEvent>
     ) => {
-        // During a drag, ALL scrolling is commanded by the auto-scroll RAF loop,
-        // which is the sole writer of scrollOffsetRef. Programmatic scrollToOffset
-        // still emits scroll events on some platforms; letting those (lagging)
-        // events write here would fight the loop's accumulated value and make the
-        // offset oscillate - juddering the scroll and flickering the drop target.
-        if (!isDragging) {
-            scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
-        }
-        // Cancel long press timer if user is scrolling
-        cancelLongPressTimer();
-        // Forward to user's onScroll
+        dragHandleScroll(event);
         treeFlashListProps?.onScroll?.(event as any);
-    }, [isDragging, scrollOffsetRef, cancelLongPressTimer, treeFlashListProps]);
+    }, [dragHandleScroll, treeFlashListProps]);
 
     // Track total content height so auto-scroll during drag can clamp to the
     // scrollable range.

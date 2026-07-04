@@ -1,5 +1,6 @@
 import type { CheckboxValueType, TreeNode } from "../types/treeView.types";
 import { getTreeViewStore } from "../store/treeView.store";
+import { getNodeDepthFromParentMap } from "./treeNode.helper";
 
 /** Derive the tri-state checkbox value from checked and indeterminate booleans. */
 export function getCheckboxValue(
@@ -255,19 +256,11 @@ export function recalculateCheckedStates<ID>(storeId: string) {
     // Sort by depth descending (deepest first) for correct bottom-up propagation
     const nodeDepths = new Map<ID, number>();
     function getDepth(nodeId: ID): number {
-        if (nodeDepths.has(nodeId)) return nodeDepths.get(nodeId)!;
-        let depth = 0;
-        let currentId: ID | undefined = nodeId;
-        while (currentId) {
-            const parentId = childToParentMap.get(currentId);
-            if (parentId) {
-                depth++;
-                currentId = parentId;
-            } else {
-                break;
-            }
+        let depth = nodeDepths.get(nodeId);
+        if (depth === undefined) {
+            depth = getNodeDepthFromParentMap(childToParentMap, nodeId);
+            nodeDepths.set(nodeId, depth);
         }
-        nodeDepths.set(nodeId, depth);
         return depth;
     }
 

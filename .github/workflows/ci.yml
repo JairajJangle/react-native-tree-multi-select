@@ -44,10 +44,36 @@ jobs:
         run: yarn test:cov
 
       - name: Update Coverage Badge
+        # Self-contained replacement for we-cli/coverage-badge-action, which
+        # pulls in Node 20-based actions (Wandalen/wretry.action, checkout@v3)
+        # that GitHub Actions runners are deprecating. Renders
+        # badges/coverage.svg onto gh-pages; the README badge reads it from
+        # raw.githubusercontent.com.
         # GitHub actions: default branch variable
         # https://stackoverflow.com/questions/64781462/github-actions-default-branch-variable
         if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-        uses: we-cli/coverage-badge-action@main
+        run: |
+          COV=$(node -p 't=require(`./coverage/coverage-summary.json`).total,Math.min(...`lines|statements|functions|branches`.split(`|`).map(k=>t[k].pct))')
+          COLOR=$(node -p "$COV >= 95 ? 'green' : 'orange'")
+          npm i -g badgen-cli
+          badgen -j coverage -s "$COV%" -c "$COLOR" > "$RUNNER_TEMP/coverage.svg"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin gh-pages
+          git checkout gh-pages
+          # Retry the push a few times in case a concurrent run lands in between.
+          for attempt in 1 2 3; do
+            git reset --hard origin/gh-pages
+            mkdir -p badges
+            cp "$RUNNER_TEMP/coverage.svg" badges/coverage.svg
+            git add badges/coverage.svg
+            # No diff (coverage % unchanged) -> nothing to push, done.
+            git commit -m "Update badges [skip ci]" || break
+            git push && break
+            git fetch origin gh-pages
+            sleep 2
+          done
 
   build-library:
     runs-on: ubuntu-latest

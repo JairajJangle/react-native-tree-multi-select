@@ -107,8 +107,9 @@ function createDefaultParams(overrides?: Partial<Parameters<typeof useDragDrop<s
         longPressDuration: 400,
         autoScrollThreshold: 60,
         autoScrollSpeed: 1.0,
-        internalDataRef: { current: tree },
         measuredItemHeightRef: { current: ITEM_HEIGHT },
+        contentHeightRef: { current: 0 },
+        itemHeightsRef: { current: new Map<string, number>() },
         dragOverlayOffset: 0,
         autoExpandDelay: 800,
         indentationMultiplier: 15,
@@ -474,7 +475,7 @@ describe("useDragDrop", () => {
     }
 
     describe("given a full drag-move-drop gesture via PanResponder", () => {
-        it("when dragging C above B (valid target), then onDragEnd is called with new tree data", () => {
+        it("when dragging C above B (valid target), then onDragEnd is called with the move delta", () => {
             const onDragEnd = jest.fn<void, [DragEndEvent<string>]>();
             const onDragCancel = jest.fn();
             const params = createDefaultParams({ onDragEnd, onDragCancel });
@@ -487,15 +488,19 @@ describe("useDragDrop", () => {
 
             expect(result.current.isDragging).toBe(false);
 
-            if (onDragEnd.mock.calls.length > 0) {
-                const event = onDragEnd.mock.calls[0]![0];
-                expect(event.draggedNodeId).toBe("C");
-                expect(event.newTreeData).toBeDefined();
-                expect(onDragCancel).not.toHaveBeenCalled();
-            } else {
-                // Drop ended as cancel (target was invalid due to zone calculation)
-                expect(onDragCancel).toHaveBeenCalledWith({ draggedNodeId: "C" });
-            }
+            // C onto B is a valid drop, so the gesture MUST commit (exactly one
+            // onDragEnd, no cancel) - asserted unconditionally so a regression that
+            // silently stops committing fails loudly instead of passing vacuously.
+            expect(onDragEnd).toHaveBeenCalledTimes(1);
+            expect(onDragCancel).not.toHaveBeenCalled();
+            const event = onDragEnd.mock.calls[0]![0];
+            expect(event.draggedNodeId).toBe("C");
+            // At the A2/B level cliff the "above B" zone may resolve to either B/above
+            // or A2/below depending on horizontal finger position; both are valid sibling
+            // commits, so assert the move landed at a real target/position with a delta.
+            expect(["B", "A2"]).toContain(event.targetNodeId);
+            expect(["above", "below"]).toContain(event.position);
+            expect(event.newIndex).toBeGreaterThanOrEqual(0);
         });
 
         it("when dragging C inside B (valid target), then tree structure updates in store", () => {
@@ -510,13 +515,18 @@ describe("useDragDrop", () => {
 
             expect(result.current.isDragging).toBe(false);
 
-            if (onDragEnd.mock.calls.length > 0) {
-                const event = onDragEnd.mock.calls[0]![0];
-                expect(event.draggedNodeId).toBe("C");
-                // Verify new tree data has C as child of B
-                const bNode = event.newTreeData.find(n => n.id === "B");
-                expect(bNode?.children?.some(c => c.id === "C")).toBe(true);
-            }
+            // "inside B" is unaffected by cliff remapping, so this commit is fully
+            // deterministic - assert it unconditionally.
+            expect(onDragEnd).toHaveBeenCalledTimes(1);
+            const event = onDragEnd.mock.calls[0]![0];
+            expect(event.draggedNodeId).toBe("C");
+            expect(event.position).toBe("inside");
+            expect(event.targetNodeId).toBe("B");
+            expect(event.newParentId).toBe("B");
+            // Verify the store's reordered tree has C as a child of B
+            const data = getTreeViewStore<string>(STORE_ID).getState().initialTreeViewData;
+            const bNode = data.find(n => n.id === "B");
+            expect(bNode?.children?.some(c => c.id === "C")).toBe(true);
         });
 
         it("when PanResponder move is called, then overlay position updates and drop target is calculated", () => {
@@ -873,6 +883,329 @@ describe("useDragDrop", () => {
 
             // A should be collapsed when dragging starts (so its subtree collapses in the overlay)
             expect(store.getState().expanded.has("A")).toBe(false);
+        });
+    });
+
+    describe("given the measureInWindow drag-start race", () => {
+        function deferredContainerRef() {
+            let resolve: (() => void) | null = null;
+            const ref = {
+                current: {
+                    measureInWindow: (
+                        cb: (x: number, y: number, w: number, h: number) => void
+                    ) => {
+                        resolve = () => cb(CONTAINER_X, CONTAINER_Y, 300, CONTAINER_HEIGHT);
+                    },
+                },
+            };
+            return { ref, flush: () => resolve?.() };
+        }
+
+        it("when the finger lifts before measureInWindow resolves, then no drag starts", () => {
+            const onDragStart = jest.fn();
+            const { ref, flush } = deferredContainerRef();
+            const params = createDefaultParams({ onDragStart, containerRef: ref as any });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+
+            act(() => {
+                result.current.handleNodeTouchStart("C", pageYForNode(8), 10, 8);
+                jest.advanceTimersByTime(500); // fire long-press -> initiateDrag (measure deferred)
+                result.current.handleNodeTouchEnd(); // finger lifts before measurement resolves
+                flush(); // measurement resolves now - must be aborted
+            });
+
+            expect(result.current.isDragging).toBe(false);
+            expect(onDragStart).not.toHaveBeenCalled();
+            expect(getTreeViewStore<string>(STORE_ID).getState().draggedNodeId).toBeNull();
+        });
+
+        it("when no finger lift occurs, then the deferred measurement starts the drag", () => {
+            const onDragStart = jest.fn();
+            const { ref, flush } = deferredContainerRef();
+            const params = createDefaultParams({ onDragStart, containerRef: ref as any });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+
+            act(() => {
+                result.current.handleNodeTouchStart("C", pageYForNode(8), 10, 8);
+                jest.advanceTimersByTime(500);
+                flush();
+            });
+
+            expect(result.current.isDragging).toBe(true);
+            expect(onDragStart).toHaveBeenCalledWith({ draggedNodeId: "C" });
+        });
+    });
+
+    describe("given a terminate during an active drag over a valid target", () => {
+        it("when the gesture terminates, then it cancels without committing the move", () => {
+            const onDragEnd = jest.fn();
+            const onDragCancel = jest.fn();
+            const params = createDefaultParams({ onDragEnd, onDragCancel });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers;
+            const store = getTreeViewStore<string>(STORE_ID);
+            const treeBefore = store.getState().initialTreeViewData;
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+                handlers.onResponderGrant?.(mockGestureEvent(pageYForNode(8)));
+                // Hover over a valid target so a commit would otherwise occur.
+                handlers.onResponderMove?.(mockGestureEvent(pageYForNode(5, "inside"), 50));
+            });
+
+            act(() => {
+                handlers.onResponderTerminate?.(mockGestureEvent(0));
+            });
+
+            expect(result.current.isDragging).toBe(false);
+            // The move must NOT commit on terminate.
+            expect(onDragEnd).not.toHaveBeenCalled();
+            expect(onDragCancel).toHaveBeenCalledWith({ draggedNodeId: "C" });
+            expect(store.getState().initialTreeViewData).toBe(treeBefore);
+        });
+    });
+
+    describe("given repeated drop-target calculations at the same position", () => {
+        it("when the target is unchanged, then updateDropTarget is not written every frame", () => {
+            const params = createDefaultParams();
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers;
+            const store = getTreeViewStore<string>(STORE_ID);
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+                handlers.onResponderGrant?.(mockGestureEvent(pageYForNode(8)));
+                // First move establishes the target (one store write expected).
+                handlers.onResponderMove?.(mockGestureEvent(pageYForNode(5, "inside"), 50));
+            });
+
+            const spy = jest.spyOn(store.getState(), "updateDropTarget");
+
+            act(() => {
+                // Identical subsequent frames must not re-write the store.
+                handlers.onResponderMove?.(mockGestureEvent(pageYForNode(5, "inside"), 50));
+                handlers.onResponderMove?.(mockGestureEvent(pageYForNode(5, "inside"), 50));
+                handlers.onResponderMove?.(mockGestureEvent(pageYForNode(5, "inside"), 50));
+            });
+
+            expect(spy).not.toHaveBeenCalled();
+            spy.mockRestore();
+        });
+    });
+
+    describe("given auto-scroll near the bottom edge with a known content height", () => {
+        it("when scrolling down, then the offset is clamped to the content bounds", () => {
+            // CONTAINER_HEIGHT = 400, content = 600 -> max scrollable offset = 200
+            const params = createDefaultParams({ contentHeightRef: { current: 600 } });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers;
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+                handlers.onResponderGrant?.(mockGestureEvent(pageYForNode(8)));
+                // Move to the bottom edge to trigger downward auto-scroll.
+                handlers.onResponderMove?.(mockGestureEvent(CONTAINER_Y + CONTAINER_HEIGHT - 5, 50));
+            });
+
+            act(() => {
+                jest.advanceTimersByTime(2000); // run the RAF loop many times
+            });
+
+            expect(result.current.scrollOffsetRef.current).toBeLessThanOrEqual(200);
+            expect(result.current.scrollOffsetRef.current).toBeGreaterThan(0);
+        });
+    });
+
+    describe("given a second touch during an active drag", () => {
+        it("when another node's long-press fires mid-drag, then the original drag is preserved", () => {
+            const onDragStart = jest.fn<void, [DragStartEvent<string>]>();
+            const params = createDefaultParams({ onDragStart });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+
+            // Start dragging C (index 8).
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+            });
+            expect(result.current.isDragging).toBe(true);
+            expect(result.current.draggedNode?.id).toBe("C");
+            expect(onDragStart).toHaveBeenCalledTimes(1);
+
+            // A second finger long-presses A (index 0) while C is being dragged.
+            // The reentrancy guard must drop this touch on the floor.
+            act(() => {
+                result.current.handleNodeTouchStart("A", pageYForNode(0), 10, 0);
+                jest.advanceTimersByTime(500); // would fire a competing initiateDrag
+            });
+
+            expect(result.current.draggedNode?.id).toBe("C");
+            expect(onDragStart).toHaveBeenCalledTimes(1);
+            expect(getTreeViewStore<string>(STORE_ID).getState().draggedNodeId).toBe("C");
+        });
+    });
+
+    describe("given variable-height rows with a fully-measured height map", () => {
+        // Rows 0..5 (A..B) measured at the uniform ITEM_HEIGHT so the cumulative walk
+        // resolves the same top offsets as the uniform path up to B; rows after B carry
+        // a different height to make the map genuinely non-uniform and exercise the walk.
+        const variableHeights = () => new Map<string, number>([
+            ["A", ITEM_HEIGHT], ["A1", ITEM_HEIGHT], ["A1a", ITEM_HEIGHT],
+            ["A1b", ITEM_HEIGHT], ["A2", ITEM_HEIGHT], ["B", ITEM_HEIGHT],
+            ["B1", 100], ["B2", 100], ["C", 100],
+        ]);
+
+        it("when every current row id is measured, then the cumulative walk drives a correct commit", () => {
+            const onDragEnd = jest.fn<void, [DragEndEvent<string>]>();
+            const params = createDefaultParams({
+                onDragEnd,
+                itemHeightsRef: { current: variableHeights() },
+            });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+
+            act(() => {
+                simulateFullDragDrop(result.current, "C", 8, pageYForNode(5, "inside"));
+            });
+
+            // The id-keyed walk (gate: every current node measured) must land C inside B.
+            expect(onDragEnd).toHaveBeenCalledTimes(1);
+            expect(onDragEnd.mock.calls[0]![0].newParentId).toBe("B");
+        });
+
+        it("when the height map holds only stale ids, then it falls back to uniform math and still commits", () => {
+            // Simulates a height map left over from a previous, different list: none of
+            // its keys match the current nodes, so the gate must reject it (size alone
+            // would have wrongly satisfied the old `size >= length` check).
+            const stale = new Map<string, number>([["GHOST_1", 999], ["GHOST_2", 999]]);
+            const onDragEnd = jest.fn<void, [DragEndEvent<string>]>();
+            const params = createDefaultParams({
+                onDragEnd,
+                itemHeightsRef: { current: stale },
+            });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+
+            act(() => {
+                simulateFullDragDrop(result.current, "C", 8, pageYForNode(5, "inside"));
+            });
+
+            expect(onDragEnd).toHaveBeenCalledTimes(1);
+            expect(onDragEnd.mock.calls[0]![0].newParentId).toBe("B");
+        });
+    });
+
+    describe("given a flattened subset (fewer rows than the full tree)", () => {
+        it("when dropping a visible node inside a parent, then the move applies to the full tree by id", () => {
+            // Only root-level A, B, C are visible (B's children B1/B2 are not in the
+            // flattened list, e.g. collapsed). The drag math runs against this subset,
+            // but the commit must operate on the FULL tree held by the store.
+            // (Interactive drag during an active search filter is blocked separately -
+            // see "given an active search filter" below.)
+            const filtered: __FlattenedTreeNode__<string>[] = [
+                { id: "A", name: "A", level: 0 },
+                { id: "B", name: "B", level: 0 },
+                { id: "C", name: "C", level: 0 },
+            ];
+            const onDragEnd = jest.fn<void, [DragEndEvent<string>]>();
+            const params = createDefaultParams({ onDragEnd, flattenedNodes: filtered });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+
+            // C (filtered index 2) dropped inside B (filtered index 1).
+            act(() => {
+                simulateFullDragDrop(result.current, "C", 2, pageYForNode(1, "inside"));
+            });
+
+            expect(onDragEnd).toHaveBeenCalledTimes(1);
+            expect(onDragEnd.mock.calls[0]![0].newParentId).toBe("B");
+
+            // In the full tree C becomes B's first child; the filter-hidden siblings
+            // B1/B2 are preserved (the move never operated on the filtered subset).
+            const data = getTreeViewStore<string>(STORE_ID).getState().initialTreeViewData;
+            const bNode = data.find(n => n.id === "B");
+            expect(bNode?.children?.map(c => c.id)).toEqual(["C", "B1", "B2"]);
+        });
+    });
+
+    describe("given an active search filter", () => {
+        it("when a node is long-pressed, then drag does not initiate", () => {
+            const onDragStart = jest.fn<void, [DragStartEvent<string>]>();
+            const params = createDefaultParams({ onDragStart });
+            getTreeViewStore<string>(STORE_ID).getState().updateSearchText("b");
+            const { result } = renderHook(() => useDragDrop<string>(params));
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+            });
+
+            expect(result.current.isDragging).toBe(false);
+            expect(onDragStart).not.toHaveBeenCalled();
+            expect(getTreeViewStore<string>(STORE_ID).getState().draggedNodeId).toBeNull();
+        });
+    });
+
+    describe("given an expanded node whose drag is cancelled", () => {
+        it("when the drag ends without a valid target, then the node's expansion is restored", () => {
+            const onDragCancel = jest.fn<void, [DragCancelEvent<string>]>();
+            const params = createDefaultParams({ onDragCancel });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const store = getTreeViewStore<string>(STORE_ID);
+            expect(store.getState().expanded.has("B")).toBe(true);
+
+            act(() => {
+                simulateLongPress(result.current, "B", 5, pageYForNode(5));
+            });
+            // Drag start force-collapses the expanded node
+            expect(store.getState().expanded.has("B")).toBe(false);
+
+            act(() => {
+                // Finger lift without movement -> drag ends with no target -> cancel
+                result.current.handleNodeTouchEnd();
+            });
+
+            expect(onDragCancel).toHaveBeenCalledTimes(1);
+            // A cancel must not mutate state: expansion is restored
+            expect(store.getState().expanded.has("B")).toBe(true);
+        });
+    });
+
+    describe("given a drop that lands the node where it already sits", () => {
+        it("when B2 is dropped below B1, then it is treated as a cancel", () => {
+            const onDragEnd = jest.fn<void, [DragEndEvent<string>]>();
+            const onDragCancel = jest.fn<void, [DragCancelEvent<string>]>();
+            const params = createDefaultParams({ onDragEnd, onDragCancel });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const before = getTreeViewStore<string>(STORE_ID).getState().initialTreeViewData;
+
+            // B2 (index 7) already sits directly after B1 (index 6); dropping it
+            // "below B1" is a positional no-op. (+10 compensates the grab-locationY
+            // skew in the headerOffset the hook derives during simulateLongPress.)
+            act(() => {
+                simulateFullDragDrop(result.current, "B2", 7, pageYForNode(6, "below") + 10);
+            });
+
+            expect(onDragEnd).not.toHaveBeenCalled();
+            expect(onDragCancel).toHaveBeenCalledTimes(1);
+            // The tree reference is untouched (no spurious clone committed)
+            expect(getTreeViewStore<string>(STORE_ID).getState().initialTreeViewData).toBe(before);
+        });
+    });
+
+    describe("given a parent responder requests to take over the gesture", () => {
+        it("when a drag is active, then the termination request is refused", () => {
+            const params = createDefaultParams();
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers;
+
+            // Idle: hand-off is allowed
+            expect(
+                handlers.onResponderTerminationRequest?.(mockGestureEvent(pageYForNode(8)))
+            ).toBe(true);
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+            });
+
+            // Mid-drag: refuse so a parent ScrollView can't steal the drag
+            expect(
+                handlers.onResponderTerminationRequest?.(mockGestureEvent(pageYForNode(8)))
+            ).toBe(false);
         });
     });
 });

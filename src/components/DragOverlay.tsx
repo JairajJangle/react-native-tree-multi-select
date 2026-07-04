@@ -54,9 +54,11 @@ function _DragOverlay<ID>(props: DragOverlayProps<ID>) {
                 overlayStyleProps && {
                     ...(overlayStyleProps.backgroundColor != null && { backgroundColor: overlayStyleProps.backgroundColor }),
                     ...(overlayStyleProps.shadowColor != null && { shadowColor: overlayStyleProps.shadowColor }),
+                    ...(overlayStyleProps.shadowOffset != null && { shadowOffset: overlayStyleProps.shadowOffset }),
                     ...(overlayStyleProps.shadowOpacity != null && { shadowOpacity: overlayStyleProps.shadowOpacity }),
                     ...(overlayStyleProps.shadowRadius != null && { shadowRadius: overlayStyleProps.shadowRadius }),
                     ...(overlayStyleProps.elevation != null && { elevation: overlayStyleProps.elevation }),
+                    ...(overlayStyleProps.zIndex != null && { zIndex: overlayStyleProps.zIndex }),
                 },
                 overlayStyleProps?.style,
                 { transform: [{ translateX: overlayX }, { translateY: overlayY }] },

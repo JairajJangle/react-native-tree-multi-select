@@ -158,6 +158,12 @@ export function deleteTreeViewStore(id: string) {
     treeViewStores.delete(id);
 }
 
+/**
+ * Returns the per-instance bound Zustand store for the given id. The returned
+ * store is itself callable as a hook with a selector - e.g.
+ * `useTreeViewStore(id)(useShallow(state => ...))` - which is why it keeps the
+ * `use` prefix. Internal helper; not part of the public API.
+ */
 export function useTreeViewStore<ID = string>(id: string) {
     return getTreeViewStore<ID>(id);
 }

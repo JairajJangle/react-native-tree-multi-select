@@ -9,8 +9,11 @@ import {
     View,
     StyleSheet,
     TouchableOpacity,
+    Platform,
     type NativeSyntheticEvent,
     type NativeScrollEvent,
+    type GestureResponderEvent,
+    type LayoutChangeEvent,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 
@@ -19,7 +22,6 @@ import type {
     DropIndicatorStyleProps,
     NodeListProps,
     NodeProps,
-    TreeNode,
 } from "../types/treeView.types";
 
 import { useTreeViewStore } from "../store/treeView.store";
@@ -37,6 +39,7 @@ import { DragOverlay } from "./DragOverlay";
 import type { DropPosition } from "../types/dragDrop.types";
 import {
     defaultIndentationMultiplier,
+    defaultItemHeight,
     listHeaderFooterPadding
 } from "../constants/treeView.constants";
 import { useShallow } from "zustand/react/shallow";
@@ -75,7 +78,10 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         autoScrollThreshold = 60,
         autoScrollSpeed = 1.0,
         dragOverlayOffset = -2,
+        overlayYCorrection,
         autoExpandDelay = 800,
+        autoExpand = true,
+        magneticSnap = true,
         customizations: dragDropCustomizations,
         canDrop: canDropCallback,
         maxDepth,
@@ -84,9 +90,12 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         autoScrollToDroppedNode,
     } = dragAndDrop ?? {};
 
-    // When the dragAndDrop prop is provided, drag is enabled by default.
-    // Users can still toggle it off with enabled: false at runtime.
-    const dragEnabled = dragAndDrop ? (_dragEnabled ?? true) : false;
+    // When the dragAndDrop prop is provided, drag is enabled by default on native
+    // (iOS/Android). On web it defaults OFF because the PanResponder-based drag is
+    // still a work in progress there - consumers can opt in with `enabled: true`.
+    const dragEnabled = dragAndDrop
+        ? (_dragEnabled ?? Platform.OS !== "web")
+        : false;
 
     const {
         expanded,
@@ -106,14 +115,31 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
 
     const flashListRef = useRef<FlashList<__FlattenedTreeNode__<ID>> | null>(null);
     const containerRef = useRef<View>(null);
-    const internalDataRef = useRef<TreeNode<ID>[] | null>(null);
     const measuredItemHeightRef = useRef(0);
+    const contentHeightRef = useRef(0);
+    // Measured row heights keyed by stable node id (NOT flattened index, which is
+    // reused by different nodes across expand/collapse/filter/reorder). Used for
+    // accurate drop targeting with variable-height rows when the whole list is
+    // rendered. Keying by id means a stale entry can never satisfy the
+    // "all current rows measured" gate in useDragDrop.
+    const itemHeightsRef = useRef<Map<ID, number>>(new Map());
 
-    const handleItemLayout = useCallback((height: number) => {
-        if (measuredItemHeightRef.current === 0 && height > 0) {
-            measuredItemHeightRef.current = height;
+    const handleItemLayout = useCallback((id: ID, height: number) => {
+        if (height > 0) {
+            itemHeightsRef.current.set(id, height);
+            // First measured height seeds the uniform fallback used while
+            // virtualization keeps some rows unmeasured.
+            if (measuredItemHeightRef.current === 0) {
+                measuredItemHeightRef.current = height;
+            }
         }
     }, []);
+
+    // Measured heights of removed nodes would otherwise accumulate forever on
+    // dynamic trees; clear on structural change and let rows re-measure on layout.
+    useEffect(() => {
+        itemHeightsRef.current.clear();
+    }, [initialTreeViewData]);
 
     const [initialScrollIndex, setInitialScrollIndex] = useState<number>(-1);
 
@@ -156,11 +182,11 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         overlayX,
         isDragging,
         draggedNode,
-        effectiveDropLevel,
         handleNodeTouchStart,
         handleNodeTouchEnd,
         cancelLongPressTimer,
         scrollOffsetRef,
+        containerHeightRef,
     } = useDragDrop<ID>({
         storeId,
         flattenedNodes: flattenedFilteredNodes,
@@ -173,10 +199,14 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         longPressDuration,
         autoScrollThreshold,
         autoScrollSpeed,
-        internalDataRef,
         measuredItemHeightRef,
+        contentHeightRef,
+        itemHeightsRef,
         dragOverlayOffset,
+        overlayYCorrection,
         autoExpandDelay,
+        autoExpand,
+        magneticSnap,
         indentationMultiplier: effectiveIndentationMultiplier,
         canDrop: canDropCallback,
         maxDepth,
@@ -190,12 +220,32 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
     const handleScroll = useCallback((
         event: NativeSyntheticEvent<NativeScrollEvent>
     ) => {
-        scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
+        // During a drag, ALL scrolling is commanded by the auto-scroll RAF loop,
+        // which is the sole writer of scrollOffsetRef. Programmatic scrollToOffset
+        // still emits scroll events on some platforms; letting those (lagging)
+        // events write here would fight the loop's accumulated value and make the
+        // offset oscillate - juddering the scroll and flickering the drop target.
+        if (!isDragging) {
+            scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
+        }
         // Cancel long press timer if user is scrolling
         cancelLongPressTimer();
         // Forward to user's onScroll
         treeFlashListProps?.onScroll?.(event as any);
-    }, [scrollOffsetRef, cancelLongPressTimer, treeFlashListProps]);
+    }, [isDragging, scrollOffsetRef, cancelLongPressTimer, treeFlashListProps]);
+
+    // Track total content height so auto-scroll during drag can clamp to the
+    // scrollable range.
+    const handleContentSizeChange = useCallback((width: number, height: number) => {
+        contentHeightRef.current = height;
+        treeFlashListProps?.onContentSizeChange?.(width, height);
+    }, [contentHeightRef, treeFlashListProps]);
+
+    // Keep the container height fresh on resize (orientation change, keyboard, split
+    // view) so auto-scroll edge detection and clamping don't go stale mid-session.
+    const handleContainerLayout = useCallback((e: LayoutChangeEvent) => {
+        containerHeightRef.current = e.nativeEvent.layout.height;
+    }, [containerHeightRef]);
 
     const nodeRenderer = useCallback((
         { item, index }: { item: __FlattenedTreeNode__<ID>; index: number; }
@@ -240,14 +290,17 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
         handleItemLayout,
     ]);
 
-    // Extract FlashList props but exclude onScroll (we provide our own combined handler)
+    // Extract FlashList props but exclude onScroll / onContentSizeChange (we provide
+    // our own combined handlers that still forward to the user's callbacks)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { onScroll: _userOnScroll, ...restFlashListProps } = treeFlashListProps ?? {};
+    const { onScroll: _userOnScroll, onContentSizeChange: _userOnContentSizeChange, ...restFlashListProps } = treeFlashListProps ?? {};
 
     const flashListElement = (
         <FlashList
             ref={flashListRef}
-            estimatedItemSize={36}
+            // estimatedItemSize is used by FlashList v1; v2 auto-measures and ignores
+            // it. Consumers can override via treeFlashListProps (spread below).
+            estimatedItemSize={defaultItemHeight}
             initialScrollIndex={initialScrollIndex}
             removeClippedSubviews={true}
             keyboardShouldPersistTaps="handled"
@@ -256,6 +309,7 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
             ListFooterComponent={<HeaderFooterView />}
             {...restFlashListProps}
             onScroll={handleScroll}
+            onContentSizeChange={handleContentSizeChange}
             scrollEnabled={isDragging ? false : (restFlashListProps?.scrollEnabled ?? true)}
             data={flattenedFilteredNodes}
             renderItem={nodeRenderer}
@@ -268,6 +322,7 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
                 <View
                     ref={containerRef}
                     style={styles.dragContainer}
+                    onLayout={handleContainerLayout}
                     {...panResponder.panHandlers}
                 >
                     {flashListElement}
@@ -277,7 +332,10 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
                             overlayY={overlayY}
                             overlayX={overlayX}
                             node={draggedNode}
-                            level={effectiveDropLevel}
+                            /* Constant for the whole drag: the level shift toward the
+                               drop target is expressed via the overlayX translate, not
+                               a re-render (which caused visible indent flicker). */
+                            level={draggedNode.level ?? 0}
                             indentationMultiplier={effectiveIndentationMultiplier}
                             CheckboxComponent={CheckboxComponent}
                             ExpandCollapseIconComponent={ExpandCollapseIconComponent}
@@ -375,7 +433,7 @@ function _Node<ID>(props: NodeProps<ID>) {
         toggleCheckboxes(storeId, [node.id]);
     }, [storeId, node.id]);
 
-    const handleTouchStart = useCallback((e: any) => {
+    const handleTouchStart = useCallback((e: GestureResponderEvent) => {
         wasDraggedRef.current = false;
         if (!onNodeTouchStart) return;
         const { pageY, locationY } = e.nativeEvent;
@@ -398,9 +456,9 @@ function _Node<ID>(props: NodeProps<ID>) {
             ? (isBeingDragged ? draggedOpacity : isDragInvalid ? invalidOpacity : 1.0)
             : 1.0;
 
-    const handleLayout = useCallback((e: any) => {
-        onItemLayout?.(e.nativeEvent.layout.height);
-    }, [onItemLayout]);
+    const handleLayout = useCallback((e: LayoutChangeEvent) => {
+        onItemLayout?.(node.id, e.nativeEvent.layout.height);
+    }, [onItemLayout, node.id]);
 
     const touchHandlers = dragEnabled ? {
         onTouchStart: handleTouchStart,
@@ -489,6 +547,8 @@ function NodeDropIndicator({ position, level, indentationMultiplier, styleProps 
     const circleSize = styleProps?.circleSize ?? 10;
     const highlightColor = styleProps?.highlightColor ?? "rgba(0, 120, 255, 0.15)";
     const highlightBorderColor = styleProps?.highlightBorderColor ?? "rgba(0, 120, 255, 0.5)";
+    const highlightBorderWidth = styleProps?.highlightBorderWidth ?? 2;
+    const highlightBorderRadius = styleProps?.highlightBorderRadius ?? 4;
 
     // Indent the line to match the node's nesting level so users can
     // visually distinguish drops at different tree depths.
@@ -504,6 +564,8 @@ function NodeDropIndicator({ position, level, indentationMultiplier, styleProps 
                         left: leftOffset,
                         backgroundColor: highlightColor,
                         borderColor: highlightBorderColor,
+                        borderWidth: highlightBorderWidth,
+                        borderRadius: highlightBorderRadius,
                     },
                 ]}
             />

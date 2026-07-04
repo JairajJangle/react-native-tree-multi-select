@@ -41,6 +41,7 @@ import { Text, View } from "react-native";
 import { render, act, screen, fireEvent } from "@testing-library/react-native";
 import { TreeView } from "../TreeView";
 import type { TreeNode, TreeViewRef, CheckboxValueType } from "../types/treeView.types";
+import type { MoveResult } from "../types/dragDrop.types";
 
 const testData: TreeNode<string>[] = [
     {
@@ -188,6 +189,183 @@ describe("TreeView", () => {
 
         // After moving, the check states should be recalculated
         expect(onCheck).toHaveBeenCalled();
+    });
+
+    it("given a ref, when moveNode() succeeds, then it returns a MoveResult delta and does not fire onDragEnd", () => {
+        const onDragEnd = jest.fn();
+        const ref = createRef<TreeViewRef<string>>();
+
+        render(<TreeView ref={ref} data={testData} dragAndDrop={{ onDragEnd }} />);
+
+        let result: MoveResult<string> | null = null;
+        act(() => {
+            result = ref.current!.moveNode("2", "1", "inside");
+        });
+
+        expect(result).not.toBeNull();
+        expect(result!).toMatchObject({
+            draggedNodeId: "2",
+            targetNodeId: "1",
+            position: "inside",
+            previousParentId: null,
+            newParentId: "1",
+        });
+        // moveNode is imperative; it must NOT fire the gesture-only onDragEnd callback.
+        expect(onDragEnd).not.toHaveBeenCalled();
+    });
+
+    it("given a ref, when moveNode() is a no-op, then it returns null and does not mutate the tree", () => {
+        const ref = createRef<TreeViewRef<string>>();
+        render(<TreeView ref={ref} data={testData} />);
+
+        const before = ref.current!.getTreeData();
+        let result: MoveResult<string> | null = {} as MoveResult<string>;
+        act(() => {
+            // Moving a node onto itself is a no-op.
+            result = ref.current!.moveNode("2", "2", "inside");
+        });
+
+        expect(result).toBeNull();
+        expect(ref.current!.getTreeData()).toBe(before);
+    });
+
+    it("given an in-flight drag, when moveNode() is called, then it is ignored and returns null", () => {
+        const storeModule = require("../store/treeView.store");
+        const spy = jest.spyOn(storeModule, "getTreeViewStore");
+        const warn = jest.spyOn(console, "warn").mockImplementation(() => { });
+        const ref = createRef<TreeViewRef<string>>();
+        render(<TreeView ref={ref} data={testData} dragAndDrop={{}} />);
+
+        // Recover the instance's internal storeId from the store factory calls.
+        const storeId = spy.mock.calls[0]![0] as string;
+        const store = storeModule.getTreeViewStore(storeId);
+
+        // Simulate an active drag, then attempt a programmatic move.
+        act(() => {
+            store.getState().updateDraggedNodeId("2");
+        });
+        let result: MoveResult<string> | null = {} as MoveResult<string>;
+        act(() => {
+            result = ref.current!.moveNode("2", "1", "inside");
+        });
+        expect(result).toBeNull();
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining("a drag is in progress"));
+
+        // Once the drag ends, the same move succeeds.
+        act(() => {
+            store.getState().updateDraggedNodeId(null);
+        });
+        act(() => {
+            result = ref.current!.moveNode("2", "1", "inside");
+        });
+        expect(result).not.toBeNull();
+
+        warn.mockRestore();
+        spy.mockRestore();
+    });
+
+    it("given an in-flight drag, when the data prop changes, then reinit is deferred until the drag ends", () => {
+        const storeModule = require("../store/treeView.store");
+        const spy = jest.spyOn(storeModule, "getTreeViewStore");
+        const ref = createRef<TreeViewRef<string>>();
+        const { rerender } = render(<TreeView ref={ref} data={testData} dragAndDrop={{}} />);
+
+        const storeId = spy.mock.calls[0]![0] as string;
+        const store = storeModule.getTreeViewStore(storeId);
+
+        act(() => {
+            store.getState().updateDraggedNodeId("2");
+        });
+
+        const newData: TreeNode<string>[] = [{ id: "X", name: "Node X" }];
+        rerender(<TreeView ref={ref} data={newData} dragAndDrop={{}} />);
+
+        // Mid-drag: the destructive reinit must not have run.
+        expect(ref.current!.getTreeData().map(n => n.id)).toEqual(["1", "2"]);
+
+        // Drag ends (no committed move): the deferred data is applied.
+        act(() => {
+            store.getState().updateDraggedNodeId(null);
+        });
+        expect(ref.current!.getTreeData().map(n => n.id)).toEqual(["X"]);
+
+        spy.mockRestore();
+    });
+
+    it("given a ref with validate, when moveNode() is blocked by canDrop, then it returns null", () => {
+        const ref = createRef<TreeViewRef<string>>();
+        render(
+            <TreeView ref={ref} data={testData} dragAndDrop={{ canDrop: () => false }} />
+        );
+
+        let result: MoveResult<string> | null = {} as MoveResult<string>;
+        act(() => {
+            result = ref.current!.moveNode("2", "1", "inside", { validate: true });
+        });
+
+        expect(result).toBeNull();
+    });
+
+    it("given a ref with validate, when moveNode() would exceed maxDepth, then it returns null", () => {
+        const ref = createRef<TreeViewRef<string>>();
+        // maxDepth 1: dropping node "2" inside "1.1" (level 1) lands it at level 2.
+        render(<TreeView ref={ref} data={testData} dragAndDrop={{ maxDepth: 1 }} />);
+
+        let result: MoveResult<string> | null = {} as MoveResult<string>;
+        act(() => {
+            result = ref.current!.moveNode("2", "1.1", "inside", { validate: true });
+        });
+
+        expect(result).toBeNull();
+    });
+
+    it("given a ref with validate, when canNodeHaveChildren rejects the target, then it returns null", () => {
+        const ref = createRef<TreeViewRef<string>>();
+        render(
+            <TreeView
+                ref={ref}
+                data={testData}
+                dragAndDrop={{ canNodeHaveChildren: (node) => node.id !== "1.1" }}
+            />
+        );
+
+        let result: MoveResult<string> | null = {} as MoveResult<string>;
+        act(() => {
+            result = ref.current!.moveNode("2", "1.1", "inside", { validate: true });
+        });
+
+        expect(result).toBeNull();
+    });
+
+    it("given a ref with NO dragAndDrop prop, when moveNode({ validate: true }) is called, then it warns and proceeds", () => {
+        const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+        const ref = createRef<TreeViewRef<string>>();
+        render(<TreeView ref={ref} data={testData} />);
+
+        let result: MoveResult<string> | null = null;
+        act(() => {
+            result = ref.current!.moveNode("2", "1", "inside", { validate: true });
+        });
+
+        // No rules to enforce -> the move proceeds, but a dev warning is logged so the
+        // silently-ignored validate flag is discoverable.
+        expect(result).not.toBeNull();
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining("moveNode({ validate: true })"));
+        warn.mockRestore();
+    });
+
+    it("given a ref, when calling getTreeData(), then it returns the current (reordered) tree", () => {
+        const ref = createRef<TreeViewRef<string>>();
+        render(<TreeView ref={ref} data={testData} />);
+
+        expect(ref.current!.getTreeData().map(n => n.id)).toEqual(["1", "2"]);
+
+        act(() => {
+            ref.current!.moveNode("2", "1", "inside");
+        });
+
+        const node1 = ref.current!.getTreeData().find(n => n.id === "1");
+        expect(node1?.children?.some(c => c.id === "2")).toBe(true);
     });
 
     it("given a ref, when calling setSearchText(), then search filters to matching nodes", () => {

@@ -22,7 +22,8 @@ import type {
     DragCancelEvent,
     DragEndEvent,
     DragStartEvent,
-    DropPosition
+    DropPosition,
+    MoveResult
 } from "./types/dragDrop.types";
 
 export * from "./TreeView";
@@ -47,6 +48,7 @@ export type {
     DragEndEvent,
     DragStartEvent,
     DropPosition,
+    MoveResult,
     DragDropCustomizations,
     DragOverlayStyleProps,
     DragOverlayComponentProps,

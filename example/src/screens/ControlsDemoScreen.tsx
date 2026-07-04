@@ -13,7 +13,7 @@ import {
     type TreeViewRef
 } from "react-native-tree-multi-select";
 
-import { styles } from "./screens.styles";
+import { styles, treeFlashListProps } from "./screens.styles";
 import {
     defaultID,
     generateTreeList
@@ -214,6 +214,7 @@ export default function ControlsDemoScreen() {
             <View
                 style={styles.treeViewParent}>
                 <TreeView
+                    treeFlashListProps={treeFlashListProps}
                     ref={treeViewRef}
                     data={sampleData.current} />
             </View>

@@ -62,6 +62,27 @@ export interface ScrollToNodeHandlerRef<ID> {
   scrollToNodeID: (params: ScrollToNodeParams<ID>) => void;
 }
 
+/**
+ * Scroll a just-moved node into view with the `DropAutoScrollOptions` defaults
+ * (animated, centered). Deferred a tick so the post-move expand/render settles
+ * first. Shared by the interactive drop path and the programmatic `moveNode`.
+ */
+export function scrollMovedNodeIntoView<ID>(
+  scrollToNodeHandlerRef: RefObject<ScrollToNodeHandlerRef<ID> | null>,
+  nodeId: ID,
+  options: boolean | { animated?: boolean; viewPosition?: number; viewOffset?: number; } | undefined
+): void {
+  const custom = typeof options === "object" ? options : {};
+  setTimeout(() => {
+    scrollToNodeHandlerRef.current?.scrollToNodeID({
+      nodeId,
+      animated: custom.animated ?? true,
+      viewPosition: custom.viewPosition ?? 0.5,
+      viewOffset: custom.viewOffset,
+    });
+  }, 0);
+}
+
 // Enum representing the two milestones needed before scrolling
 enum ExpandQueueAction {
   EXPANDED,

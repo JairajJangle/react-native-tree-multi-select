@@ -5,10 +5,12 @@ import {
 	useEffect,
 	useId,
 	useImperativeHandle,
+	useMemo,
 	useRef,
 	type ForwardedRef,
 } from "react";
 import type {
+	DropAutoScrollOptions,
 	TreeNode,
 	TreeViewProps,
 	TreeViewRef
@@ -25,19 +27,24 @@ import {
 	toggleCheckboxes,
 	expandNodes,
 	collapseNodes,
-	recalculateCheckedStates,
 	moveTreeNode,
+	applyMoveToStore,
+	findNodePosition,
+	findNodePositionFromMaps,
+	getSubtreeDepthFromMap,
+	getNodeDepthFromParentMap,
 } from "./helpers";
 import { deleteTreeViewStore, getTreeViewStore, useTreeViewStore } from "./store/treeView.store";
 import usePreviousState from "./utils/usePreviousState";
 import { useShallow } from "zustand/react/shallow";
 import useDeepCompareEffect from "./utils/useDeepCompareEffect";
 import { typedMemo } from "./utils/typedMemo";
-import type {
-	ScrollToNodeHandlerRef,
-	ScrollToNodeParams
+import {
+	scrollMovedNodeIntoView,
+	type ScrollToNodeHandlerRef,
+	type ScrollToNodeParams
 } from "./hooks/useScrollToNode";
-import type { DragEndEvent, DropPosition } from "./types/dragDrop.types";
+import type { DragEndEvent, DropPosition, MoveResult } from "./types/dragDrop.types";
 import { fastIsEqual } from "fast-is-equal";
 
 function _innerTreeView<ID>(
@@ -93,6 +100,8 @@ function _innerTreeView<ID>(
 		setSelectionPropagation,
 
 		cleanUpTreeViewStore,
+
+		draggedNodeId,
 	} = useTreeViewStore<ID>(storeId)(useShallow(
 		state => ({
 			expanded: state.expanded,
@@ -112,6 +121,8 @@ function _innerTreeView<ID>(
 			setSelectionPropagation: state.setSelectionPropagation,
 
 			cleanUpTreeViewStore: state.cleanUpTreeViewStore,
+
+			draggedNodeId: state.draggedNodeId,
 		})
 	));
 
@@ -137,22 +148,38 @@ function _innerTreeView<ID>(
 
 		getChildToParentMap,
 
+		getTreeData,
+
 		moveNode,
 	}));
 
 	const scrollToNodeHandlerRef = useRef<ScrollToNodeHandlerRef<ID>>(null);
 	const prevSearchText = usePreviousState(searchText);
 	const internalDataRef = useRef<TreeNode<ID>[] | null>(null);
+	// Holds a `data` prop change that arrived mid-drag; applied once the drag ends so
+	// the destructive reinit never swaps the node maps out from under an active drag.
+	const pendingDataRef = useRef<TreeNode<ID>[] | null>(null);
 
-	// Wrap onDragEnd to set internalDataRef before calling consumer's callback
+	// Wrap onDragEnd to capture the post-move tree before calling the consumer's
+	// callback. The reordered tree lives in the store (the event only carries the
+	// lightweight move delta); snapshotting it here lets a controlled consumer feed
+	// an equal tree back into `data` and skip re-initialization.
 	const wrappedOnDragEnd = useCallback((event: DragEndEvent<ID>) => {
-		internalDataRef.current = event.newTreeData;
+		internalDataRef.current = getTreeViewStore<ID>(storeId).getState().initialTreeViewData;
+		// A `data` change deferred during this drag predates the move that just
+		// committed; applying it would silently undo the drop after onDragEnd
+		// already told the consumer it happened. Discard it - a controlled
+		// consumer reacts to onDragEnd with fresh data anyway.
+		pendingDataRef.current = null;
 		onDragEnd?.(event);
-	}, [onDragEnd]);
+	}, [onDragEnd, storeId]);
 
-	useDeepCompareEffect(() => {
+	// Reinitialize the store from a tree. Held in a ref so the value stays stable
+	// (no dep churn) while always capturing the latest props/store actions.
+	const applyDataRef = useRef<(nextData: TreeNode<ID>[]) => void>(() => { });
+	applyDataRef.current = (nextData: TreeNode<ID>[]) => {
 		// If data matches what was set internally from a drag-drop, skip reinitialize
-		if (internalDataRef.current !== null && fastIsEqual(data, internalDataRef.current)) {
+		if (internalDataRef.current !== null && fastIsEqual(nextData, internalDataRef.current)) {
 			internalDataRef.current = null;
 			return;
 		}
@@ -160,12 +187,12 @@ function _innerTreeView<ID>(
 
 		cleanUpTreeViewStore();
 
-		updateInitialTreeViewData(data);
+		updateInitialTreeViewData(nextData);
 
 		if (selectionPropagation)
 			setSelectionPropagation(selectionPropagation);
 
-		initializeNodeMaps(storeId, data);
+		initializeNodeMaps(storeId, nextData);
 
 		// Check any pre-selected nodes
 		toggleCheckboxes(storeId, preselectedIds, true);
@@ -175,7 +202,26 @@ function _innerTreeView<ID>(
 			...preExpandedIds,
 			...(initialScrollNodeID ? [initialScrollNodeID] : [])
 		]);
+	};
+
+	useDeepCompareEffect(() => {
+		// A reinit while a drag is in flight would replace nodeMap/childToParentMap
+		// under the drag's feet and corrupt the commit. Defer it until the drag ends.
+		if (getTreeViewStore<ID>(storeId).getState().draggedNodeId !== null) {
+			pendingDataRef.current = data;
+			return;
+		}
+		applyDataRef.current(data);
 	}, [data]);
+
+	// Apply any data change that was deferred during a drag, once the drag ends.
+	useEffect(() => {
+		if (draggedNodeId === null && pendingDataRef.current !== null) {
+			const pending = pendingDataRef.current;
+			pendingDataRef.current = null;
+			applyDataRef.current(pending);
+		}
+	}, [draggedNodeId]);
 
 	function selectNodes(ids: ID[]) {
 		toggleCheckboxes(storeId, ids, true);
@@ -199,21 +245,93 @@ function _innerTreeView<ID>(
 		return treeViewStore.getState().childToParentMap;
 	}
 
-	function moveNode(nodeId: ID, targetNodeId: ID, position: DropPosition) {
+	function getTreeData() {
+		return getTreeViewStore<ID>(storeId).getState().initialTreeViewData;
+	}
+
+	function moveNode(
+		nodeId: ID,
+		targetNodeId: ID,
+		position: DropPosition,
+		options?: { validate?: boolean; scrollToNode?: boolean | DropAutoScrollOptions; }
+	): MoveResult<ID> | null {
 		const store = getTreeViewStore<ID>(storeId);
-		const currentData = store.getState().initialTreeViewData;
-		const newData = moveTreeNode(currentData, nodeId, targetNodeId, position);
+		const { initialTreeViewData: currentData, nodeMap, childToParentMap }
+			= store.getState();
 
-		store.getState().updateInitialTreeViewData(newData);
-		initializeNodeMaps(storeId, newData);
-		recalculateCheckedStates<ID>(storeId);
-
-		if (position === "inside") {
-			expandNodes(storeId, [targetNodeId]);
+		// A programmatic move during an in-flight drag would reinitialize
+		// nodeMap/childToParentMap under the drag's feet and corrupt the pending
+		// commit (same guard as the deferred data-prop reinit above).
+		if (store.getState().draggedNodeId !== null) {
+			if (__DEV__) {
+				console.warn(
+					"[react-native-tree-multi-select] moveNode() ignored: a drag is in progress."
+				);
+			}
+			return null;
 		}
-		expandNodes(storeId, [nodeId], true);
+
+		// Validation rules (canDrop / maxDepth / canNodeHaveChildren) live on the
+		// dragAndDrop prop, so `validate` only has rules to enforce when that prop is
+		// configured. Warn in dev if the caller asked to validate but nothing can.
+		if (__DEV__ && options?.validate
+			&& !(dragAndDrop?.canDrop || dragAndDrop?.maxDepth !== undefined || dragAndDrop?.canNodeHaveChildren)) {
+			console.warn(
+				"[react-native-tree-multi-select] moveNode({ validate: true }) was called, "
+				+ "but no validation rules are configured. canDrop / maxDepth / "
+				+ "canNodeHaveChildren are read from the `dragAndDrop` prop; without them the "
+				+ "move proceeds unvalidated."
+			);
+		}
+
+		// Optional validation mirrors the interactive drag constraints so a
+		// programmatic move can't silently build a tree the drag UI would reject.
+		if (options?.validate && dragAndDrop) {
+			const draggedNode = nodeMap.get(nodeId);
+			const targetNode = nodeMap.get(targetNodeId);
+			if (!draggedNode || !targetNode) return null;
+			if (position === "inside"
+				&& dragAndDrop.canNodeHaveChildren
+				&& !dragAndDrop.canNodeHaveChildren(targetNode)) return null;
+			if (dragAndDrop.canDrop
+				&& !dragAndDrop.canDrop(draggedNode, targetNode, position)) return null;
+			if (dragAndDrop.maxDepth !== undefined) {
+				const targetLevel = getNodeDepthFromParentMap(childToParentMap, targetNodeId);
+				const subtreeDepth = getSubtreeDepthFromMap(nodeMap, nodeId);
+				const baseLevel = position === "inside" ? targetLevel + 1 : targetLevel;
+				if (baseLevel + subtreeDepth > dragAndDrop.maxDepth) return null;
+			}
+		}
+
+		// The maps still describe the pre-move tree here, so the O(depth) lookup applies.
+		const previousPosition =
+			findNodePositionFromMaps(currentData, nodeMap, childToParentMap, nodeId);
+		const newData = moveTreeNode(currentData, nodeId, targetNodeId, position);
+		// moveTreeNode returns the original array reference on a no-op / invalid move
+		// (same node, dropping into own descendant, or node/target not found).
+		if (newData === currentData) return null;
+
+		// Same commit pipeline as the interactive drag path.
+		applyMoveToStore(storeId, newData, nodeId, targetNodeId, position);
 
 		internalDataRef.current = newData;
+
+		// Optionally scroll the moved node into view (the interactive drag does this
+		// automatically; programmatic moves opt in). Deferred so the expand/render settles.
+		if (options?.scrollToNode) {
+			scrollMovedNodeIntoView(scrollToNodeHandlerRef, nodeId, options.scrollToNode);
+		}
+
+		const newPosition = findNodePosition(newData, nodeId);
+		return {
+			draggedNodeId: nodeId,
+			targetNodeId,
+			position,
+			previousParentId: previousPosition?.parentId ?? null,
+			previousIndex: previousPosition?.index ?? -1,
+			newParentId: newPosition?.parentId ?? null,
+			newIndex: newPosition?.index ?? -1,
+		};
 	}
 
 	const getIds = useCallback((node: TreeNode<ID>): ID[] => {
@@ -262,6 +380,23 @@ function _innerTreeView<ID>(
 		};
 	}, [cleanUpTreeViewStore, storeId]);
 
+	// Consumers routinely pass `dragAndDrop` as an inline object literal, so its
+	// identity changes every render even when nothing differs. Stabilize by deep
+	// equality (callbacks compare by reference) so NodeList's memo - and with it
+	// the drag overlay - isn't churned by unrelated re-renders mid-drag.
+	const stableDragAndDropRef = useRef(dragAndDrop);
+	if (!fastIsEqual(stableDragAndDropRef.current, dragAndDrop)) {
+		stableDragAndDropRef.current = dragAndDrop;
+	}
+	const stableDragAndDrop = stableDragAndDropRef.current;
+	const dragAndDropWithWrappedEnd = useMemo(
+		() => stableDragAndDrop && {
+			...stableDragAndDrop,
+			onDragEnd: wrappedOnDragEnd,
+		},
+		[stableDragAndDrop, wrappedOnDragEnd]
+	);
+
 	return (
 		<NodeList
 			storeId={storeId}
@@ -279,10 +414,7 @@ function _innerTreeView<ID>(
 
 			CustomNodeRowComponent={CustomNodeRowComponent}
 
-			dragAndDrop={dragAndDrop && {
-				...dragAndDrop,
-				onDragEnd: wrappedOnDragEnd,
-			}}
+			dragAndDrop={dragAndDropWithWrappedEnd}
 		/>
 	);
 }

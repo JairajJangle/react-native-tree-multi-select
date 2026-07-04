@@ -10,13 +10,14 @@ import {
 
 import {
     TreeView,
+    moveTreeNode,
     type TreeViewRef,
     type TreeNode,
     type DragEndEvent,
     type NodeRowProps,
 } from "react-native-tree-multi-select";
 
-import { styles as screenStyles } from "./screens.styles";
+import { styles as screenStyles, treeFlashListProps } from "./screens.styles";
 
 const initialData: TreeNode[] = [
     {
@@ -180,7 +181,7 @@ export default function DragDropCustomRowScreen() {
     const [lastDrop, setLastDrop] = useState("");
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
-        setData(event.newTreeData);
+        setData(prev => moveTreeNode(prev, event.draggedNodeId, event.targetNodeId, event.position));
         const action = event.position === "inside" ? "into" : event.position;
         setLastDrop(`Moved ${action} "${event.targetNodeId}"`);
     }, []);
@@ -205,6 +206,7 @@ export default function DragDropCustomRowScreen() {
 
             <View style={screenStyles.treeViewParent}>
                 <TreeView
+                    treeFlashListProps={treeFlashListProps}
                     ref={treeViewRef}
                     data={data}
                     onCheck={() => { }}

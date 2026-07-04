@@ -22,6 +22,8 @@ import DragDropStyledScreen from "./screens/DragDropStyledScreen";
 import DragDropCustomOverlayScreen from "./screens/DragDropCustomOverlayScreen";
 import DragDropCustomRowScreen from "./screens/DragDropCustomRowScreen";
 import DragDropUndoScreen from "./screens/DragDropUndoScreen";
+import DragDropSelectionScreen from "./screens/DragDropSelectionScreen";
+import DragDropPlaygroundScreen from "./screens/DragDropPlaygroundScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const data: ShowcaseExampleScreenSectionType[] = [
@@ -122,6 +124,16 @@ const data: ShowcaseExampleScreenSectionType[] = [
         name: "Undo / Redo",
         slug: "drag-drop-undo",
         getScreen: () => DragDropUndoScreen,
+      },
+      {
+        name: "Selection + Drag",
+        slug: "drag-drop-selection",
+        getScreen: () => DragDropSelectionScreen,
+      },
+      {
+        name: "Physics Playground",
+        slug: "drag-drop-playground",
+        getScreen: () => DragDropPlaygroundScreen,
       },
     ],
   },

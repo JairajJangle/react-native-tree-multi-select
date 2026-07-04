@@ -122,6 +122,9 @@ export default function CustomNodeID(props: Props) {
                     onExpand={handleExpanded}
                     selectionPropagation={selectionPropagation}
                     CustomNodeRowComponent={CustomNodeRowView}
+                    /* Drag-and-drop works with any ID type; the generic <number>
+                       flows through DragEndEvent, moveNode, etc. */
+                    dragAndDrop={{}}
                 />
             </View>
         </SafeAreaView>

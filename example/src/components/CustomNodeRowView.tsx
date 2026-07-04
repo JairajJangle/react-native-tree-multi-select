@@ -42,7 +42,12 @@ function _CustomNodeRowView<ID = string>(props: NodeRowProps<ID>) {
 
 
     return (
-        <View style={[styles.rowView, { backgroundColor }]}>
+        // Spreading dragHandleProps on the root makes the whole row draggable
+        // when the host TreeView has drag-and-drop enabled (no-op otherwise).
+        <View
+            style={[styles.rowView, { backgroundColor }]}
+            {...(props.dragHandleProps ?? {})}
+        >
             <View style={styles.innerRowView}>
                 <Levels levels={level} />
 

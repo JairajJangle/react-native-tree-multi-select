@@ -1,3 +1,5 @@
+# [3.0.0-beta.8](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.7...v3.0.0-beta.8) (2026-07-04)
+
 # [3.0.0-beta.7](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0-beta.6...v3.0.0-beta.7) (2026-07-04)
 
 

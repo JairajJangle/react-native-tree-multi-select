@@ -1,5 +1,6 @@
-import { type ComponentType } from "react";
+import { memo, type ComponentType } from "react";
 import { Animated, StyleSheet, View } from "react-native";
+import { fastIsEqual } from "fast-is-equal";
 
 import type {
     __FlattenedTreeNode__,
@@ -12,7 +13,6 @@ import { CustomExpandCollapseIcon } from "./CustomExpandCollapseIcon";
 import { defaultIndentationMultiplier } from "../constants/treeView.constants";
 import { getTreeViewStore } from "../store/treeView.store";
 import { getCheckboxValue } from "../helpers";
-import { typedMemo } from "../utils/typedMemo";
 
 interface DragOverlayProps<ID> extends TreeItemCustomizations<ID> {
     storeId: string;
@@ -102,7 +102,34 @@ function _DragOverlay<ID>(props: DragOverlayProps<ID>) {
     );
 }
 
-export const DragOverlay = typedMemo(_DragOverlay);
+/**
+ * Re-rendering the overlay mid-drag makes React Native re-bind the Animated
+ * transform, which can flash the overlay at its un-translated position for a
+ * frame (visible when e.g. auto-expand re-renders the tree while dragging).
+ * Nothing the overlay renders can change mid-drag, so block re-renders unless
+ * a prop meaningfully differs - style/customization objects are compared by
+ * value because consumers routinely pass fresh (but equal) literals per render.
+ */
+const overlayPropsAreEqual = <ID,>(
+    prev: DragOverlayProps<ID>,
+    next: DragOverlayProps<ID>
+) =>
+    prev.storeId === next.storeId &&
+    prev.overlayY === next.overlayY &&
+    prev.overlayX === next.overlayX &&
+    prev.node === next.node &&
+    prev.level === next.level &&
+    prev.indentationMultiplier === next.indentationMultiplier &&
+    prev.CheckboxComponent === next.CheckboxComponent &&
+    prev.ExpandCollapseIconComponent === next.ExpandCollapseIconComponent &&
+    prev.CustomNodeRowComponent === next.CustomNodeRowComponent &&
+    fastIsEqual(prev.checkBoxViewStyleProps, next.checkBoxViewStyleProps) &&
+    fastIsEqual(prev.dragDropCustomizations, next.dragDropCustomizations);
+
+export const DragOverlay = memo(
+    _DragOverlay,
+    overlayPropsAreEqual
+) as typeof _DragOverlay;
 
 const styles = StyleSheet.create({
     overlay: {

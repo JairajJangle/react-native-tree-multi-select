@@ -391,13 +391,21 @@ function _innerTreeView<ID>(
 		};
 	}, [cleanUpTreeViewStore, storeId]);
 
-	// Memoized so NodeList's memo isn't defeated by a fresh object every render.
+	// Consumers routinely pass `dragAndDrop` as an inline object literal, so its
+	// identity changes every render even when nothing differs. Stabilize by deep
+	// equality (callbacks compare by reference) so NodeList's memo - and with it
+	// the drag overlay - isn't churned by unrelated re-renders mid-drag.
+	const stableDragAndDropRef = useRef(dragAndDrop);
+	if (!fastIsEqual(stableDragAndDropRef.current, dragAndDrop)) {
+		stableDragAndDropRef.current = dragAndDrop;
+	}
+	const stableDragAndDrop = stableDragAndDropRef.current;
 	const dragAndDropWithWrappedEnd = useMemo(
-		() => dragAndDrop && {
-			...dragAndDrop,
+		() => stableDragAndDrop && {
+			...stableDragAndDrop,
 			onDragEnd: wrappedOnDragEnd,
 		},
-		[dragAndDrop, wrappedOnDragEnd]
+		[stableDragAndDrop, wrappedOnDragEnd]
 	);
 
 	return (

@@ -1,3 +1,16 @@
+## [3.0.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0...v3.0.1) (2026-07-05)
+
+
+### Bug Fixes
+
+* **drag-drop:** honor dragEnabled toggled off during a pending long-press ([72e8535](https://github.com/JairajJangle/react-native-tree-multi-select/commit/72e8535d18d9f19037f18f96ad3eba8282a92ce8))
+* run deep-compare effect for consecutive dependency changes ([9120da0](https://github.com/JairajJangle/react-native-tree-multi-select/commit/9120da019d296e2563d645c6434adbdaf62d3aa3))
+
+
+### Contributors
+
+* @Claude Fable 5
+
 # [3.0.0](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v2.0.22...v3.0.0) (2026-07-04)
 
 

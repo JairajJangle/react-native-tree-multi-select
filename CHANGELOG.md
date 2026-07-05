@@ -1,3 +1,10 @@
+## [3.0.2](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.1...v3.0.2) (2026-07-05)
+
+
+### Bug Fixes
+
+* **ci:** stop coverage badge git 400 from breaking the pipeline ([ba27d25](https://github.com/JairajJangle/react-native-tree-multi-select/commit/ba27d25ce7a6faac099ce7f7a23b9a06ee6f6bc1)), closes [#pages](https://github.com/JairajJangle/react-native-tree-multi-select/issues/pages) [#pages](https://github.com/JairajJangle/react-native-tree-multi-select/issues/pages)
+
 ## [3.0.1](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.0...v3.0.1) (2026-07-05)
 
 

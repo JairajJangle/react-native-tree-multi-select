@@ -210,7 +210,7 @@ export function useScrollToNode<ID>(params: UseScrollToNodeParams<ID>) {
           viewPosition
         });
       } else {
-        /* istanbul ignore next -- __DEV__ is false in test/production */
+        /* istanbul ignore else -- __DEV__ is always true in jest */
         if (__DEV__) {
           console.info("Cannot find the item of the mentioned id to scroll in the rendered tree view list data!");
         }

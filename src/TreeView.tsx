@@ -176,7 +176,7 @@ function _innerTreeView<ID>(
 
 	// Reinitialize the store from a tree. Held in a ref so the value stays stable
 	// (no dep churn) while always capturing the latest props/store actions.
-	const applyDataRef = useRef<(nextData: TreeNode<ID>[]) => void>(() => { });
+	const applyDataRef = useRef<(nextData: TreeNode<ID>[]) => void>(/* istanbul ignore next -- placeholder, overwritten on the next line */ () => { });
 	applyDataRef.current = (nextData: TreeNode<ID>[]) => {
 		// If data matches what was set internally from a drag-drop, skip reinitialize
 		if (internalDataRef.current !== null && fastIsEqual(nextData, internalDataRef.current)) {
@@ -263,6 +263,7 @@ function _innerTreeView<ID>(
 		// nodeMap/childToParentMap under the drag's feet and corrupt the pending
 		// commit (same guard as the deferred data-prop reinit above).
 		if (store.getState().draggedNodeId !== null) {
+			/* istanbul ignore else -- __DEV__ is always true in jest */
 			if (__DEV__) {
 				console.warn(
 					"[react-native-tree-multi-select] moveNode() ignored: a drag is in progress."
@@ -323,6 +324,8 @@ function _innerTreeView<ID>(
 		}
 
 		const newPosition = findNodePosition(newData, nodeId);
+		/* istanbul ignore next -- positions always resolve for a just-committed
+		   move; the ?? fallbacks are type-level guards */
 		return {
 			draggedNodeId: nodeId,
 			targetNodeId,

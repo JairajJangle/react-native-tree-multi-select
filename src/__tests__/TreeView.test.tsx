@@ -1078,4 +1078,19 @@ describe("TreeView", () => {
             fireEvent(nodeRow, "layout", { nativeEvent: { layout: { height: 52 } } });
         }).not.toThrow();
     });
+
+    it("given validate with only canDrop rules, when the move is allowed, then it commits", () => {
+        const ref = createRef<TreeViewRef<string>>();
+        render(
+            <TreeView ref={ref} data={testData} dragAndDrop={{ canDrop: () => true }} />
+        );
+
+        let result: MoveResult<string> | null = null;
+        act(() => {
+            result = ref.current!.moveNode("2", "1", "inside", { validate: true });
+        });
+
+        expect(result).not.toBeNull();
+        expect(result!).toMatchObject({ newParentId: "1" });
+    });
 });

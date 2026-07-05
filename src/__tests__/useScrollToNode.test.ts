@@ -224,13 +224,49 @@ describe("useScrollToNode", () => {
             flashListRef: { current: null },
         });
 
-        renderHook(() => useScrollToNode<string>(props));
+        const { rerender } = renderHook(
+            (p) => useScrollToNode<string>(p),
+            { initialProps: props }
+        );
 
         expect(() => {
             act(() => {
                 props.scrollToNodeHandlerRef.current!.scrollToNodeID({ nodeId: "A1a" });
             });
+            // Complete the RENDERED milestone so the scroll actually resolves;
+            // with the list ref gone it must be a silent no-op, not a crash.
+            act(() => {
+                rerender({
+                    ...props,
+                    flattenedFilteredNodes: buildFlatNodes(getTreeViewStore<string>(STORE_ID).getState().expanded),
+                });
+            });
         }).not.toThrow();
+    });
+
+    it("given a root-level node, when scrolling without expanding it, then the scroll completes directly", () => {
+        const flashListRef: MutableRefObject<any> = { current: { scrollToIndex: jest.fn() } };
+        const flatNodes = buildFlatNodes(new Set());
+        const props = makeProps({ flattenedFilteredNodes: flatNodes, flashListRef });
+
+        const { rerender } = renderHook(
+            (p) => useScrollToNode<string>(p),
+            { initialProps: props }
+        );
+
+        // "B" is a root: it has no parent to expand, so the scroll must not
+        // wait on any ancestor expansion.
+        act(() => {
+            props.scrollToNodeHandlerRef.current!.scrollToNodeID({
+                nodeId: "B",
+                expandScrolledNode: false,
+            });
+        });
+        act(() => {
+            rerender({ ...props, flattenedFilteredNodes: buildFlatNodes(getTreeViewStore<string>(STORE_ID).getState().expanded) });
+        });
+
+        expect(flashListRef.current.scrollToIndex).toHaveBeenCalled();
     });
 
     it("given a nonexistent node, when scrollToNodeID is called, then no crash occurs", () => {

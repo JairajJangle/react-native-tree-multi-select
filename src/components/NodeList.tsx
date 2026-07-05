@@ -257,7 +257,7 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
 
                 // Index only matters for drag touch bookkeeping; keep it stable
                 // when drag is off so memoized nodes skip index-shift re-renders
-                nodeIndex={dragEnabled ? index : 0}
+                nodeIndex={dragEnabled ? index : undefined}
                 dragEnabled={dragEnabled}
                 isDragging={isDragging}
                 onNodeTouchStart={dragEnabled ? handleNodeTouchStart : undefined}
@@ -327,7 +327,7 @@ function _NodeList<ID>(props: NodeListProps<ID>) {
                             /* Constant for the whole drag: the level shift toward the
                                drop target is expressed via the overlayX translate, not
                                a re-render (which caused visible indent flicker). */
-                            level={draggedNode.level ?? 0}
+                            level={/* istanbul ignore next -- level is always set by flattenTree */ draggedNode.level ?? 0}
                             indentationMultiplier={effectiveIndentationMultiplier}
                             CheckboxComponent={CheckboxComponent}
                             ExpandCollapseIconComponent={ExpandCollapseIconComponent}
@@ -427,6 +427,8 @@ function _Node<ID>(props: NodeProps<ID>) {
 
     const handleTouchStart = useCallback((e: GestureResponderEvent) => {
         wasDraggedRef.current = false;
+        /* istanbul ignore next -- touch handlers are only attached when
+           dragEnabled, and NodeList always passes both together */
         if (!onNodeTouchStart) return;
         const { pageY, locationY } = e.nativeEvent;
         onNodeTouchStart(node.id, pageY, locationY, nodeIndex);
@@ -442,6 +444,9 @@ function _Node<ID>(props: NodeProps<ID>) {
     // isDraggedNode / isInvalidDropTarget / isDragging props.
     const draggedOpacity = dragDropCustomizations?.draggedNodeOpacity ?? 0.3;
     const invalidOpacity = dragDropCustomizations?.invalidTargetOpacity ?? 0.3;
+    /* istanbul ignore next -- invalidOpacity side: invalid targets are the
+       dragged node's own descendants, which drag start force-collapses out of
+       the rendered list, so a built-in row never renders as an invalid target */
     const nodeOpacity = CustomNodeRowComponent
         ? 1.0
         : isDraggingGlobal

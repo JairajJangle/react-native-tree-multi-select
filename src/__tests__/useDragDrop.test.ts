@@ -1896,4 +1896,256 @@ describe("useDragDrop", () => {
             });
         });
     });
+
+    // ──────────────────────────────────────────────
+    // Runtime toggles and remaining zone geometry
+    // ──────────────────────────────────────────────
+
+    describe("given dragEnabled turns off while a long-press is pending", () => {
+        it("when the timer fires, then no drag starts", () => {
+            const params = createDefaultParams();
+            const { result, rerender } = renderHook(
+                (p) => useDragDrop<string>(p),
+                { initialProps: params }
+            );
+
+            act(() => {
+                result.current.handleNodeTouchStart("C", pageYForNode(8), 10, 8);
+            });
+            act(() => {
+                rerender({ ...params, dragEnabled: false });
+            });
+            act(() => {
+                jest.advanceTimersByTime(500);
+            });
+
+            expect(result.current.isDragging).toBe(false);
+        });
+    });
+
+    describe("given maxDepth leaves room for the dragged subtree", () => {
+        it("when hovering inside a target within the limit, then the inside drop is offered", () => {
+            const params = createDefaultParams({ maxDepth: 5 });
+            const store = getTreeViewStore<string>(STORE_ID);
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(8)));
+            });
+
+            // Inside B1 (level 1): leaf C at level 2 is within maxDepth 5.
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(6, 0.5), 200));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("B1");
+            expect(store.getState().dropPosition).toBe("inside");
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(dropY(6, 0.5), 200));
+            });
+        });
+
+        it("when inserting below a sibling within the limit, then the drop is offered", () => {
+            const params = createDefaultParams({ maxDepth: 2 });
+            const store = getTreeViewStore<string>(STORE_ID);
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(8)));
+            });
+
+            // Below B1 (leaf, level 1): sibling insertion at level 1 fits maxDepth 2.
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(6, 0.9), 200));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("B1");
+            expect(store.getState().dropPosition).toBe("below");
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(dropY(6, 0.9), 200));
+            });
+        });
+    });
+
+    describe("given the finger oscillates downward across a same-level boundary", () => {
+        it("when flipping from 'above B2' to 'below B1', then hysteresis keeps the previous target", () => {
+            const params = createDefaultParams();
+            const store = getTreeViewStore<string>(STORE_ID);
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(8)));
+            });
+
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(7, 0.05)));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("B2");
+            expect(store.getState().dropPosition).toBe("above");
+
+            // Same visual gap approached from the other side: keep B2/above.
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(6, 0.95)));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("B2");
+            expect(store.getState().dropPosition).toBe("above");
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(dropY(6, 0.95)));
+            });
+        });
+    });
+
+    describe("given the boundary rows sit at different levels", () => {
+        it("when crossing the gap, then hysteresis stands aside and horizontal control decides", () => {
+            const params = createDefaultParams();
+            const store = getTreeViewStore<string>(STORE_ID);
+            const { result } = renderHook(() => useDragDrop<string>(params));
+            const handlers = result.current.panResponder.panHandlers as any;
+
+            act(() => {
+                simulateLongPress(result.current, "C", 8, pageYForNode(8));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(8)));
+            });
+
+            // Below A1b (index 3, level 2) with the finger right of the threshold.
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(3, 0.95), 200));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("A1b");
+            expect(store.getState().dropPosition).toBe("below");
+
+            // Above A2 (index 4, level 1) with the finger at the shallow edge:
+            // a level cliff, so the previous target must NOT be frozen - the
+            // horizontal rule resolves to the shallow "above A2".
+            act(() => {
+                handlers.onResponderMove(mockGestureEvent(dropY(4, 0.05), 30));
+            });
+            expect(store.getState().dropTargetNodeId).toBe("A2");
+            expect(store.getState().dropPosition).toBe("above");
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(dropY(4, 0.05), 30));
+            });
+        });
+    });
+
+    // ──────────────────────────────────────────────
+    // Post-drop auto-scroll configuration
+    // ──────────────────────────────────────────────
+
+    describe("given autoScrollToDroppedNode is disabled", () => {
+        it("when the drop lands off-screen, then no post-drop scroll is issued", () => {
+            const scrollToNodeID = jest.fn();
+            const params = createDefaultParams({
+                autoScrollToDroppedNode: false,
+                containerRef: {
+                    current: {
+                        measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) =>
+                            cb(CONTAINER_X, CONTAINER_Y, 300, 80),
+                    },
+                } as any,
+                scrollToNodeHandlerRef: { current: { scrollToNodeID } } as any,
+            });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+
+            act(() => {
+                simulateFullDragDrop(result.current, "A2", 4, pageYForNode(8, "below"), 200);
+            });
+            act(() => {
+                jest.runOnlyPendingTimers();
+            });
+
+            expect(scrollToNodeID).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("given autoScrollToDroppedNode is an options object", () => {
+        it("when the drop lands off-screen, then the scroll runs with the custom options", () => {
+            const scrollToNodeID = jest.fn();
+            const params = createDefaultParams({
+                autoScrollToDroppedNode: { enabled: true, viewPosition: 0, animated: false },
+                containerRef: {
+                    current: {
+                        measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) =>
+                            cb(CONTAINER_X, CONTAINER_Y, 300, 80),
+                    },
+                } as any,
+                scrollToNodeHandlerRef: { current: { scrollToNodeID } } as any,
+            });
+            const { result } = renderHook(() => useDragDrop<string>(params));
+
+            act(() => {
+                simulateFullDragDrop(result.current, "A2", 4, pageYForNode(8, "below"), 200);
+            });
+            act(() => {
+                jest.runOnlyPendingTimers();
+            });
+
+            expect(scrollToNodeID).toHaveBeenCalledTimes(1);
+            expect(scrollToNodeID.mock.calls[0]![0]).toMatchObject({
+                nodeId: "A2",
+                viewPosition: 0,
+                animated: false,
+            });
+        });
+    });
+
+    // ──────────────────────────────────────────────
+    // Auto-expanded node retention rules
+    // ──────────────────────────────────────────────
+
+    describe("given a node was auto-expanded during the drag", () => {
+        function setupCollapsedB(autoExpandDelay = 100) {
+            const params = createDefaultParams({ autoExpandDelay });
+            const store = getTreeViewStore<string>(STORE_ID);
+            act(() => {
+                store.getState().updateExpanded(new Set(["A", "A1"]));
+            });
+            const collapsedFlat = params.flattenedNodes.filter(
+                (n) => n.id !== "B1" && n.id !== "B2"
+            );
+            const { result } = renderHook(() =>
+                useDragDrop<string>({ ...params, flattenedNodes: collapsedFlat })
+            );
+            const handlers = result.current.panResponder.panHandlers as any;
+            // Collapsed order: A(0) A1(1) A1a(2) A1b(3) A2(4) B(5) C(6). Drag C.
+            act(() => {
+                simulateLongPress(result.current, "C", 6, pageYForNode(6));
+                handlers.onResponderGrant(mockGestureEvent(pageYForNode(6)));
+                handlers.onResponderMove(mockGestureEvent(dropY(5, 0.45)));
+                jest.advanceTimersByTime(150);
+            });
+            expect(store.getState().expanded.has("B")).toBe(true);
+            return { store, handlers };
+        }
+
+        it("when the drag is cancelled, then the courtesy expansion is rolled back", () => {
+            const { store, handlers } = setupCollapsedB();
+
+            act(() => {
+                handlers.onResponderTerminate(mockGestureEvent(dropY(5, 0.45)));
+            });
+
+            expect(store.getState().expanded.has("B")).toBe(false);
+        });
+
+        it("when the drop lands inside that node, then it stays expanded to show the drop", () => {
+            const { store, handlers } = setupCollapsedB();
+
+            act(() => {
+                handlers.onResponderRelease(mockGestureEvent(dropY(5, 0.45)));
+            });
+
+            expect(store.getState().expanded.has("B")).toBe(true);
+            const b = store.getState().initialTreeViewData.find((n) => n.id === "B");
+            expect(b?.children?.some((c) => c.id === "C")).toBe(true);
+        });
+    });
 });

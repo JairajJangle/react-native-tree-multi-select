@@ -205,6 +205,8 @@ function removeNodeById<ID>(
                 if (parent && level.length === 0) {
                     parent.children = undefined;
                 }
+                /* istanbul ignore next -- splice at a found index always yields
+                   the element; noUncheckedIndexedAccess guard */
                 return removed ?? null;
             }
             if (node.children?.length) {

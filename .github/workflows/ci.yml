@@ -35,7 +35,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
+        # persist-credentials: false so no http.extraheader auth is left in
+        # .git/config. The coverage-badge-action below runs its own nested
+        # checkout of gh-pages; a leftover credential header conflicts with
+        # its auth and makes git fail with HTTP 400 (surfaced after the
+        # actions/checkout v7 bump).
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -47,7 +54,10 @@ jobs:
         # GitHub actions: default branch variable
         # https://stackoverflow.com/questions/64781462/github-actions-default-branch-variable
         if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-        uses: we-cli/coverage-badge-action@main
+        # Cosmetic gh-pages badge push must never block the release pipeline.
+        continue-on-error: true
+        # Pinned to a commit SHA (was @main) for reproducibility + supply-chain safety.
+        uses: we-cli/coverage-badge-action@8a0b6ee05f6dd0f294089cbe7a848452a2b43eef # main @ 2025-03-12
 
   build-library:
     runs-on: ubuntu-latest

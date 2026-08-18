@@ -138,6 +138,11 @@
       "optional": true
     }
   },
+  "resolutions": {
+    "postcss@~8.4.32": "^8.5.23",
+    "undici@6.23.0": "^6.28.0",
+    "uuid@^7.0.3": "^11.1.1"
+  },
   "packageManager": "yarn@4.9.2",
   "jest": {
     "preset": "react-native",

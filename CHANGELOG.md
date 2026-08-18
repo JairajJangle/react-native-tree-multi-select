@@ -1,3 +1,10 @@
+## [3.0.5](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.4...v3.0.5) (2026-08-18)
+
+
+### Bug Fixes
+
+* **deps:** resolve dependabot security alerts ([b518e8d](https://github.com/JairajJangle/react-native-tree-multi-select/commit/b518e8d17d07ba44723d2eede560dc3e3e6c25b4))
+
 ## [3.0.4](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.3...v3.0.4) (2026-08-11)
 
 ## [3.0.3](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.2...v3.0.3) (2026-07-25)

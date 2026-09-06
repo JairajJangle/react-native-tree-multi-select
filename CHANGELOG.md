@@ -1,3 +1,10 @@
+## [3.0.6](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.5...v3.0.6) (2026-09-06)
+
+
+### Bug Fixes
+
+* **deps:** refresh lockfile for xmldom and fast-uri advisories ([0d1b80d](https://github.com/JairajJangle/react-native-tree-multi-select/commit/0d1b80dff44e06d5a24acf377ec8c7bc5d90f9f5)), closes [222/#225](https://github.com/JairajJangle/react-native-tree-multi-select/issues/225) [226/#227](https://github.com/JairajJangle/react-native-tree-multi-select/issues/227)
+
 ## [3.0.5](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.4...v3.0.5) (2026-08-18)
 
 

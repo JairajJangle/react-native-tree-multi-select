@@ -12,7 +12,6 @@ module.exports = {
       {
         preset: "angular",
         releaseRules: [
-          { type: "chore", scope: "deps", release: "patch" },
           { type: "chore", breaking: true, release: "major" },
           { type: "chore", scope: "breaking", release: "major" },
         ],

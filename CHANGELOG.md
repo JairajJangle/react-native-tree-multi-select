@@ -1,5 +1,9 @@
 ## [3.0.7](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.6...v3.0.7) (2026-10-25)
 
+### Miscellaneous Chores
+
+* **deps:** patch dependabot security alerts via lockfile refresh ([4324aac](https://github.com/JairajJangle/react-native-tree-multi-select/commit/4324aac0fa3aa3d67d72306c8674b3dd85540be7))
+
 ## [3.0.6](https://github.com/JairajJangle/react-native-tree-multi-select/compare/v3.0.5...v3.0.6) (2026-09-06)
 
 
